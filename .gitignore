@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 .venv/
 /Trail Buddy*.md
+android/.gradle/
+android/.kotlin/
+android/build/
+android/app/build/
+android/local.properties
+.idea/
+*.iml
