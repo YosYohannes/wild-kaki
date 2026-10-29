@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'animals/holidays_live.dart';
 import 'data/controller.dart';
 import 'scene/scene_screen.dart';
 import 'scene/sprites.dart';
@@ -19,7 +22,9 @@ Future<void> main() async {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
+  final holidays = await HolidayService.open();
   final controller = await WildController.create(
+    holidays: holidays,
     systemAnimate: !WidgetsBinding
         .instance
         .platformDispatcher
@@ -27,17 +32,21 @@ Future<void> main() async {
         .disableAnimations,
   );
   final sprites = await SceneSprites.load();
-  runApp(WildKakiApp(controller: controller, sprites: sprites));
+  runApp(
+    WildKakiApp(controller: controller, holidays: holidays, sprites: sprites),
+  );
 }
 
 class WildKakiApp extends StatefulWidget {
   const WildKakiApp({
     super.key,
     required this.controller,
+    required this.holidays,
     required this.sprites,
   });
 
   final WildController controller;
+  final HolidayService holidays;
   final SceneSprites sprites;
 
   @override
@@ -50,6 +59,7 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.controller.syncQuietly();
+    unawaited(widget.holidays.refresh());
   }
 
   @override
@@ -60,7 +70,10 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) widget.controller.syncQuietly();
+    if (state == AppLifecycleState.resumed) {
+      widget.controller.syncQuietly();
+      unawaited(widget.holidays.refresh());
+    }
   }
 
   @override

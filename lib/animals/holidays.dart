@@ -19,7 +19,8 @@ class DateListHolidays implements HolidayProvider {
   final Set<String> _dates;
 
   @override
-  bool isPublicHoliday(DateTime localDate) => _dates.contains(isoDate(localDate));
+  bool isPublicHoliday(DateTime localDate) =>
+      _dates.contains(isoDate(localDate));
 }
 
 String isoDate(DateTime d) =>

@@ -2,7 +2,7 @@
 
 How an activity becomes an animal: the raw values we read, the processed parameters the decision uses, the values each one can take, and what happens when a value is missing.
 
-An activity is anything Health Connect reports: an exercise session or a sleep session. Nothing is read from the network, the location or any other app.
+An activity is anything Health Connect reports: an exercise session or a sleep session. Nothing is read from the location or any other app. The only network use is the public holiday list (below).
 
 ## Raw values
 
@@ -42,7 +42,7 @@ The decision looks at `kind`, `partOfDay`, the three bands and the rolls. `dayOf
 | `dayOff` | datetime, holiday list | Day off, Working day | A Saturday, a Sunday or a public holiday. Looks only: the animal wears a hat |
 | `roll` | roll | five independent numbers from 0 up to 1: visitor, base, species, colour, hat | Luck |
 
-Public holidays come from a list bundled with the app for the phone's region (from the phone's locale). If the region has no list, only Saturdays and Sundays count as days off.
+Public holidays come from the free Nager.Date service, asked once for this year and next by the phone's country code (from the phone's locale). The answer is cached on the phone for 30 days. Offline, or before the first answer, Singapore uses the list bundled with the app; any other country has no list, so only Saturdays and Sundays count as days off.
 
 ### `partOfDay` hours (phone local time)
 
@@ -135,6 +135,8 @@ On a day off the animal wears a hat. The hat roll picks one of the five hats wit
 
 Heart rate, steps, calories, elevation, speed samples, weather, season, climate, location, indoor or outdoor, which app recorded the activity.
 
+Weather in particular never changes which animal you get: an activity can be synced hours or days after it happened, so the weather at sync time says nothing about it. Live weather is only for the look of the scene (see the README).
+
 ## Decisions
 
 1. Decide with the processed parameters and the rolls only.
@@ -145,3 +147,6 @@ Heart rate, steps, calories, elevation, speed samples, weather, season, climate,
 6. Bands only, no continuous scores for now.
 7. A day off (weekend or public holiday) gives a hat, chosen at random from five.
 8. Start with 15 bases, 57 shape species and 16 colour species (73 in the collection), aiming for 50 to 120.
+9. `partOfDay` keeps the fixed hours; it does not follow sunrise and sunset.
+10. Kingfisher stays a Swim animal through the songbird base, about 30% of swims.
+11. Weather is a scene background only, never an input to the pick.

@@ -1,10 +1,12 @@
 # WildKaki
 
-An offline running app where every run reveals one wild animal, chosen by how, where and when you ran.
+A running app that works offline, where every run reveals one wild animal, chosen by how, where and when you ran.
 
 ## Status
 
 Flutter app, builds as a debug APK. The whole app is one pixel-art scene (sky, river, meadow) that follows the clock. Activities and sleep are read from Health Connect: everything Health Connect counts is an activity, once it starts after first launch. Each waiting activity hides an animal in a bush on the far bank (up to three at a time): tap a bush to meet the animal, the bench for the collection, the lamppost for Recent (the last 7 days), and pull down to sync. Tapping the animals in the scene makes them run off with a sound. Debug builds have Developer tools in Settings that write a fake run or a fake sleep into Health Connect.
+
+Public holidays (they give a day-off hat) come from the free Nager.Date service by the phone's country code, cached on the phone for 30 days, with the bundled Singapore list as the fallback. This is the only network use, and there is no server of ours: the request carries only the country code and the phone's IP address.
 
 Animals and the rules that pick them live in `lib/animals/`. For now there are three animals (fox, duck, bird) and one rule: every activity brings a fox.
 
@@ -19,10 +21,10 @@ Not yet verified on a device: Health Connect permission flow, pull-to-refresh fe
 
 ## Layout
 
-- `lib/main.dart`: app start, portrait lock, edge-to-edge bars, sync on launch and resume
+- `lib/main.dart`: app start, portrait lock, edge-to-edge bars, sync and holiday refresh on launch and resume
 - `lib/world/`: the pixel world (`pixel_buffer.dart`, `sky.dart`, `world_painter.dart`)
 - `lib/scene/`: scene screen, actors and sprite loading
-- `lib/animals/`: the animal list (`animals.dart`), what an animal needs (`animal.dart`) and the rules (`rules.dart`)
+- `lib/animals/`: the animal list (`animals.dart`), what an animal needs (`animal.dart`), the rules (`rules.dart`) and the public holidays (`holidays.dart`, `holidays_live.dart`)
 - `lib/data/`: model, local store (shared_preferences), Health Connect sync, controller
 - `lib/ui/`: theme, collection, animal, recent, settings, reveal and developer pages
 - `assets/sprites/`: sprite PNGs written by `tools/make_sprites.py` (animals are 32x32); change the script, run it, rebuild
