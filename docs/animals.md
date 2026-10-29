@@ -176,7 +176,7 @@ Five hats, one picked at random on a day off: party hat, sombrero, beanie, top h
 
 ## Words still to write
 
-Each species needs a card note. The bases above already have their arrival line and sound.
+The card notes, one for each of the 73 entries, live in `notes.md`. The bases above already have their arrival line and sound.
 
 ## Assets to make
 
