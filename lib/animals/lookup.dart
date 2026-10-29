@@ -1,5 +1,7 @@
+import 'art_data.dart';
 import 'catalog.dart';
 import 'catalog_data.dart';
+import 'notes_data.dart';
 
 class AnimalEntry {
   const AnimalEntry({
@@ -17,7 +19,20 @@ class AnimalEntry {
   final ColourSpecies? colour;
 
   bool get isColour => colour != null;
+
+  List<String> get frames => artFrom(entryArt).frames;
+
+  List<HeadPoint> get headPoints => artFrom(entryArt).headPoints;
+
+  EntryArt artFrom(Map<String, EntryArt> art) {
+    final own = art[id] ?? (isColour ? art[shape.id] : null);
+    return own ?? EntryArt(frames: base.frames, headPoints: base.headPoints);
+  }
 }
+
+Set<String> spriteNamesUsed(Map<String, EntryArt> art) => {
+  for (final a in art.values) ...a.frames,
+};
 
 final List<AnimalEntry> animalEntries = [
   for (final base in defaultCatalog.bases)
@@ -60,5 +75,6 @@ String legacyEntryId(String stored) => switch (stored) {
   _ => _entriesById.containsKey(stored) ? stored : defaultEntryId,
 };
 
-String entryNote(AnimalEntry entry) =>
+String entryNote(AnimalEntry entry, {Map<String, String> notes = entryNotes}) =>
+    notes[entry.id] ??
     'A ${entry.name.toLowerCase()} keeps you company for a while.';

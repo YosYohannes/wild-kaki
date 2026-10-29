@@ -1,0 +1,116 @@
+FRAMES = [
+    [
+        "...........bHb.....",
+        "..........bbbbb....",
+        "..........bbbebyyyy",
+        "..........bbbbbyyy.",
+        "..........bbbbb....",
+        "t.........bbbb.....",
+        "tt.......cccccc....",
+        "ttggggggggrrrrrr...",
+        "tggggggggggrrrrrr..",
+        ".gggvvvvvvvgrrrrrr.",
+        "..vvvvvvvvvgrrrrr..",
+        "..ggvvvvvgggrrr....",
+        "...gdddddddggg.....",
+        "......f....f.......",
+        "......f....fff.....",
+        "......fff..........",
+    ],
+    [
+        "...........bHb.....",
+        "..........bbbbb....",
+        "..........bbbebyyyy",
+        "..........bbbbbyyy.",
+        "..........bbbbb....",
+        "..........bbbb.....",
+        "t........cccccc....",
+        "ttggggggggrrrrrr...",
+        "tggggggggggrrrrrr..",
+        ".gggvvvvvvvgrrrrrr.",
+        "..vvvvvvvvvgrrrrr..",
+        "..ggvvvvvgggrrr....",
+        "...gdddddddggg.....",
+        "......f....f.......",
+        "......fff..f.......",
+        "...........fff.....",
+    ],
+]
+
+DUCK = {
+    "b": "#fbf7ec", "c": "#fbf7ec", "r": "#fbf7ec", "g": "#f1ebd9", "v": "#e3dcc6", "d": "#cfc6ae", "t": "#f1ebd9",
+    "e": "#2a2a22", "y": "#f09a2e", "f": "#ee8a2a",
+}
+
+GOOSE_HEAD = [
+    ".bbbb..",
+    ".bbebyy",
+    ".bbwwy.",
+    ".bwww..",
+]
+
+SPECIES = {
+    "duck": {"palette": DUCK},
+    "goose": {
+        "palette": {
+            **DUCK, "b": "#34343c", "c": "#34343c", "r": "#d8cdb8", "g": "#8d7a63", "v": "#6d5c48", "d": "#d8cdb8",
+            "t": "#2f2f35", "y": "#2e2e34", "f": "#55535c", "e": "#8a6a46", "w": "#f4f1ea",
+        },
+        "patches": [
+            (None, 10, 1, ["-...-....", "-..b-----", "-...----.", "-...-....", "-........"]),
+            (None, 11, -5, GOOSE_HEAD),
+            (None, 11, -1, ["bbb", "bbb"]),
+            (None, 0, 5, ["-", "-"]),
+            (None, 1, 6, "-"),
+            (None, 3, 6, ["gggggg"]),
+            (None, -1, 7, ["tt"]),
+            (None, -1, 8, ["tt"]),
+            (None, 2, 7, ["w", "w"]),
+            (None, 13, -5, "H"),
+        ],
+    },
+    "moorhen": {
+        "palette": {
+            **DUCK, "b": "#3d4656", "c": "#3d4656", "r": "#505b6d", "g": "#505b6d", "v": "#4a4a42", "d": "#343c49",
+            "t": "#2f3640", "y": "#d9372b", "q": "#f2d23a", "f": "#b7c533", "e": "#f4e6c8", "w": "#f4f1ea",
+        },
+        "patches": [
+            (None, 10, 1, ["-..yy....", "-.eyyyyq-", "-....y--.", "-........", "-........"]),
+            (None, 2, 7, ["-----------------"]),
+            (None, 10, 7, ["cccc"]),
+            (None, 3, 10, ["wwwwwwwww"]),
+            (None, 0, 8, "w"),
+            (None, 1, 9, "w"),
+            (None, 3, 12, ["-----------"]),
+            (None, 6, 12, "f"),
+            (None, 11, 12, "f"),
+            (0, 9, 15, "f"),
+            (0, 14, 14, "f"),
+            (1, 9, 14, "f"),
+            (1, 14, 15, "f"),
+        ],
+    },
+    "grebe": {
+        "palette": {
+            **DUCK, "b": "#3a312c", "c": "#b8562c", "r": "#f3efe4", "g": "#6e6057", "v": "#574c43", "d": "#e0d9c8",
+            "t": "#6e6057", "y": "#e3877a", "f": "#8d9a6c", "e": "#d9402c", "w": "#f6f2e8",
+        },
+        "patches": [
+            (None, 10, -2, ["b.", ".b"]),
+            (None, 12, -2, ["b.", ".b"]),
+            (None, 0, 5, ["-", "-", "-", "-"]),
+            (None, 1, 6, ["-", "-"]),
+            (None, 10, 1, ["c....", "ccwew", "ccwww", "-cww-", "-cc-."]),
+            (None, 9, 6, ["--..--"]),
+            (None, 0, 7, ["-------------------"]),
+            (None, 1, 8, ["---", "--.", ".-.", ".-."]),
+            (None, 11, 7, "cc"),
+            (None, 15, 3, ["---"]),
+        ],
+    },
+}
+
+COLOURS = {
+    "mallard": {"b": "#2f8a4c", "c": "#ffffff", "r": "#8b4a2b", "g": "#a3a6ab", "v": "#80838a", "d": "#5f626a", "t": "#26272b", "y": "#d9c443"},
+    "golden-duck": {"b": "#f2c94c", "c": "#f6d669", "r": "#f2c94c", "g": "#efc342", "v": "#dcab2c", "d": "#b98a14", "t": "#e8b83a", "y": "#e8731c", "f": "#e8731c"},
+}

@@ -419,9 +419,10 @@ class _RevealOverlayState extends State<RevealOverlay>
   }
 
   Widget _fox(int frame, double wipe) {
-    final base = widget.entry.base;
-    final name = base.frames[frame % base.frames.length];
-    final head = base.headPoints[frame % base.headPoints.length];
+    final frames = widget.entry.frames;
+    final headPoints = widget.entry.headPoints;
+    final name = frames[frame % frames.length];
+    final head = headPoints[frame % headPoints.length];
     final hat = hatById(widget.hatId);
 
     Widget layer(Color? tint) => Stack(
@@ -438,8 +439,8 @@ class _RevealOverlayState extends State<RevealOverlay>
                 clipBehavior: Clip.none,
                 children: [
                   Positioned(
-                    left: head.x.toDouble(),
-                    top: head.y.toDouble(),
+                    left: head.x + 0.5,
+                    top: head.y + 1.0,
                     child: FractionalTranslation(
                       translation: const Offset(-0.5, -1),
                       child: _image(hat.sprite, tint, natural: true),

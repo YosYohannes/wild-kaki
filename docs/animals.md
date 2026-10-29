@@ -172,7 +172,7 @@ Affinities list only what a species cares about; everything else is neutral. Sca
 
 ## Hats
 
-Five hats, one picked at random on a day off: party hat, sombrero, beanie, top hat, flower crown. Hats sit on each base's head point, so every species of a base shares them.
+Five hats, one picked at random on a day off: party hat, sombrero, beanie, top hat, bowler hat. Hats sit on each base's head point, so every species of a base shares them.
 
 ## Words still to write
 

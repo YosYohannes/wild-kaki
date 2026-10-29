@@ -32,7 +32,7 @@ The run is Twilight, Medium length, Medium distance and Fast.
 | | Jackrabbit | 1 | 6% |
 | Visitor (10%) | any other base | | about 0.8% per base |
 
-It is a Saturday, so whatever comes wears a hat: party hat, sombrero, beanie, top hat or flower crown, 20% each.
+It is a Saturday, so whatever comes wears a hat: party hat, sombrero, beanie, top hat or bowler hat, 20% each.
 
 ## What discovery does
 

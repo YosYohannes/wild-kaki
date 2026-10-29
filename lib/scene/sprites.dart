@@ -2,7 +2,9 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
 
+import '../animals/art_data.dart';
 import '../animals/catalog_data.dart';
+import '../animals/lookup.dart';
 
 class SceneSprites {
   SceneSprites._({
@@ -59,9 +61,15 @@ class SceneSprites {
   static Future<SceneSprites> load() async {
     final names = {
       for (final b in defaultCatalog.bases) ...b.frames,
+      ...spriteNamesUsed(entryArt),
       for (final h in defaultCatalog.hats) h.sprite,
+    }.toList();
+    final loaded = await Future.wait(names.map(_load));
+    final right = {for (var i = 0; i < names.length; i++) names[i]: loaded[i]};
+    final mirroredList = await Future.wait(loaded.map(_mirrored));
+    final left = {
+      for (var i = 0; i < names.length; i++) names[i]: mirroredList[i],
     };
-    final right = {for (final n in names) n: await _load(n)};
     final birdRight = [await _load('bird_1'), await _load('bird_2')];
     final duckRight = await _load('duck');
     return SceneSprites._(
@@ -70,7 +78,7 @@ class SceneSprites {
       bush: await _load('bush'),
       bushBlink: await _load('bush_blink'),
       right: right,
-      left: {for (final e in right.entries) e.key: await _mirrored(e.value)},
+      left: left,
       birdRight: birdRight,
       birdLeft: [for (final i in birdRight) await _mirrored(i)],
       duckRight: duckRight,

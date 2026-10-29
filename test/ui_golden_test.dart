@@ -252,7 +252,7 @@ void main() {
     final image = tester.widget<Image>(find.byType(Image));
     expect(
       (image.image as AssetImage).assetName,
-      'assets/sprites/${entry.base.frames[0]}.png',
+      'assets/sprites/${entry.frames[0]}.png',
     );
     await _leave(tester);
   });

@@ -12,7 +12,13 @@ import 'package:wildkaki/world/world_painter.dart';
 
 const _shots =
     '/tmp/claude-1000/-home-yos-Desktop-wild-kaki/b522a0f8-ab30-4973-b0c2-dccd1164ca20/scratchpad';
-const _sprites = ['bush', 'bush_blink', 'stub_fox_1', 'stub_fox_2', 'stub_hat'];
+const _sprites = [
+  'bush',
+  'bush_blink',
+  'stub_fox_1',
+  'stub_fox_2',
+  'hat_party-hat',
+];
 
 final _outing = Outing(
   id: 'o1',
@@ -255,7 +261,9 @@ void main() {
   testWidgets('a hat sits on the animal in the hop, the card and the run-off', (
     tester,
   ) async {
-    final hat = find.image(const AssetImage('assets/sprites/stub_hat.png'));
+    final hat = find.image(
+      const AssetImage('assets/sprites/hat_party-hat.png'),
+    );
     await _pumpHost(tester, _host(outing: _outing, hatId: 'party-hat'));
     await tester.pump(Duration.zero);
 
@@ -278,7 +286,7 @@ void main() {
     await _pumpHost(tester, _host(outing: _outing, animate: false));
     await tester.pump();
     expect(
-      find.image(const AssetImage('assets/sprites/stub_hat.png')),
+      find.image(const AssetImage('assets/sprites/hat_party-hat.png')),
       findsNothing,
     );
   });

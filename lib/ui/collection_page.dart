@@ -75,7 +75,7 @@ class _Cell extends StatelessWidget {
     final name = found ? entry.name : '???';
     final sprite = found
         ? Image.asset(
-            'assets/sprites/${entry.base.frames[0]}.png',
+            'assets/sprites/${entry.frames[0]}.png',
             width: 96,
             height: 96,
             fit: BoxFit.fill,

@@ -1,0 +1,56 @@
+PALETTE = {
+    "m": "#e0407f", "M": "#a82a5e", "y": "#ffd23f", "Y": "#d9a521", "w": "#fff7e6", "W": "#d8cdb8",
+    "s": "#e8c46a", "S": "#b98a3a", "r": "#d2402f", "R": "#8f2a20",
+    "u": "#3f7fd1", "U": "#2c5aa0", "c": "#9cc7f2", "C": "#6fa6e0",
+    "k": "#3c3c4a", "K": "#6e6e84", "v": "#8a3fbf",
+    "b": "#6b4430", "B": "#9a6a48", "j": "#d9c7a0",
+}
+
+HATS = {
+    "party-hat": [
+        "...w...",
+        "..www..",
+        "...m...",
+        "...mM..",
+        "..mmM..",
+        "..yyY..",
+        ".mmmmM.",
+        ".yyyyYY",
+        "mmmmmmM",
+    ],
+    "sombrero": [
+        "......sss......",
+        ".....sssss.....",
+        ".....ssssS.....",
+        ".....sssSs.....",
+        "....rrrrrrR....",
+        "....ssyssSs....",
+        "ss.sssssssss.ss",
+        "sssSSSSSSSSSsss",
+    ],
+    "beanie": [
+        "..www..",
+        "..wwW..",
+        "..uuu..",
+        ".uuUuu.",
+        "uUuuUuu",
+        "ccCcCcc",
+        "ccCcCcc",
+    ],
+    "top-hat": [
+        ".kkkkk.",
+        ".kKkkk.",
+        ".kKkkk.",
+        ".kKkkk.",
+        ".vvvvv.",
+        "kkkkkkk",
+    ],
+    "bowler-hat": [
+        "...bbbbb...",
+        "..bBbbbbb..",
+        "..bBbbbbb..",
+        "..bbbbbbb..",
+        "b.jjjjjjj.b",
+        "bbbbbbbbbbb",
+    ],
+}

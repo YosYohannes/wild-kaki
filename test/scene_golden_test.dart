@@ -447,8 +447,8 @@ void main() {
     expect(foxes.map((f) => f.entryId), everyElement('red-fox'));
     expect(foxes.map((f) => f.hatId), unorderedEquals(['party-hat', null]));
     expect(
-      foxes.map((f) => entryOrDefault(f.entryId).base.frames),
-      everyElement(['stub_fox_1', 'stub_fox_2']),
+      foxes.map((f) => entryOrDefault(f.entryId).frames),
+      everyElement(['red-fox_1', 'red-fox_2']),
     );
     await tester.pumpWidget(const SizedBox());
   });

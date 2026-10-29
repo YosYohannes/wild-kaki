@@ -68,7 +68,7 @@ class _AnimalPageState extends State<AnimalPage>
 
   @override
   Widget build(BuildContext context) {
-    final frames = widget.entry.base.frames;
+    final frames = widget.entry.frames;
     final meetings = [...widget.meetings]
       ..sort((a, b) => b.outing.start.compareTo(a.outing.start));
     final count = meetings.length;

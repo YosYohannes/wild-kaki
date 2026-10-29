@@ -672,28 +672,24 @@ class _ScenePainter extends CustomPainter {
         f.feet,
         items.length,
         () {
-          final base = entryOrDefault(f.entryId).base;
+          final entry = entryOrDefault(f.entryId);
+          final frames = entry.frames;
+          final headPoints = entry.headPoints;
           final left = f.dir < 0;
-          final i = f.frame % base.frames.length;
+          final i = f.frame % frames.length;
           final x = f.x.round();
           final y = f.feet - 32;
-          _sprite(
-            canvas,
-            sprites.named(base.frames[i], mirrored: left),
-            x,
-            y,
-            s,
-          );
+          _sprite(canvas, sprites.named(frames[i], mirrored: left), x, y, s);
           final hat = hatById(f.hatId);
           if (hat == null) return;
           final img = sprites.named(hat.sprite, mirrored: left);
-          final head = base.headPoints[i % base.headPoints.length];
-          final hx = left ? 32 - head.x : head.x;
+          final head = headPoints[i % headPoints.length];
+          final hx = left ? 31 - head.x : head.x;
           _sprite(
             canvas,
             img,
             x + hx - img.width ~/ 2,
-            y + head.y - img.height,
+            y + head.y - img.height + 1,
             s,
           );
         },

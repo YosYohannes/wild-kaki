@@ -83,7 +83,7 @@ class _OutingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final sprite = animal == null
         ? 'assets/sprites/bush.png'
-        : 'assets/sprites/${entryOrDefault(animal!).base.frames.first}.png';
+        : 'assets/sprites/${entryOrDefault(animal!).frames.first}.png';
     return Column(
       children: [
         DottedRule(color: Wild.bark.withValues(alpha: 0.35)),

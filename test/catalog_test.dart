@@ -160,7 +160,8 @@ void main() {
     expect(catalog.baseById('hare')!.bubble, 'thump!');
     expect(catalog.baseById('small-deer')!.name, 'Small deer');
     for (final b in catalog.bases) {
-      expect(b.sound, 'yip');
+      expect(b.bubble, '${b.sound}!');
+      expect(File('assets/sounds/${b.sound}.wav').existsSync(), isTrue);
       expect(b.frames, ['stub_fox_1', 'stub_fox_2']);
       expect(b.headPoints, [(x: 24, y: 16), (x: 24, y: 16)]);
     }
@@ -254,8 +255,11 @@ void main() {
       'sombrero',
       'beanie',
       'top-hat',
-      'flower-crown',
+      'bowler-hat',
     ]);
-    expect(catalog.hats.every((h) => h.sprite == 'stub_hat'), isTrue);
+    for (final h in catalog.hats) {
+      expect(h.sprite, 'hat_${h.id}');
+      expect(File('assets/sprites/${h.sprite}.png').existsSync(), isTrue);
+    }
   });
 }

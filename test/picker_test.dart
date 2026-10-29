@@ -115,7 +115,7 @@ void main() {
           baseId: 'otter',
           speciesId: 'beaver',
           entryId: 'beaver',
-          hatId: 'flower-crown',
+          hatId: 'bowler-hat',
         ),
       );
     });
