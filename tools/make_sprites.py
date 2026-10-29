@@ -8,7 +8,7 @@ import math
 from pathlib import Path
 from PIL import Image
 
-OUT = Path(__file__).resolve().parent.parent / "android/app/src/main/res/drawable-nodpi"
+OUT = Path(__file__).resolve().parent.parent / "assets/sprites"
 
 PAL = {
     "o": "#d9772f", "r": "#b3591f", "w": "#f6eedc", "k": "#2a2a22", "e": "#f3ecdc", "O": "#2e2218",
@@ -222,12 +222,6 @@ def objects():
     return bench.save_cropped("bench"), lamp.save_cropped("lamppost")
 
 
-def gear():
-    rows = [".....XXX.....", "..XX.X.X.XX..", ".X..XX.XX..X.", ".X.........X.", "..X..XXX..X..", "XXX.XX.XX.XXX", "X...X...X...X",
-            "XXX.XX.XX.XXX", "..X..XXX..X..", ".X.........X.", ".X..XX.XX..X.", "..XX.X.X.XX..", ".....XXX....."]
-    save_grid([["O" if c == "X" else "." for c in row] for row in rows], "ui_gear")
-
-
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     save_grid(to32(fox_walk(0)), "fox_walk_1")
@@ -239,6 +233,5 @@ if __name__ == "__main__":
     save_grid(to32(bush(False), outline=False), "bush")
     save_grid(to32(bush(True), outline=False), "bush_blink")
     bench_box, lamp_box = objects()
-    gear()
     print("bench box (x0, y0, x1, y1):", bench_box)
     print("lamppost box (x0, y0, x1, y1):", lamp_box)
