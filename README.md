@@ -8,6 +8,8 @@ Flutter app, builds as a debug APK. The whole app is one pixel-art scene (sky, r
 
 Public holidays (they give a day-off hat) come from the free Nager.Date service by the phone's country code, cached on the phone for 30 days, with the bundled Singapore list as the fallback. This is the only network use, and there is no server of ours: the request carries only the country code and the phone's IP address.
 
+The weather in the scene's sky comes from the free Open-Meteo service for a representative city of the phone's time zone (no location permission), cached for 20 minutes, and falls back to clear. It only changes how the scene looks; the request carries only the rounded city coordinates and the phone's IP address.
+
 Animals and the rules that pick them live in `lib/animals/`. For now there are three animals (fox, duck, bird) and one rule: every activity brings a fox.
 
 Not yet verified on a device: Health Connect permission flow, pull-to-refresh feel and the launcher icon.

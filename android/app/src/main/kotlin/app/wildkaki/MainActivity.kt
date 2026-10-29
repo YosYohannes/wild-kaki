@@ -14,6 +14,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.time.Instant
+import java.util.TimeZone
 import kotlin.reflect.KClass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +32,7 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "openSettings" -> openSettings(result)
+                    "timeZone" -> result.success(TimeZone.getDefault().id)
                     "readOutings" -> readOutings(call, result)
                     else -> result.notImplemented()
                 }

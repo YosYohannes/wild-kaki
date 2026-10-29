@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../weather/weather_state.dart';
 import 'theme.dart' show PageTopBar;
 
 const _parchment = Color(0xFFF3ECDC);
@@ -23,11 +24,13 @@ TextStyle _text(
 class DevToolsPage extends StatefulWidget {
   const DevToolsPage({
     super.key,
+    required this.weather,
     required this.onBack,
     required this.onFakeRun,
     required this.onFakeSleep,
   });
 
+  final WeatherState weather;
   final VoidCallback onBack;
   final Future<String> Function() onFakeRun;
   final Future<String> Function() onFakeSleep;
@@ -91,6 +94,16 @@ class _DevToolsPageState extends State<DevToolsPage> {
                       const SizedBox(height: 16),
                       Text(_result!, style: _text(14, _ink)),
                     ],
+                    const SizedBox(height: 28),
+                    Text(
+                      'Weather',
+                      style: _text(22, _ink, weight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 6),
+                    ListenableBuilder(
+                      listenable: widget.weather,
+                      builder: (context, _) => _WeatherButtons(widget.weather),
+                    ),
                   ],
                 ),
               ),
@@ -127,6 +140,79 @@ class _ActionButton extends StatelessWidget {
         child: Text(
           busy ? 'Writing...' : label,
           style: _text(16, _forest, weight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+}
+
+class _WeatherButtons extends StatelessWidget {
+  const _WeatherButtons(this.weather);
+
+  final WeatherState weather;
+
+  @override
+  Widget build(BuildContext context) {
+    final picked = weather.override;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'live: ${weather.live.name}, showing: ${weather.value.name}',
+          style: _text(14, _ink),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _ChoiceButton(
+              label: 'Auto',
+              selected: picked == null,
+              onTap: () => weather.override = null,
+            ),
+            for (final w in Weather.values)
+              _ChoiceButton(
+                label: '${w.name[0].toUpperCase()}${w.name.substring(1)}',
+                selected: picked == w,
+                onTap: () => weather.override = w,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ChoiceButton extends StatelessWidget {
+  const _ChoiceButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? _forest : _fern,
+          border: Border.all(color: _outline, width: 2),
+        ),
+        child: Text(
+          label,
+          style: _text(
+            16,
+            selected ? _parchment : _forest,
+            weight: FontWeight.w600,
+          ),
         ),
       ),
     );

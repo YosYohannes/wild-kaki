@@ -16,12 +16,14 @@ import '../ui/dev_tools.dart';
 import '../ui/reveal.dart';
 import '../ui/settings_page.dart';
 import '../ui/theme.dart';
+import '../weather/weather_state.dart';
 import '../world/pixel_buffer.dart';
 import '../world/sky.dart';
 import '../world/world_painter.dart';
 import 'actors.dart';
 import 'sounds.dart';
 import 'sprites.dart';
+import 'weather_layer.dart';
 
 const _duckReaction = (sound: 'quack', bubble: 'quack!');
 const _birdReaction = (sound: 'tweet', bubble: 'tweet!');
@@ -66,6 +68,7 @@ class SceneScreen extends StatefulWidget {
     this.hourOverride,
     this.random,
     this.sounds,
+    this.weather,
   });
 
   final WildController controller;
@@ -73,6 +76,7 @@ class SceneScreen extends StatefulWidget {
   final double? hourOverride;
   final math.Random? random;
   final SceneSounds? sounds;
+  final WeatherState? weather;
 
   @override
   State<SceneScreen> createState() => _SceneScreenState();
@@ -84,6 +88,10 @@ class _SceneScreenState extends State<SceneScreen>
   late final SceneSounds _sounds = widget.sounds ?? SceneSounds();
   late final Ticker _ticker;
   final _repaint = _Repaint();
+  late WeatherState _weather;
+  late final WeatherView _weatherView;
+  late final WeatherLayer _weatherLayer;
+  bool _ownsWeather = false;
   Timer? _clockTimer;
   Duration _last = Duration.zero;
 
@@ -120,6 +128,9 @@ class _SceneScreenState extends State<SceneScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _hour = widget.hourOverride ?? currentHour();
+    _bindWeather();
+    _weatherView = WeatherView(_weather.value);
+    _weatherLayer = WeatherLayer(_weatherView);
     _world = SceneState(_meadow, random: widget.random);
     _ticker = createTicker(_onTick)..start();
     if (widget.hourOverride == null) {
@@ -130,8 +141,37 @@ class _SceneScreenState extends State<SceneScreen>
     }
   }
 
+  void _bindWeather() {
+    final given = widget.weather;
+    _ownsWeather = given == null;
+    _weather = given ?? WeatherState();
+    _weather.addListener(_onWeather);
+  }
+
+  void _unbindWeather() {
+    _weather.removeListener(_onWeather);
+    if (_ownsWeather) _weather.dispose();
+  }
+
+  void _onWeather() {
+    _weatherView.change(_weather.value, animate: _motion);
+    _repaint.poke();
+  }
+
+  @override
+  void didUpdateWidget(SceneScreen old) {
+    super.didUpdateWidget(old);
+    if (old.weather != widget.weather) {
+      _unbindWeather();
+      _bindWeather();
+      _weatherView.change(_weather.value, animate: false);
+      _repaint.poke();
+    }
+  }
+
   @override
   void dispose() {
+    _unbindWeather();
     WidgetsBinding.instance.removeObserver(this);
     _clockTimer?.cancel();
     _ticker.dispose();
@@ -155,6 +195,7 @@ class _SceneScreenState extends State<SceneScreen>
     final dt = math.min((elapsed - _last).inMicroseconds / 1e6, 0.05);
     _last = elapsed;
     _world.step(dt, _motion, skyAt(_hour).stars);
+    _weatherView.step(dt);
     _repaint.poke();
   }
 
@@ -335,6 +376,7 @@ class _SceneScreenState extends State<SceneScreen>
         );
       case _Page.devTools:
         return DevToolsPage(
+          weather: _weather,
           onBack: _back,
           onFakeRun: _c.writeFakeRun,
           onFakeSleep: _c.writeFakeSleep,
@@ -413,6 +455,7 @@ class _SceneScreenState extends State<SceneScreen>
                               hiddenBush: reveal?.outing.id,
                               night: night,
                               motion: _motion,
+                              weather: _weatherLayer,
                             ),
                           ),
                         ),
@@ -477,6 +520,7 @@ class _ScenePainter extends CustomPainter {
     required this.hiddenBush,
     required this.night,
     required this.motion,
+    required this.weather,
   }) : super(repaint: repaint);
 
   final ui.Image? world;
@@ -487,6 +531,7 @@ class _ScenePainter extends CustomPainter {
   final String? hiddenBush;
   final double night;
   final bool motion;
+  final WeatherLayer weather;
 
   static final _plain = Paint()
     ..filterQuality = FilterQuality.none
@@ -535,15 +580,32 @@ class _ScenePainter extends CustomPainter {
       _plain,
     );
 
-    Paint? dim;
+    final wet = weather.active;
+    if (wet) {
+      weather.paintTint(canvas, size, layout, night);
+      weather.paintParticles(
+        canvas,
+        size,
+        layout,
+        night,
+        motion ? state.clock : 0,
+      );
+    }
+
+    Color? dimColor;
     if (night > 0.01) {
+      dimColor = const Color(0xFF0B1510).withValues(alpha: night * 0.55);
+    }
+    final wetDim = wet ? weather.dim(night) : null;
+    if (wetDim != null) {
+      dimColor = dimColor == null ? wetDim : combineDim(dimColor, wetDim);
+    }
+    Paint? dim;
+    if (dimColor != null) {
       dim = Paint()
         ..filterQuality = FilterQuality.none
         ..isAntiAlias = false
-        ..colorFilter = ColorFilter.mode(
-          const Color(0xFF0B1510).withValues(alpha: night * 0.55),
-          BlendMode.srcATop,
-        );
+        ..colorFilter = ColorFilter.mode(dimColor, BlendMode.srcATop);
     }
     _sprite(canvas, sprites.bench, Layout.benchX, layout.benchY, s, dim);
     _sprite(canvas, sprites.lamppost, Layout.lampX, layout.lampY, s, dim);
@@ -706,5 +768,6 @@ class _ScenePainter extends CustomPainter {
       old.bushes != bushes ||
       old.hiddenBush != hiddenBush ||
       old.night != night ||
-      old.motion != motion;
+      old.motion != motion ||
+      old.weather != weather;
 }

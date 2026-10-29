@@ -8,6 +8,7 @@ import 'data/controller.dart';
 import 'scene/scene_screen.dart';
 import 'scene/sprites.dart';
 import 'ui/theme.dart';
+import 'weather/weather_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,7 @@ Future<void> main() async {
     ),
   );
   final holidays = await HolidayService.open();
+  final weather = await WeatherService.open();
   final controller = await WildController.create(
     holidays: holidays,
     systemAnimate: !WidgetsBinding
@@ -33,7 +35,12 @@ Future<void> main() async {
   );
   final sprites = await SceneSprites.load();
   runApp(
-    WildKakiApp(controller: controller, holidays: holidays, sprites: sprites),
+    WildKakiApp(
+      controller: controller,
+      holidays: holidays,
+      weather: weather,
+      sprites: sprites,
+    ),
   );
 }
 
@@ -42,11 +49,13 @@ class WildKakiApp extends StatefulWidget {
     super.key,
     required this.controller,
     required this.holidays,
+    required this.weather,
     required this.sprites,
   });
 
   final WildController controller;
   final HolidayService holidays;
+  final WeatherService weather;
   final SceneSprites sprites;
 
   @override
@@ -60,6 +69,7 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     widget.controller.syncQuietly();
     unawaited(widget.holidays.refresh());
+    unawaited(widget.weather.refresh());
   }
 
   @override
@@ -73,6 +83,7 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       widget.controller.syncQuietly();
       unawaited(widget.holidays.refresh());
+      unawaited(widget.weather.refresh());
     }
   }
 
@@ -87,6 +98,7 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
         child: SceneScreen(
           controller: widget.controller,
           sprites: widget.sprites,
+          weather: widget.weather.state,
         ),
       ),
     );

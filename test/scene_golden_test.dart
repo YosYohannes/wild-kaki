@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,13 +13,17 @@ import 'package:wildkaki/data/health_sync.dart';
 import 'package:wildkaki/data/model.dart';
 import 'package:wildkaki/data/store.dart';
 import 'package:wildkaki/scene/actors.dart';
+import 'package:wildkaki/world/world_painter.dart' show Layout;
 import 'package:wildkaki/scene/scene_screen.dart';
 import 'package:wildkaki/scene/sounds.dart';
 import 'package:wildkaki/scene/sprites.dart';
+import 'package:wildkaki/scene/weather_layer.dart';
 import 'package:wildkaki/ui/collection_page.dart';
+import 'package:wildkaki/ui/dev_tools.dart';
 import 'package:wildkaki/ui/recent_page.dart';
 import 'package:wildkaki/ui/settings_page.dart';
 import 'package:wildkaki/ui/theme.dart';
+import 'package:wildkaki/weather/weather_state.dart';
 
 const _scratch =
     '/tmp/claude-1000/-home-yos-Desktop-wild-kaki/b522a0f8-ab30-4973-b0c2-dccd1164ca20/scratchpad';
@@ -81,6 +87,7 @@ Future<void> _show(
   bool animate = false,
   Size size = const Size(1080, 2340),
   int seed = 5,
+  WeatherState? weather,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 3;
@@ -101,6 +108,7 @@ Future<void> _show(
           sprites: _sprites,
           hourOverride: hour,
           random: Random(seed),
+          weather: weather,
         ),
       ),
     ),
@@ -112,7 +120,7 @@ Future<void> _show(
   await tester.pump(const Duration(milliseconds: 50));
 }
 
-Future<void> _shot(WidgetTester tester, String name) async {
+Future<void> _shot(WidgetTester tester, String name, {String? copy}) async {
   await expectLater(
     find.byKey(_boundary),
     matchesGoldenFile('goldens/$name.png'),
@@ -120,7 +128,8 @@ Future<void> _shot(WidgetTester tester, String name) async {
   await tester.runAsync(() async {
     final bytes = await File('test/goldens/$name.png').readAsBytes();
     if (Directory(_scratch).existsSync()) {
-      await File('$_scratch/flutter_$name.png').writeAsBytes(bytes);
+      await File('$_scratch/${copy ?? 'flutter_$name'}.png')
+          .writeAsBytes(bytes);
     }
   });
 }
@@ -150,6 +159,40 @@ SceneState _state(WidgetTester tester) {
   return (paint.painter as dynamic).state as SceneState;
 }
 
+dynamic _painter(WidgetTester tester) {
+  final paint = tester.widget<CustomPaint>(
+    find
+        .descendant(
+          of: find.byType(SceneScreen),
+          matching: find.byType(CustomPaint),
+        )
+        .first,
+  );
+  return paint.painter;
+}
+
+Future<List<int>> _render(
+  WidgetTester? tester,
+  WeatherView view,
+  double time,
+) async {
+  Future<List<int>> go() async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    const size = Size(360, 780);
+    final layout = Layout.forRows(260);
+    final layer = WeatherLayer(view);
+    if (layer.active) {
+      layer.paintTint(canvas, size, layout, 0);
+      layer.paintParticles(canvas, size, layout, 0, time);
+    }
+    final image = await recorder.endRecording().toImage(360, 780);
+    return (await image.toByteData())!.buffer.asUint8List().toList();
+  }
+
+  return tester == null ? go() : (await tester.runAsync(go))!;
+}
+
 class _QuietSounds extends SceneSounds {
   @override
   Future<void> play(String name) async {}
@@ -173,6 +216,154 @@ void main() {
     expect(find.text('synced just now'), findsOneWidget);
     await _shot(tester, 'scene_day');
     await tester.pumpWidget(const SizedBox());
+  });
+
+  for (final (label, hour) in [('day', 12.0), ('night', 23.0)]) {
+    for (final w in Weather.values) {
+      testWidgets('scene $label in $w weather', (tester) async {
+        _sprites = (await tester.runAsync(SceneSprites.load))!;
+        final c = (await tester.runAsync(_controller))!;
+        final state = WeatherState()..override = w;
+        await _show(tester, c, hour: hour, weather: state);
+        final name = w == Weather.clear
+            ? 'scene_$label'
+            : 'scene_weather_${label}_${w.name}';
+        await _shot(tester, name, copy: 'weather_${label}_${w.name}');
+        await tester.pumpWidget(const SizedBox());
+      });
+    }
+  }
+
+  testWidgets('clear weather draws no overlay or particles', (tester) async {
+    _sprites = (await tester.runAsync(SceneSprites.load))!;
+    final c = (await tester.runAsync(_controller))!;
+    await _show(tester, c, weather: WeatherState());
+    final layer = (_painter(tester)).weather as WeatherLayer;
+    expect(layer.active, isFalse);
+    final blank = await _render(tester, WeatherView(Weather.clear), 0);
+    expect(blank.every((b) => b == 0), isTrue);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('override wins over the live weather', (tester) async {
+    _sprites = (await tester.runAsync(SceneSprites.load))!;
+    final c = (await tester.runAsync(_controller))!;
+    final state = WeatherState()..live = Weather.rain;
+    await _show(tester, c, weather: state);
+    Weather shown() => (_painter(tester).weather as WeatherLayer).view.to;
+    expect(shown(), Weather.rain);
+    state.override = Weather.clear;
+    await tester.pump();
+    expect(shown(), Weather.clear);
+    state.live = Weather.storm;
+    await tester.pump();
+    expect(shown(), Weather.clear);
+    state.override = null;
+    await tester.pump();
+    expect(shown(), Weather.storm);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('particles stay still without motion and move with it', (
+    tester,
+  ) async {
+    for (final w in [Weather.cloudy, Weather.rain, Weather.storm]) {
+      final view = WeatherView(w);
+      final still = await _render(tester, view, 0);
+      expect(still.any((b) => b != 0), isTrue);
+      expect(await _render(tester, view, 0), still);
+      expect(await _render(tester, view, 1.5), isNot(still));
+    }
+  });
+
+  testWidgets('with animation off the weather frame does not change', (
+    tester,
+  ) async {
+    _sprites = (await tester.runAsync(SceneSprites.load))!;
+    final c = (await tester.runAsync(_controller))!;
+    await _show(tester, c, weather: WeatherState()..override = Weather.storm);
+    Future<List<int>> frame() async => (await tester.runAsync(() async {
+      final boundary =
+          _boundary.currentContext!.findRenderObject()!
+              as RenderRepaintBoundary;
+      final image = await boundary.toImage();
+      return (await image.toByteData())!.buffer.asUint8List().toList();
+    }))!;
+    final first = await frame();
+    await tester.pump(const Duration(seconds: 2));
+    expect(await frame(), first);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('with animation on the rain moves', (tester) async {
+    _sprites = (await tester.runAsync(SceneSprites.load))!;
+    final c = (await tester.runAsync(_controller))!;
+    await _show(
+      tester,
+      c,
+      animate: true,
+      weather: WeatherState()..override = Weather.rain,
+    );
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    final layer = _painter(tester).weather as WeatherLayer;
+    expect(layer.active, isTrue);
+    final state = _state(tester);
+    expect(state.clock, greaterThan(0.3));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('changing the weather cross-fades', (tester) async {
+    _sprites = (await tester.runAsync(SceneSprites.load))!;
+    final c = (await tester.runAsync(_controller))!;
+    final state = WeatherState();
+    await _show(tester, c, animate: true, weather: state);
+    final view = (_painter(tester).weather as WeatherLayer).view;
+    state.override = Weather.rain;
+    await tester.pump();
+    expect(view.from, Weather.clear);
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(view.fade, inInclusiveRange(0.2, 0.9));
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(view.from, isNull);
+    expect(view.to, Weather.rain);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('the developer tools set the weather override', (tester) async {
+    final state = WeatherState()..live = Weather.cloudy;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: wildTheme(),
+        home: DevToolsPage(
+          weather: state,
+          onBack: () {},
+          onFakeRun: () async => '',
+          onFakeSleep: () async => '',
+        ),
+      ),
+    );
+    expect(find.text('live: cloudy, showing: cloudy'), findsOneWidget);
+    for (final w in Weather.values) {
+      await tester.tap(
+        find.text('${w.name[0].toUpperCase()}${w.name.substring(1)}'),
+      );
+      await tester.pump();
+      expect(state.override, w);
+      expect(state.value, w);
+    }
+    await tester.tap(find.text('Rain'));
+    await tester.pump();
+    expect(find.text('live: cloudy, showing: rain'), findsOneWidget);
+    await tester.tap(find.text('Auto'));
+    await tester.pump();
+    expect(state.override, isNull);
+    expect(state.value, Weather.cloudy);
   });
 
   testWidgets('scene with three bushes waiting', (tester) async {
