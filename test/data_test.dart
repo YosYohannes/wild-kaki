@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wildkaki/animals/animals.dart';
-import 'package:wildkaki/animals/rules.dart';
+import 'package:wildkaki/animals/holidays.dart';
+import 'package:wildkaki/animals/lookup.dart';
+import 'package:wildkaki/animals/picker.dart';
 import 'package:wildkaki/data/controller.dart';
 import 'package:wildkaki/data/health_sync.dart';
 import 'package:wildkaki/data/model.dart';
@@ -177,30 +178,36 @@ void main() {
       expect(store.prefsState().miles, isFalse);
     });
 
-    test('legacy sightings become foxes and legacy opened is migrated', () async {
+    test('legacy sightings read as red foxes without a hat', () async {
       final store = await newStore(
         initial: {
           'sightings':
               '[{"id":"n","kind":"Swim","start":4,"minutes":30},'
-              '{"id":"m","kind":"Run","start":5,"minutes":30,"animal":"duck"}]',
+              '{"id":"m","kind":"Run","start":5,"minutes":30,"animal":"Fox"},'
+              '{"id":"o","kind":"Run","start":6,"minutes":30,"animal":"fox"},'
+              '{"id":"p","kind":"Run","start":7,"minutes":30,"animal":"dragon"}]',
           'opened': ['Fox'],
         },
       );
       final home = store.home();
-      expect(home.sightings.map((s) => s.animal), ['fox', 'duck']);
-      expect(home.opened, {'fox'});
+      expect(home.sightings.map((s) => s.animal), everyElement('red-fox'));
+      expect(home.sightings.map((s) => s.hat), everyElement(isNull));
+      expect(home.opened, {'red-fox'});
     });
 
-    test('the animal id of a sighting survives a round trip', () async {
+    test('an entry id and a hat survive a round trip', () async {
       final store = await newStore();
-      await store.addWaiting([outing('a', 1), outing('b', 2)]);
-      await store.reveal(outing('a', 1), 'duck');
-      await store.reveal(outing('b', 2), 'fox');
+      await store.addWaiting([outing('a', 1), outing('b', 2), outing('c', 3)]);
+      await store.reveal(outing('a', 1), 'tabby');
+      await store.reveal(outing('b', 2), 'black-cat', hat: 'beanie');
+      await store.reveal(outing('c', 3), 'red-fox', hat: 'sombrero');
       final reread = WildStore(
         await SharedPreferences.getInstance(),
         systemAnimate: true,
       );
-      expect(reread.home().sightings.map((s) => s.animal), ['fox', 'duck']);
+      final sightings = reread.home().sightings;
+      expect(sightings.map((s) => s.animal), ['red-fox', 'black-cat', 'tabby']);
+      expect(sightings.map((s) => s.hat), ['sombrero', 'beanie', null]);
     });
 
     test('kind survives a round trip', () async {
@@ -231,11 +238,11 @@ void main() {
     test('reveal moves waiting to sightings, newest first, and is not re-added by a later sync', () async {
       final store = await newStore();
       await store.addWaiting([outing('a', 1), outing('b', 2), outing('c', 3)]);
-      await store.reveal(outing('a', 1), 'fox');
+      await store.reveal(outing('a', 1), 'red-fox');
       final home = await store.reveal(outing('c', 3), 'duck');
       expect(home.waiting.map((o) => o.id), ['b']);
       expect(home.sightings.map((s) => s.outing.id), ['c', 'a']);
-      expect(home.sightings.map((s) => s.animal), ['duck', 'fox']);
+      expect(home.sightings.map((s) => s.animal), ['duck', 'red-fox']);
       final after = await store.addWaiting([
         outing('a', 1),
         outing('c', 3),
@@ -247,9 +254,9 @@ void main() {
 
     test('markOpened is remembered once per animal', () async {
       final store = await newStore();
-      await store.markOpened('fox');
-      final home = await store.markOpened('fox');
-      expect(home.opened, {'fox'});
+      await store.markOpened('tabby');
+      final home = await store.markOpened('tabby');
+      expect(home.opened, {'tabby'});
     });
 
     test(
@@ -258,8 +265,8 @@ void main() {
         final later = t0.add(const Duration(days: 2));
         final store = await newStore();
         await store.addWaiting([outing('a', 1), outing('b', 2)]);
-        await store.reveal(outing('a', 1), 'fox');
-        await store.markOpened('fox');
+        await store.reveal(outing('a', 1), 'red-fox', hat: 'beanie');
+        await store.markOpened('red-fox');
         await store.savePrefs(
           const Prefs(miles: true, animate: false, sound: false),
         );
@@ -314,24 +321,20 @@ void main() {
       expected.forEach((type, kind) => expect(kindForExercise(type), kind));
     });
 
-    test('arrivalPhrase reads naturally for every kind', () {
-      final fox = animalById('fox');
-      expect(arrivalPhrase(fox, 'Run'), 'joined your run');
-      expect(arrivalPhrase(fox, 'Walk'), 'joined your walk');
-      expect(arrivalPhrase(fox, 'Hike'), 'joined your hike');
-      expect(arrivalPhrase(fox, 'Ride'), 'joined your ride');
-      expect(arrivalPhrase(fox, 'Swim'), 'joined your swim');
-      expect(arrivalPhrase(fox, 'Climb'), 'joined your climb');
-      expect(arrivalPhrase(fox, 'Workout'), 'joined your workout');
-      expect(arrivalPhrase(fox, 'Yoga'), 'joined your yoga session');
-      expect(arrivalPhrase(fox, 'Sleep'), 'watched over your sleep');
+    test('arrivalLine reads naturally for every kind', () {
+      final fox = entryOrDefault('red-fox').base;
+      expect(arrivalLine(fox, 'Run'), 'joined your run');
+      expect(arrivalLine(fox, 'Walk'), 'joined your walk');
+      expect(arrivalLine(fox, 'Hike'), 'joined your hike');
+      expect(arrivalLine(fox, 'Ride'), 'joined your ride');
+      expect(arrivalLine(fox, 'Swim'), 'joined your swim');
+      expect(arrivalLine(fox, 'Climb'), 'joined your climb');
+      expect(arrivalLine(fox, 'Workout'), 'joined your workout');
+      expect(arrivalLine(fox, 'Yoga'), 'joined your yoga session');
+      expect(arrivalLine(fox, 'Sleep'), 'watched over your sleep');
       expect(
-        arrivalPhrase(animalById('duck'), 'Run'),
-        'paddled along on your run',
-      );
-      expect(
-        arrivalPhrase(animalById('duck'), 'Sleep'),
-        'watched over your sleep',
+        arrivalLine(entryOrDefault('shiba').base, 'Walk'),
+        'trotted along on your walk',
       );
     });
 
@@ -407,12 +410,14 @@ void main() {
       Map<String, Object> initial = const {},
       DateTime? now,
       DateTime Function()? clock,
+      HolidayProvider? holidays,
     }) async {
       final store = await newStore(initial: initial, now: now, clock: clock);
       return WildController.create(
         systemAnimate: true,
         source: source,
         store: store,
+        holidays: holidays ?? const NoHolidays(),
       );
     }
 
@@ -518,12 +523,13 @@ void main() {
       var now = t0;
       final c = await make(clock: () => now);
       await c.refresh();
+      final pick = c.previewPick(c.home.waiting.first);
       await c.reveal(c.home.waiting.first);
-      expect(c.home.sightings.single.animal, animalIdFor(outing('a', 1)));
-      await c.markOpened('fox');
+      expect(c.home.sightings.single.animal, pick.entryId);
+      await c.markOpened(pick.entryId);
       expect(c.home.waiting.map((o) => o.id), ['b']);
       expect(c.home.sightings.map((s) => s.outing.id), ['a']);
-      expect(c.home.opened, {'fox'});
+      expect(c.home.opened, {pick.entryId});
       now = t0.add(const Duration(days: 1));
       await c.startOver();
       expect(c.home.waiting, isEmpty);
@@ -531,6 +537,81 @@ void main() {
       expect(c.home.opened, isEmpty);
       await c.refresh();
       expect(c.home.waiting, isEmpty);
+    });
+
+    test('reveal stores exactly the previewed pick', () async {
+      source.outings = [for (var i = 1; i <= 6; i++) outing('o$i', i)];
+      final c = await make();
+      await c.refresh();
+      for (final o in List.of(c.home.waiting)) {
+        final pick = c.previewPick(o);
+        expect(c.previewPick(o), pick);
+        await c.reveal(o);
+        final stored = c.home.sightings.firstWhere((s) => s.outing.id == o.id);
+        expect(stored.animal, pick.entryId);
+        expect(stored.hat, pick.hatId);
+      }
+    });
+
+    test('a hat is stored on a day off and not on a weekday', () async {
+      final saturday = DateTime(2026, 10, 3, 9);
+      final weekday = DateTime(2026, 10, 2, 9);
+      Outing at(String id, DateTime start) =>
+          Outing(id: id, kind: 'Run', start: start, distanceKm: 5, minutes: 30);
+      source.outings = [at('sat', saturday), at('fri', weekday)];
+      final c = await make(holidays: const NoHolidays());
+      await c.refresh();
+      await c.reveal(at('sat', saturday));
+      await c.reveal(at('fri', weekday));
+      Sighting of(String id) =>
+          c.home.sightings.firstWhere((s) => s.outing.id == id);
+      expect(of('sat').hat, isNotNull);
+      expect(hatById(of('sat').hat), isNotNull);
+      expect(of('fri').hat, isNull);
+    });
+
+    test('a public holiday on a weekday also earns a hat', () async {
+      final friday = DateTime(2026, 10, 2, 9);
+      final o = Outing(
+        id: 'h',
+        kind: 'Run',
+        start: friday,
+        distanceKm: 5,
+        minutes: 30,
+      );
+      source.outings = [o];
+      final c = await make(holidays: DateListHolidays(['2026-10-02']));
+      await c.refresh();
+      await c.reveal(o);
+      expect(c.home.sightings.single.hat, isNotNull);
+    });
+
+    test('revealed animals count as met for the next pick', () async {
+      source.outings = [outing('a', 1), outing('b', 2)];
+      final c = await make();
+      await c.refresh();
+      await c.reveal(c.home.waiting.first);
+      final met = {for (final s in c.home.sightings) s.animal};
+      expect(met, hasLength(1));
+      final next = outing('b', 2);
+      expect(
+        c.previewPick(next),
+        pickAnimal(activity: next, met: met, holidays: const NoHolidays()),
+      );
+      final metChangesSomePick = [for (var i = 0; i < 300; i++) 'x$i'].any(
+        (id) =>
+            pickAnimal(
+              activity: outing(id, 1),
+              met: met,
+              holidays: const NoHolidays(),
+            ) !=
+            pickAnimal(
+              activity: outing(id, 1),
+              met: const {},
+              holidays: const NoHolidays(),
+            ),
+      );
+      expect(metChangesSomePick, isTrue);
     });
 
     test('updatePrefs persists', () async {

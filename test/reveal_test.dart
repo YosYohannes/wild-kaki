@@ -5,14 +5,14 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wildkaki/animals/animals.dart';
+import 'package:wildkaki/animals/lookup.dart';
 import 'package:wildkaki/data/model.dart';
 import 'package:wildkaki/ui/reveal.dart';
 import 'package:wildkaki/world/world_painter.dart';
 
 const _shots =
     '/tmp/claude-1000/-home-yos-Desktop-wild-kaki/b522a0f8-ab30-4973-b0c2-dccd1164ca20/scratchpad';
-const _sprites = ['bush', 'bush_blink', 'fox_walk_1', 'fox_walk_2', 'duck'];
+const _sprites = ['bush', 'bush_blink', 'stub_fox_1', 'stub_fox_2', 'stub_hat'];
 
 final _outing = Outing(
   id: 'o1',
@@ -22,12 +22,16 @@ final _outing = Outing(
   minutes: 22,
 );
 
+String _arrival(String entryId, String kind) =>
+    arrivalLine(entryOrDefault(entryId).base, kind);
+
 final _now = DateTime(2026, 10, 29, 10);
 final _key = GlobalKey();
 
 Widget _host({
   required Outing outing,
-  String animal = 'fox',
+  String entryId = 'red-fox',
+  String? hatId,
   bool first = true,
   bool animate = true,
   VoidCallback? onClose,
@@ -45,7 +49,8 @@ Widget _host({
           Positioned.fill(
             child: RevealOverlay(
               outing: outing,
-              animal: animalById(animal),
+              entry: entryOrDefault(entryId),
+              hatId: hatId,
               first: first,
               timesMet: timesMet,
               miles: miles,
@@ -120,17 +125,17 @@ void main() {
 
     await _at(tester, 2600, from: 2100);
     expect(find.bySemanticsLabel('Close'), findsNothing);
-    expect(find.text('joined your run'), findsNothing);
+    expect(find.text(_arrival('red-fox', 'Run')), findsNothing);
 
     await _at(tester, 2800, from: 2600);
-    expect(find.text('F'), findsOneWidget);
+    expect(find.text('R'), findsOneWidget);
     expect(find.bySemanticsLabel('Close'), findsOneWidget);
 
-    await _at(tester, 3200, from: 2800);
-    expect(find.text('Fox'), findsOneWidget);
-    expect(find.text('joined your run'), findsOneWidget);
+    await _at(tester, 3700, from: 2800);
+    expect(find.text('Red fox'), findsOneWidget);
+    expect(find.text(_arrival('red-fox', 'Run')), findsOneWidget);
     expect(find.text('Run · 3.6 km · 22 min · this morning'), findsOneWidget);
-    expect(find.text(animalById('fox').note), findsOneWidget);
+    expect(find.text(entryNote(entryOrDefault('red-fox'))), findsOneWidget);
     await _shot(tester, '4_text');
   });
 
@@ -201,9 +206,9 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.text('Fox'), findsOneWidget);
+    expect(find.text('Red fox'), findsOneWidget);
     expect(find.bySemanticsLabel('Close'), findsOneWidget);
-    expect(find.text(animalById('fox').note), findsOneWidget);
+    expect(find.text(entryNote(entryOrDefault('red-fox'))), findsOneWidget);
 
     await tester.tap(find.bySemanticsLabel('Close'));
     await tester.pump();
@@ -233,17 +238,58 @@ void main() {
   testWidgets('a duck arrives with its own name, heading and bubble', (
     tester,
   ) async {
-    await _pumpHost(tester, _host(outing: _outing, animal: 'duck'));
+    await _pumpHost(tester, _host(outing: _outing, entryId: 'duck'));
     await tester.pump(Duration.zero);
     await tester.pump(const Duration(milliseconds: 3600));
     expect(find.text('Duck'), findsOneWidget);
     expect(find.text('paddled along on your run'), findsOneWidget);
-    expect(find.text(animalById('duck').note), findsOneWidget);
+    expect(find.text(entryNote(entryOrDefault('duck'))), findsOneWidget);
     await _shot(tester, 'duck');
 
     await tester.tap(find.bySemanticsLabel('Close'));
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('quack!'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 6));
+  });
+
+  testWidgets('a hat sits on the animal in the hop, the card and the run-off', (
+    tester,
+  ) async {
+    final hat = find.image(const AssetImage('assets/sprites/stub_hat.png'));
+    await _pumpHost(tester, _host(outing: _outing, hatId: 'party-hat'));
+    await tester.pump(Duration.zero);
+
+    await tester.pump(const Duration(milliseconds: 1200));
+    expect(hat, findsOneWidget);
+    await _shot(tester, 'hat_hop');
+
+    await tester.pump(const Duration(milliseconds: 2400));
+    expect(hat, findsWidgets);
+    await _shot(tester, 'hat_card');
+
+    await tester.tap(find.bySemanticsLabel('Close'));
+    await tester.pump(const Duration(milliseconds: 1000));
+    expect(hat, findsWidgets);
+    await _shot(tester, 'hat_walk');
+    await tester.pump(const Duration(seconds: 6));
+  });
+
+  testWidgets('no hat is drawn when none was picked', (tester) async {
+    await _pumpHost(tester, _host(outing: _outing, animate: false));
+    await tester.pump();
+    expect(
+      find.image(const AssetImage('assets/sprites/stub_hat.png')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('the run-off bubble is the base bubble', (tester) async {
+    await _pumpHost(tester, _host(outing: _outing));
+    await tester.pump(Duration.zero);
+    await tester.pump(const Duration(milliseconds: 3600));
+    await tester.tap(find.bySemanticsLabel('Close'));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text(entryOrDefault('red-fox').base.bubble), findsOneWidget);
     await tester.pump(const Duration(seconds: 6));
   });
 
@@ -261,7 +307,7 @@ void main() {
     );
     await tester.pump();
     expect(find.text('Walk · 1.2 mi · 30 min · yesterday'), findsOneWidget);
-    expect(find.text('joined your walk'), findsOneWidget);
+    expect(find.text(_arrival('red-fox', 'Walk')), findsOneWidget);
 
     final old = Outing(
       id: 'o3',

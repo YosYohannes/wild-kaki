@@ -1,4 +1,4 @@
-import '../animals/animal.dart';
+import '../animals/catalog.dart' show Base;
 
 const sleepKind = 'Sleep';
 
@@ -16,9 +16,9 @@ String kindForExercise(int exerciseType) => switch (exerciseType) {
 String activityWord(String kind) =>
     kind == 'Yoga' ? 'yoga session' : kind.toLowerCase();
 
-String arrivalPhrase(Animal animal, String kind) => kind == sleepKind
+String arrivalLine(Base base, String kind) => kind == sleepKind
     ? 'watched over your sleep'
-    : animal.arrivalFor(activityWord(kind));
+    : base.arrivalFor(activityWord(kind));
 
 class Outing {
   const Outing({
@@ -39,10 +39,11 @@ class Outing {
 }
 
 class Sighting {
-  const Sighting(this.outing, this.animal);
+  const Sighting(this.outing, this.animal, {this.hat});
 
   final Outing outing;
   final String animal;
+  final String? hat;
 }
 
 class HomeState {

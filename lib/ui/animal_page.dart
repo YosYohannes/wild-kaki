@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../animals/animal.dart';
+import '../animals/lookup.dart';
 import '../data/model.dart';
 import 'theme.dart';
 
@@ -28,13 +28,13 @@ String meetingWhen(DateTime t) {
 class AnimalPage extends StatefulWidget {
   const AnimalPage({
     super.key,
-    required this.animal,
+    required this.entry,
     required this.meetings,
     required this.miles,
     required this.onClose,
   });
 
-  final Animal animal;
+  final AnimalEntry entry;
   final List<Sighting> meetings;
   final bool miles;
   final VoidCallback onClose;
@@ -68,7 +68,7 @@ class _AnimalPageState extends State<AnimalPage>
 
   @override
   Widget build(BuildContext context) {
-    final frames = widget.animal.frames;
+    final frames = widget.entry.base.frames;
     final meetings = [...widget.meetings]
       ..sort((a, b) => b.outing.start.compareTo(a.outing.start));
     final count = meetings.length;
@@ -116,7 +116,7 @@ class _AnimalPageState extends State<AnimalPage>
                     Padding(
                       padding: const EdgeInsets.only(top: 14, bottom: 6),
                       child: Text(
-                        widget.animal.name,
+                        widget.entry.name,
                         style: pixelText(
                           32,
                           color: Wild.forest,
@@ -126,7 +126,7 @@ class _AnimalPageState extends State<AnimalPage>
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 36),
                       child: Text(
-                        widget.animal.note,
+                        entryNote(widget.entry),
                         textAlign: TextAlign.center,
                         style: bodyText(15, italic: true),
                       ),

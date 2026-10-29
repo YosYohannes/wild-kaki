@@ -2,14 +2,16 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
 
+import '../animals/catalog_data.dart';
+
 class SceneSprites {
   SceneSprites._({
     required this.bench,
     required this.lamppost,
     required this.bush,
     required this.bushBlink,
-    required this.foxRight,
-    required this.foxLeft,
+    required this.right,
+    required this.left,
     required this.birdRight,
     required this.birdLeft,
     required this.duckRight,
@@ -20,12 +22,15 @@ class SceneSprites {
   final ui.Image lamppost;
   final ui.Image bush;
   final ui.Image bushBlink;
-  final List<ui.Image> foxRight;
-  final List<ui.Image> foxLeft;
   final List<ui.Image> birdRight;
   final List<ui.Image> birdLeft;
   final ui.Image duckRight;
   final ui.Image duckLeft;
+  final Map<String, ui.Image> right;
+  final Map<String, ui.Image> left;
+
+  ui.Image named(String name, {bool mirrored = false}) =>
+      (mirrored ? left : right)[name]!;
 
   static Future<ui.Image> _load(String name) async {
     final data = await rootBundle.load('assets/sprites/$name.png');
@@ -52,7 +57,11 @@ class SceneSprites {
   }
 
   static Future<SceneSprites> load() async {
-    final foxRight = [await _load('fox_walk_1'), await _load('fox_walk_2')];
+    final names = {
+      for (final b in defaultCatalog.bases) ...b.frames,
+      for (final h in defaultCatalog.hats) h.sprite,
+    };
+    final right = {for (final n in names) n: await _load(n)};
     final birdRight = [await _load('bird_1'), await _load('bird_2')];
     final duckRight = await _load('duck');
     return SceneSprites._(
@@ -60,8 +69,8 @@ class SceneSprites {
       lamppost: await _load('lamppost'),
       bush: await _load('bush'),
       bushBlink: await _load('bush_blink'),
-      foxRight: foxRight,
-      foxLeft: [for (final i in foxRight) await _mirrored(i)],
+      right: right,
+      left: {for (final e in right.entries) e.key: await _mirrored(e.value)},
       birdRight: birdRight,
       birdLeft: [for (final i in birdRight) await _mirrored(i)],
       duckRight: duckRight,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../animals/animal.dart';
-import '../animals/animals.dart';
+import '../animals/lookup.dart';
 import '../data/model.dart';
 import 'theme.dart';
 
@@ -19,18 +18,18 @@ class CollectionPage extends StatelessWidget {
   final Set<String> opened;
   final VoidCallback onSettings;
   final VoidCallback onClose;
-  final void Function(String animal) onOpen;
+  final void Function(String entryId) onOpen;
 
   @override
   Widget build(BuildContext context) {
     final met = {for (final s in sightings) s.animal};
     final cells = <Widget>[
-      for (final animal in animals)
+      for (final entry in animalEntries)
         _Cell(
-          animal: animal,
-          found: met.contains(animal.id),
-          isNew: met.contains(animal.id) && !opened.contains(animal.id),
-          onTap: () => onOpen(animal.id),
+          entry: entry,
+          found: met.contains(entry.id),
+          isNew: met.contains(entry.id) && !opened.contains(entry.id),
+          onTap: () => onOpen(entry.id),
         ),
     ];
     final bottom = MediaQuery.paddingOf(context).bottom;
@@ -60,23 +59,23 @@ class CollectionPage extends StatelessWidget {
 
 class _Cell extends StatelessWidget {
   const _Cell({
-    required this.animal,
+    required this.entry,
     required this.found,
     required this.isNew,
     this.onTap,
   });
 
-  final Animal animal;
+  final AnimalEntry entry;
   final bool found;
   final bool isNew;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final name = found ? animal.name : '???';
+    final name = found ? entry.name : '???';
     final sprite = found
         ? Image.asset(
-            'assets/sprites/${animal.frames.first}.png',
+            'assets/sprites/${entry.base.frames[0]}.png',
             width: 96,
             height: 96,
             fit: BoxFit.fill,

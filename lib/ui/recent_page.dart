@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/model.dart';
+import '../animals/lookup.dart';
 import 'animal_page.dart';
 import 'theme.dart';
 
@@ -82,7 +83,7 @@ class _OutingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final sprite = animal == null
         ? 'assets/sprites/bush.png'
-        : 'assets/sprites/${animal!.toLowerCase()}_walk_1.png';
+        : 'assets/sprites/${entryOrDefault(animal!).base.frames.first}.png';
     return Column(
       children: [
         DottedRule(color: Wild.bark.withValues(alpha: 0.35)),

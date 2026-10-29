@@ -1,20 +1,32 @@
 import 'dart:math';
 
+import '../animals/lookup.dart';
 import '../world/pixel_buffer.dart';
 import '../world/world_painter.dart';
 
 const int maxFoxes = 6;
 
+typedef MeadowAnimal = ({String entryId, String? hatId});
+
 class Fox {
-  Fox(this.x, this.refFeet, this.dir, {Random? random, Layout? layout})
-    : feet = (layout ?? Layout.reference).y(refFeet),
-      _random = random ?? Random() {
+  Fox(
+    this.x,
+    this.refFeet,
+    this.dir, {
+    this.entryId = defaultEntryId,
+    this.hatId,
+    Random? random,
+    Layout? layout,
+  }) : feet = (layout ?? Layout.reference).y(refFeet),
+       _random = random ?? Random() {
     t = _random.nextDouble() * 3;
     _left = 1 + _random.nextDouble() * 3;
     _speed = 9 + _random.nextDouble() * 4;
   }
 
   final Random _random;
+  final String entryId;
+  final String? hatId;
   double x;
   final int refFeet;
   int feet;
@@ -215,15 +227,17 @@ Map<String, int> assignBushSlots(List<String> ids, Map<String, int> current) {
 }
 
 class SceneState {
-  SceneState(int foxCount, {Random? random, Layout? layout})
+  SceneState(List<MeadowAnimal> animals, {Random? random, Layout? layout})
     : _random = random ?? Random(),
       _layout = layout ?? Layout.reference {
     foxes = [
-      for (var i = 0; i < min(foxCount, maxFoxes); i++)
+      for (final a in animals.take(maxFoxes))
         Fox(
           _random.nextDouble() * (worldW - 30.0),
           214 + _random.nextInt(22),
           _random.nextBool() ? 1 : -1,
+          entryId: a.entryId,
+          hatId: a.hatId,
           random: _random,
           layout: _layout,
         ),
@@ -280,13 +294,15 @@ class SceneState {
     }
   }
 
-  void addFox(double x) {
+  void addFox(double x, MeadowAnimal animal) {
     if (foxes.length >= maxFoxes) return;
     foxes.add(
       Fox(
         x,
         214 + _random.nextInt(22),
         x > 60 ? -1 : 1,
+        entryId: animal.entryId,
+        hatId: animal.hatId,
         random: _random,
         layout: _layout,
       ),

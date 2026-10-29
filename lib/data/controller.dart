@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 
-import '../animals/rules.dart';
+import '../animals/holidays.dart';
+import '../animals/picker.dart';
 import 'health_sync.dart';
 import 'model.dart';
 import 'store.dart';
 
 class WildController extends ChangeNotifier {
-  WildController(this._store, this._source) {
+  WildController(this._store, this._source, {HolidayProvider? holidays})
+    : _holidays = holidays ?? holidaysForPhone() {
     _home = _store.home();
     _prefs = _store.prefsState();
   }
@@ -15,10 +17,12 @@ class WildController extends ChangeNotifier {
     required bool systemAnimate,
     OutingSource? source,
     WildStore? store,
+    HolidayProvider? holidays,
   }) async {
     final controller = WildController(
       store ?? await WildStore.open(systemAnimate: systemAnimate),
       source ?? HealthConnectSource(),
+      holidays: holidays,
     );
     await controller._checkStatus();
     return controller;
@@ -26,6 +30,7 @@ class WildController extends ChangeNotifier {
 
   final WildStore _store;
   final OutingSource _source;
+  final HolidayProvider _holidays;
   late HomeState _home;
   late Prefs _prefs;
   SourceStatus _status = SourceStatus.missing;
@@ -99,13 +104,20 @@ class WildController extends ChangeNotifier {
     _home = await _store.addWaiting(counted);
   }
 
+  Pick previewPick(Outing outing) => pickAnimal(
+    activity: outing,
+    met: {for (final s in _home.sightings) s.animal},
+    holidays: _holidays,
+  );
+
   Future<void> reveal(Outing o) async {
-    _home = await _store.reveal(o, animalIdFor(o));
+    final pick = previewPick(o);
+    _home = await _store.reveal(o, pick.entryId, hat: pick.hatId);
     notifyListeners();
   }
 
-  Future<void> markOpened(String animal) async {
-    _home = await _store.markOpened(animal);
+  Future<void> markOpened(String entryId) async {
+    _home = await _store.markOpened(entryId);
     notifyListeners();
   }
 

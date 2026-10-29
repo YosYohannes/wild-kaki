@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
-import '../animals/animal.dart';
+import '../animals/lookup.dart';
 import '../data/model.dart';
 import '../world/world_painter.dart';
 import 'pixel_icon.dart';
@@ -150,7 +150,8 @@ class RevealOverlay extends StatefulWidget {
   const RevealOverlay({
     super.key,
     required this.outing,
-    required this.animal,
+    required this.entry,
+    required this.hatId,
     required this.first,
     required this.timesMet,
     required this.miles,
@@ -164,7 +165,8 @@ class RevealOverlay extends StatefulWidget {
   });
 
   final Outing outing;
-  final Animal animal;
+  final AnimalEntry entry;
+  final String? hatId;
   final bool first;
   final int timesMet;
   final bool miles;
@@ -242,7 +244,7 @@ class _RevealOverlayState extends State<RevealOverlay>
   double _stepped(double f) => (f.clamp(0.0, 0.999999) * 9).floor() / 9;
 
   int _typed() {
-    final n = widget.animal.name.length;
+    final n = widget.entry.name.length;
     if (!widget.animate) return n;
     return ((_intro - _textAt) ~/ _typeMs).clamp(0, n);
   }
@@ -393,16 +395,16 @@ class _RevealOverlayState extends State<RevealOverlay>
         border: Border.all(color: _outline, width: s * 0.8),
       ),
       child: Text(
-        widget.animal.reaction.bubble,
+        widget.entry.base.bubble,
         style: _text(s * 4.2, _ink, weight: FontWeight.w600),
       ),
     );
   }
 
-  Widget _image(String name, Color? tint) {
+  Widget _image(String name, Color? tint, {bool natural = false}) {
     Widget img = Image.asset(
       'assets/sprites/$name.png',
-      fit: BoxFit.fill,
+      fit: natural ? BoxFit.none : BoxFit.fill,
       filterQuality: FilterQuality.none,
       isAntiAlias: false,
       gaplessPlayback: true,
@@ -417,20 +419,50 @@ class _RevealOverlayState extends State<RevealOverlay>
   }
 
   Widget _fox(int frame, double wipe) {
-    final frames = widget.animal.frames;
-    final name = frames[frame % frames.length];
+    final base = widget.entry.base;
+    final name = base.frames[frame % base.frames.length];
+    final head = base.headPoints[frame % base.headPoints.length];
+    final hat = hatById(widget.hatId);
+
+    Widget layer(Color? tint) => Stack(
+      fit: StackFit.expand,
+      children: [
+        _image(name, tint),
+        if (hat != null)
+          FittedBox(
+            fit: BoxFit.fill,
+            child: SizedBox(
+              width: 32,
+              height: 32,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    left: head.x.toDouble(),
+                    top: head.y.toDouble(),
+                    child: FractionalTranslation(
+                      translation: const Offset(-0.5, -1),
+                      child: _image(hat.sprite, tint, natural: true),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+
     return Stack(
       fit: StackFit.expand,
       children: [
-        _image(name, _silhouette),
-        if (wipe > 0)
-          ClipRect(clipper: _FeetUp(wipe), child: _image(name, null)),
+        layer(_silhouette),
+        if (wipe > 0) ClipRect(clipper: _FeetUp(wipe), child: layer(null)),
       ],
     );
   }
 
   Widget _block() {
-    final name = widget.animal.name;
+    final name = widget.entry.name;
     final typed = _typed();
     final when = _whenLabel(widget.outing.start, widget.now ?? DateTime.now());
     final meta = '${outingMeta(widget.outing, miles: widget.miles)} · $when';
@@ -463,7 +495,7 @@ class _RevealOverlayState extends State<RevealOverlay>
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    arrivalPhrase(widget.animal, widget.outing.kind),
+                    arrivalLine(widget.entry.base, widget.outing.kind),
                     style: _bodyText(16, _bark),
                   ),
                   const SizedBox(height: 10),
@@ -476,7 +508,7 @@ class _RevealOverlayState extends State<RevealOverlay>
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 232),
                     child: Text(
-                      widget.animal.note,
+                      entryNote(widget.entry),
                       style: _bodyText(15, _ink, italic: true),
                       textAlign: TextAlign.center,
                     ),

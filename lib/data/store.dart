@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../animals/lookup.dart';
 import 'model.dart';
 
 class WildStore {
@@ -45,7 +46,7 @@ class WildStore {
     waiting: _readOutings(_waitingKey),
     sightings: _readSightings(),
     opened: (_prefs.getStringList(_openedKey) ?? const <String>[])
-        .map((id) => id == 'Fox' ? 'fox' : id)
+        .map(legacyEntryId)
         .toSet(),
     lastSynced: _prefs
         .getInt(_syncedKey)
@@ -67,23 +68,23 @@ class WildStore {
     return home();
   }
 
-  Future<HomeState> reveal(Outing outing, String animal) async {
+  Future<HomeState> reveal(Outing outing, String animal, {String? hat}) async {
     final waiting = _readOutings(_waitingKey)
         .where((o) => o.id != outing.id)
         .toList();
     final sightings = _readSightings()
       ..removeWhere((s) => s.outing.id == outing.id)
-      ..add(Sighting(outing, animal))
+      ..add(Sighting(outing, animal, hat: hat))
       ..sort((a, b) => b.outing.start.compareTo(a.outing.start));
     await _prefs.setString(_waitingKey, _write(waiting));
     await _prefs.setString(_sightingsKey, _writeSightings(sightings));
     return home();
   }
 
-  Future<HomeState> markOpened(String animal) async {
+  Future<HomeState> markOpened(String entryId) async {
     final opened = {
       ..._prefs.getStringList(_openedKey) ?? const <String>[],
-      animal,
+      entryId,
     };
     await _prefs.setStringList(_openedKey, opened.toList());
     return home();
@@ -122,7 +123,11 @@ class WildStore {
 
   List<Sighting> _readSightings() => [
     for (final o in _readMaps(_sightingsKey))
-      Sighting(_outingFrom(o), (o['animal'] as String?) ?? 'fox'),
+      Sighting(
+        _outingFrom(o),
+        legacyEntryId((o['animal'] as String?) ?? ''),
+        hat: o['hat'] as String?,
+      ),
   ];
 
   List<Map<String, dynamic>> _readMaps(String key) {
@@ -151,7 +156,12 @@ class WildStore {
       jsonEncode([for (final o in outings) _outingJson(o)]);
 
   String _writeSightings(List<Sighting> sightings) => jsonEncode([
-    for (final s in sightings) {..._outingJson(s.outing), 'animal': s.animal},
+    for (final s in sightings)
+      {
+        ..._outingJson(s.outing),
+        'animal': s.animal,
+        if (s.hat != null) 'hat': s.hat,
+      },
   ]);
 }
 

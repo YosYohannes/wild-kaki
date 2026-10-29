@@ -177,16 +177,31 @@ def to32(g, outline=True):
     return out
 
 
+STUB_FOX_PAL = {**PAL, "o": "#3a3a3a", "r": "#2a2a2a", "w": "#8a8a8a"}
+STUB_HAT_PAL = {"p": "#e0527a", "q": "#f6eedc", "y": "#e8a23a"}
+
+STUB_HAT = [
+    "...yy...",
+    "...yy...",
+    "..pppp..",
+    "..qqqq..",
+    ".pppppp.",
+    ".qqqqqq.",
+    "pppppppp",
+    "qqqqqqqq",
+]
+
+
 def hex_rgba(c):
     return tuple(int(c[i:i + 2], 16) for i in (1, 3, 5)) + (255,)
 
 
-def save_grid(g, name):
+def save_grid(g, name, pal=PAL):
     im = Image.new("RGBA", (len(g[0]), len(g)), (0, 0, 0, 0))
     for y, row in enumerate(g):
         for x, ch in enumerate(row):
-            if ch in PAL:
-                im.putpixel((x, y), hex_rgba(PAL[ch]))
+            if ch in pal:
+                im.putpixel((x, y), hex_rgba(pal[ch]))
     im.save(OUT / f"{name}.png")
 
 
@@ -232,6 +247,9 @@ if __name__ == "__main__":
     save_grid(to32(bird(1)), "bird_2")
     save_grid(to32(bush(False), outline=False), "bush")
     save_grid(to32(bush(True), outline=False), "bush_blink")
+    save_grid(to32(fox_walk(0)), "stub_fox_1", STUB_FOX_PAL)
+    save_grid(to32(fox_walk(1)), "stub_fox_2", STUB_FOX_PAL)
+    save_grid([list(r) for r in STUB_HAT], "stub_hat", STUB_HAT_PAL)
     bench_box, lamp_box = objects()
     print("bench box (x0, y0, x1, y1):", bench_box)
     print("lamppost box (x0, y0, x1, y1):", lamp_box)

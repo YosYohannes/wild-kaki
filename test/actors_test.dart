@@ -5,6 +5,10 @@ import 'package:wildkaki/scene/actors.dart';
 import 'package:wildkaki/world/pixel_buffer.dart';
 import 'package:wildkaki/world/world_painter.dart';
 
+List<MeadowAnimal> _meadow(int n, {String? hat}) => [
+  for (var i = 0; i < n; i++) (entryId: 'red-fox', hatId: hat),
+];
+
 void main() {
   test('bush slots are fixed, evenly spaced and inside the far bank', () {
     final spots = [for (var i = 0; i < maxBushes; i++) bushAtSlot('b$i', i)];
@@ -83,18 +87,18 @@ void main() {
   });
 
   test('scene caps foxes at six', () {
-    final scene = SceneState(10, random: Random(2));
+    final scene = SceneState(_meadow(10), random: Random(2));
     expect(scene.foxes, hasLength(maxFoxes));
-    scene.addFox(40);
+    scene.addFox(40, _meadow(1).first);
     expect(scene.foxes, hasLength(maxFoxes));
 
-    final small = SceneState(2, random: Random(2));
+    final small = SceneState(_meadow(2), random: Random(2));
     expect(small.foxes, hasLength(2));
-    small.addFox(100);
+    small.addFox(100, _meadow(1).first);
     expect(small.foxes, hasLength(3));
     expect(small.foxes.last.dir, -1);
     for (var i = 0; i < 10; i++) {
-      small.addFox(10);
+      small.addFox(10, _meadow(1).first);
     }
     expect(small.foxes, hasLength(maxFoxes));
     for (final f in small.foxes) {
@@ -102,12 +106,24 @@ void main() {
     }
   });
 
+  test('meadow animals keep their entry and hat', () {
+    final scene = SceneState([
+      (entryId: 'duck', hatId: 'beanie'),
+      (entryId: 'red-fox', hatId: null),
+    ], random: Random(2));
+    expect(scene.foxes.map((f) => f.entryId), ['duck', 'red-fox']);
+    expect(scene.foxes.map((f) => f.hatId), ['beanie', null]);
+    scene.addFox(40, (entryId: 'sparrow', hatId: 'top-hat'));
+    expect(scene.foxes.last.entryId, 'sparrow');
+    expect(scene.foxes.last.hatId, 'top-hat');
+  });
+
   test('foxes and ducks follow the layout when the scene resizes', () {
-    final scene = SceneState(4, random: Random(2));
+    final scene = SceneState(_meadow(4), random: Random(2));
     final lanes = [for (final f in scene.foxes) f.refFeet];
     final short = Layout.forRows(213);
     scene.fit(short);
-    scene.addFox(40);
+    scene.addFox(40, _meadow(1).first);
     for (final f in scene.foxes) {
       expect(f.feet, short.y(f.refFeet));
       expect(f.feet, lessThan(213));
@@ -131,7 +147,7 @@ void main() {
   });
 
   test('scene step advances the clock and only moves actors with motion', () {
-    final scene = SceneState(1, random: Random(9));
+    final scene = SceneState(_meadow(1), random: Random(9));
     final x = scene.foxes.first.x;
     scene.step(0.5, false, 0);
     expect(scene.clock, 0.5);
@@ -175,7 +191,7 @@ void main() {
   });
 
   test('bubbles fade even when motion is off', () {
-    final scene = SceneState(0, random: Random(1));
+    final scene = SceneState(_meadow(0), random: Random(1));
     scene.ducks.first.startle();
     scene.step(2, false, 0);
     expect(scene.ducks.first.bubble, lessThanOrEqualTo(0));

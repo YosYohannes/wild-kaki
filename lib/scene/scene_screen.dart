@@ -6,9 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import '../animals/animal.dart';
-import '../animals/animals.dart';
-import '../animals/rules.dart';
+import '../animals/lookup.dart';
 import '../data/controller.dart';
 import '../data/model.dart';
 import '../ui/animal_page.dart';
@@ -25,19 +23,24 @@ import 'actors.dart';
 import 'sounds.dart';
 import 'sprites.dart';
 
+const _duckReaction = (sound: 'quack', bubble: 'quack!');
+const _birdReaction = (sound: 'tweet', bubble: 'tweet!');
+
 enum _Page { scene, collection, animal, settings, devTools, recent }
 
 class _Revealing {
   const _Revealing(
     this.outing,
-    this.animal,
+    this.entry,
+    this.hatId,
     this.spot,
     this.first,
     this.timesMet,
   );
 
   final Outing outing;
-  final Animal animal;
+  final AnimalEntry entry;
+  final String? hatId;
   final BushSpot? spot;
   final bool first;
   final int timesMet;
@@ -90,7 +93,7 @@ class _SceneScreenState extends State<SceneScreen>
 
   _Page _page = _Page.scene;
   _Page _animalFrom = _Page.collection;
-  String _animalId = animals.first.id;
+  String _animalId = defaultEntryId;
   _Page _settingsFrom = _Page.collection;
   _Revealing? _revealing;
   Map<String, int> _slots = {};
@@ -100,10 +103,13 @@ class _SceneScreenState extends State<SceneScreen>
 
   WildController get _c => widget.controller;
 
-  int _met(String animalId) =>
-      _c.home.sightings.where((s) => s.animal == animalId).length;
+  int _met(String entryId) =>
+      _c.home.sightings.where((s) => s.animal == entryId).length;
 
-  int get _foxCount => _met('fox');
+  List<MeadowAnimal> get _meadow => [
+    for (final s in _c.home.sightings.take(maxFoxes))
+      (entryId: entryOrDefault(s.animal).id, hatId: s.hat),
+  ];
 
   bool get _motion =>
       _c.prefs.animate &&
@@ -114,7 +120,7 @@ class _SceneScreenState extends State<SceneScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _hour = widget.hourOverride ?? currentHour();
-    _world = SceneState(_foxCount, random: widget.random);
+    _world = SceneState(_meadow, random: widget.random);
     _ticker = createTicker(_onTick)..start();
     if (widget.hourOverride == null) {
       _clockTimer = Timer.periodic(
@@ -214,27 +220,27 @@ class _SceneScreenState extends State<SceneScreen>
     if (_page != _Page.scene || _revealing != null) return;
     final px = local.dx / scale;
     final py = local.dy / scale;
-    void react(String animalId) {
-      if (_c.prefs.sound) _sounds.play(animalById(animalId).reaction.sound);
+    void react(String sound) {
+      if (_c.prefs.sound) _sounds.play(sound);
     }
 
     final fox = _world.foxes.where((f) => f.hit(px, py)).firstOrNull;
     if (fox != null) {
       fox.startle();
-      react('fox');
+      react(entryOrDefault(fox.entryId).base.sound);
       return;
     }
     for (final b in _world.birds) {
       if (b.hit(px, py, layout)) {
         b.startle();
-        react('bird');
+        react(_birdReaction.sound);
         return;
       }
     }
     for (final d in _world.ducks) {
       if (d.hit(px, py)) {
         d.startle();
-        react('duck');
+        react(_duckReaction.sound);
         return;
       }
     }
@@ -245,10 +251,18 @@ class _SceneScreenState extends State<SceneScreen>
           py < b.base + 1) {
         final outing = _c.home.waiting.where((o) => o.id == b.id).firstOrNull;
         if (outing == null) return;
-        final animal = animalById(animalIdFor(outing));
-        final met = _met(animal.id);
+        final pick = _c.previewPick(outing);
+        final entry = entryOrDefault(pick.entryId);
+        final met = _met(entry.id);
         setState(
-          () => _revealing = _Revealing(outing, animal, b, met == 0, met + 1),
+          () => _revealing = _Revealing(
+            outing,
+            entry,
+            pick.hatId,
+            b,
+            met == 0,
+            met + 1,
+          ),
         );
         return;
       }
@@ -266,9 +280,12 @@ class _SceneScreenState extends State<SceneScreen>
   }
 
   void _close(_Revealing r) {
-    _world.addFox(r.spot?.x.toDouble() ?? 40);
+    _world.addFox(r.spot?.x.toDouble() ?? 40, (
+      entryId: r.entry.id,
+      hatId: r.hatId,
+    ));
     _c.reveal(r.outing);
-    if (_c.prefs.sound) _sounds.play(r.animal.reaction.sound);
+    if (_c.prefs.sound) _sounds.play(r.entry.base.sound);
   }
 
   Widget _pageFor(_Page page) {
@@ -293,7 +310,7 @@ class _SceneScreenState extends State<SceneScreen>
         );
       case _Page.animal:
         return AnimalPage(
-          animal: animalById(_animalId),
+          entry: entryOrDefault(_animalId),
           meetings: _c.home.sightings
               .where((s) => s.animal == _animalId)
               .toList(),
@@ -309,7 +326,9 @@ class _SceneScreenState extends State<SceneScreen>
           onStartOver: () async {
             await _c.startOver();
             if (mounted) {
-              setState(() => _world = SceneState(0, random: widget.random));
+              setState(
+                () => _world = SceneState(const [], random: widget.random),
+              );
             }
           },
           onDevTools: kDebugMode ? () => _go(_Page.devTools) : null,
@@ -418,7 +437,8 @@ class _SceneScreenState extends State<SceneScreen>
                     child: RevealOverlay(
                       key: ValueKey(reveal.outing.id),
                       outing: reveal.outing,
-                      animal: reveal.animal,
+                      entry: reveal.entry,
+                      hatId: reveal.hatId,
                       first: reveal.first,
                       timesMet: reveal.timesMet,
                       miles: _c.prefs.miles,
@@ -590,11 +610,28 @@ class _ScenePainter extends CustomPainter {
         f.feet,
         items.length,
         () {
+          final base = entryOrDefault(f.entryId).base;
+          final left = f.dir < 0;
+          final i = f.frame % base.frames.length;
+          final x = f.x.round();
+          final y = f.feet - 32;
           _sprite(
             canvas,
-            (f.dir > 0 ? sprites.foxRight : sprites.foxLeft)[f.frame],
-            f.x.round(),
-            f.feet - 32,
+            sprites.named(base.frames[i], mirrored: left),
+            x,
+            y,
+            s,
+          );
+          final hat = hatById(f.hatId);
+          if (hat == null) return;
+          final img = sprites.named(hat.sprite, mirrored: left);
+          final head = base.headPoints[i % base.headPoints.length];
+          final hx = left ? 32 - head.x : head.x;
+          _sprite(
+            canvas,
+            img,
+            x + hx - img.width ~/ 2,
+            y + head.y - img.height,
             s,
           );
         },
@@ -609,7 +646,7 @@ class _ScenePainter extends CustomPainter {
     for (final f in state.foxes.where((f) => f.bubble > 0)) {
       _bubble(
         canvas,
-        animalById('fox').reaction.bubble,
+        entryOrDefault(f.entryId).base.bubble,
         (f.x + 16) * s,
         (f.feet - 20) * s,
         s,
@@ -618,7 +655,7 @@ class _ScenePainter extends CustomPainter {
     for (final d in state.ducks.where((d) => d.bubble > 0)) {
       _bubble(
         canvas,
-        animalById('duck').reaction.bubble,
+        _duckReaction.bubble,
         (d.x + 8) * s,
         (d.feet - 18) * s,
         s,
@@ -627,7 +664,7 @@ class _ScenePainter extends CustomPainter {
     for (final b in state.birds.where((b) => b.active && b.bubble > 0)) {
       _bubble(
         canvas,
-        animalById('bird').reaction.bubble,
+        _birdReaction.bubble,
         (b.x + 16) * s,
         (layout.y(b.y) + 12) * s,
         s,

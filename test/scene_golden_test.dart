@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wildkaki/animals/lookup.dart';
 import 'package:wildkaki/data/controller.dart';
 import 'package:wildkaki/data/health_sync.dart';
 import 'package:wildkaki/data/model.dart';
 import 'package:wildkaki/data/store.dart';
+import 'package:wildkaki/scene/actors.dart';
 import 'package:wildkaki/scene/scene_screen.dart';
 import 'package:wildkaki/scene/sounds.dart';
 import 'package:wildkaki/scene/sprites.dart';
@@ -63,9 +65,8 @@ Future<WildController> _controller({bool third = false}) async {
     if (third) _outing('e', 'Swim', DateTime(2026, 10, 29, 6, 40), 0.8, 30),
   ];
   await store.addWaiting(seen);
-  for (final o in seen) {
-    await store.reveal(o, 'fox');
-  }
+  await store.reveal(seen[0], 'red-fox');
+  await store.reveal(seen[1], 'red-fox', hat: 'party-hat');
   await store.addWaiting(waiting);
   return WildController(store, _FakeSource());
 }
@@ -137,6 +138,18 @@ Offset _bushTap(WidgetTester tester, int i) {
   return Offset((spot.x + 10) * 3.0, (spot.base - 10) * 3.0);
 }
 
+SceneState _state(WidgetTester tester) {
+  final paint = tester.widget<CustomPaint>(
+    find
+        .descendant(
+          of: find.byType(SceneScreen),
+          matching: find.byType(CustomPaint),
+        )
+        .first,
+  );
+  return (paint.painter as dynamic).state as SceneState;
+}
+
 class _QuietSounds extends SceneSounds {
   @override
   Future<void> play(String name) async {}
@@ -195,11 +208,21 @@ void main() {
     await _show(tester, c);
     expect(c.home.waiting, hasLength(2));
     expect(c.home.sightings, hasLength(2));
+    final waiting = c.home.waiting.first;
+    final pick = c.previewPick(waiting);
+    final before = c.home.sightings.where((s) => s.animal == pick.entryId);
 
     await tester.tapAt(_bushTap(tester, 0));
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.bySemanticsLabel('Close'), findsOneWidget);
-    expect(find.text('Met 3 times'), findsOneWidget);
+    expect(
+      find.text(
+        before.isEmpty
+            ? 'New in your collection'
+            : 'Met ${before.length + 1} times',
+      ),
+      findsOneWidget,
+    );
 
     await tester.tap(find.bySemanticsLabel('Close'));
     await tester.runAsync(
@@ -210,7 +233,32 @@ void main() {
     }
     expect(c.home.waiting, hasLength(1));
     expect(c.home.sightings, hasLength(3));
+    expect(
+      c.home.sightings.firstWhere((s) => s.outing.id == waiting.id).animal,
+      pick.entryId,
+    );
+    expect(
+      c.home.sightings.firstWhere((s) => s.outing.id == waiting.id).hat,
+      pick.hatId,
+    );
     expect(find.bySemanticsLabel('Close'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('every sighting walks the meadow, wearing its hat', (
+    tester,
+  ) async {
+    _sprites = (await tester.runAsync(SceneSprites.load))!;
+    final c = (await tester.runAsync(_controller))!;
+    await _show(tester, c);
+    final foxes = (_state(tester)).foxes;
+    expect(foxes, hasLength(2));
+    expect(foxes.map((f) => f.entryId), everyElement('red-fox'));
+    expect(foxes.map((f) => f.hatId), unorderedEquals(['party-hat', null]));
+    expect(
+      foxes.map((f) => entryOrDefault(f.entryId).base.frames),
+      everyElement(['stub_fox_1', 'stub_fox_2']),
+    );
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -221,13 +269,18 @@ void main() {
     await tester.tapAt(const Offset(30 * 3.0, 120 * 3.0));
     await tester.pump();
     expect(find.byType(CollectionPage), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Red fox'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(find.byKey(const ValueKey('new-dot')), findsOneWidget);
-    await tester.tap(find.text('Fox'));
+    await tester.tap(find.text('Red fox'));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
     );
     await tester.pump();
-    expect(c.home.opened, contains('fox'));
+    expect(c.home.opened, contains('red-fox'));
     expect(find.text('Met 2 times'), findsOneWidget);
     await tester.binding.handlePopRoute();
     await tester.pump();

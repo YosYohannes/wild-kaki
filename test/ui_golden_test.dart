@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wildkaki/animals/animals.dart';
+import 'package:wildkaki/animals/lookup.dart';
 import 'package:wildkaki/data/model.dart';
 import 'package:wildkaki/ui/animal_page.dart';
 import 'package:wildkaki/ui/collection_page.dart';
@@ -37,12 +37,29 @@ Outing _outing(String id, String kind, DateTime start, double km, int min) =>
     Outing(id: id, kind: kind, start: start, distanceKm: km, minutes: min);
 
 final _meetings = [
-  Sighting(_outing('a', 'Run', DateTime(2025, 10, 22, 6, 55), 5.2, 31), 'fox'),
+  Sighting(
+    _outing('a', 'Run', DateTime(2025, 10, 22, 6, 55), 5.2, 31),
+    'red-fox',
+  ),
   Sighting(
     _outing('b', 'Walk', DateTime(2025, 10, 25, 17, 40), 2.4, 35),
-    'fox',
+    'red-fox',
   ),
-  Sighting(_outing('c', 'Run', DateTime(2025, 10, 28, 7, 12), 3.6, 22), 'fox'),
+  Sighting(
+    _outing('c', 'Run', DateTime(2025, 10, 28, 7, 12), 3.6, 22),
+    'red-fox',
+  ),
+];
+
+final _recentSightings = [
+  for (final s in _meetings) Sighting(s.outing, 'red-fox'),
+];
+
+final _collected = [
+  ..._meetings,
+  Sighting(_outing('g', 'Walk', DateTime(2025, 10, 29, 7), 2, 25), 'shiba'),
+  Sighting(_outing('d', 'Walk', DateTime(2025, 10, 29, 8), 1.8, 20), 'tabby'),
+  Sighting(_outing('e', 'Run', DateTime(2025, 10, 29, 9), 6, 40), 'black-cat'),
 ];
 
 const _allPrefs = Prefs(miles: false, animate: true);
@@ -97,39 +114,83 @@ Future<void> _leave(WidgetTester tester) async {
 void main() {
   setUpAll(_loadFonts);
 
-  testWidgets('collection grid shows the new dot', (tester) async {
+  testWidgets('collection grid shows found animals and the new dot', (
+    tester,
+  ) async {
     var opened = '';
     await _show(
       tester,
       CollectionPage(
-        sightings: _meetings,
-        opened: const {},
+        sightings: _collected,
+        opened: const {'shiba', 'tabby'},
         onSettings: () {},
         onClose: () {},
         onOpen: (a) => opened = a,
       ),
     );
-    expect(find.byType(Image), findsOneWidget);
-    expect(find.text('Fox'), findsOneWidget);
-    expect(find.text('???'), findsNWidgets(2));
-    expect(find.text('?'), findsNWidgets(2));
+    expect(animalEntries, hasLength(73));
+    expect(find.text('Shiba'), findsOneWidget);
+    expect(find.text('Tabby'), findsOneWidget);
+    expect(find.text('Black cat'), findsOneWidget);
     expect(find.byKey(const ValueKey('new-dot')), findsOneWidget);
     await _shot(tester, 'collection');
     await tester.tap(find.text('???').first);
     expect(opened, '');
-    await tester.tap(find.text('Fox'));
-    expect(opened, 'fox');
+    await tester.tap(find.text('Black cat'));
+    expect(opened, 'black-cat');
+    await tester.tap(find.text('Shiba'));
+    expect(opened, 'shiba');
     await _leave(tester);
   });
 
-  testWidgets('collection hides the dot once opened and the fox when unmet', (
+  testWidgets('collection scrolls to the last entry', (tester) async {
+    final last = animalEntries.last;
+    final all = [
+      for (final e in animalEntries)
+        Sighting(
+          _outing(e.id, 'Run', DateTime(2025, 10, 22, 6, 55), 5, 30),
+          e.id,
+        ),
+    ];
+    await _show(
+      tester,
+      CollectionPage(
+        sightings: all,
+        opened: const {},
+        onSettings: () {},
+        onClose: () {},
+        onOpen: (_) {},
+      ),
+    );
+    expect(find.text('???'), findsNothing);
+    expect(find.byKey(const ValueKey('new-dot')), findsWidgets);
+    await tester.drag(find.byType(GridView), const Offset(0, -20000));
+    await tester.pump();
+    expect(find.text(last.name), findsOneWidget);
+    await _shot(tester, 'collection_end');
+    final longest = animalEntries.reduce(
+      (a, b) => a.name.length >= b.name.length ? a : b,
+    );
+    await tester.scrollUntilVisible(
+      find.text(longest.name),
+      -300,
+      scrollable: find.byType(Scrollable),
+    );
+    await tester.pump();
+    expect(tester.getSize(find.text(longest.name)).height, lessThan(18));
+    expect(tester.getSize(find.text(longest.name)).width, lessThan(109));
+    await _shot(tester, 'collection_longest');
+    await _leave(tester);
+  });
+
+  testWidgets('collection hides the dot once opened and unmet shows ???', (
     tester,
   ) async {
     await _show(
       tester,
       CollectionPage(
         sightings: _meetings,
-        opened: const {'fox'},
+        opened: const {'red-fox'},
         onSettings: () {},
         onClose: () {},
         onOpen: (_) {},
@@ -146,8 +207,9 @@ void main() {
         onOpen: (_) {},
       ),
     );
-    expect(find.text('Fox'), findsNothing);
-    expect(find.text('???'), findsNWidgets(3));
+    expect(find.text('Red fox'), findsNothing);
+    expect(find.byType(Image), findsNothing);
+    expect(find.text('???'), findsWidgets);
     await _leave(tester);
   });
 
@@ -157,12 +219,13 @@ void main() {
     await _show(
       tester,
       AnimalPage(
-        animal: animalById('fox'),
+        entry: entryOrDefault('red-fox'),
         meetings: _meetings,
         miles: false,
         onClose: () {},
       ),
     );
+    expect(find.text('Red fox'), findsOneWidget);
     expect(find.text('Met 3 times'), findsOneWidget);
     expect(find.text('first met', findRichText: true), findsOneWidget);
     expect(find.text('Run · 3.6 km · 22 min'), findsOneWidget);
@@ -170,27 +233,27 @@ void main() {
     await _leave(tester);
   });
 
-  testWidgets('animal page shows a non-fox animal with its own frames', (
+  testWidgets('animal page shows a colour species with its base frames', (
     tester,
   ) async {
-    final duck = Sighting(
-      _outing('d', 'Run', DateTime(2025, 10, 29, 7), 4, 25),
-      'duck',
+    final entry = findEntry('golden-cat')!;
+    expect(entry.isColour, isTrue);
+    final cat = Sighting(
+      _outing('f', 'Run', DateTime(2025, 10, 29, 7), 4, 25),
+      entry.id,
     );
     await _show(
       tester,
-      AnimalPage(
-        animal: animalById('duck'),
-        meetings: [duck],
-        miles: false,
-        onClose: () {},
-      ),
+      AnimalPage(entry: entry, meetings: [cat], miles: false, onClose: () {}),
     );
-    expect(find.text('Duck'), findsOneWidget);
-    expect(find.text(animalById('duck').note), findsOneWidget);
+    expect(find.text(entry.name), findsOneWidget);
+    expect(find.text(entryNote(entry)), findsOneWidget);
     expect(find.text('Met once'), findsOneWidget);
     final image = tester.widget<Image>(find.byType(Image));
-    expect((image.image as AssetImage).assetName, 'assets/sprites/duck.png');
+    expect(
+      (image.image as AssetImage).assetName,
+      'assets/sprites/${entry.base.frames[0]}.png',
+    );
     await _leave(tester);
   });
 
@@ -261,7 +324,7 @@ void main() {
             minutes: 440,
           ),
         ],
-        sightings: _meetings,
+        sightings: _recentSightings,
         miles: false,
         onClose: () {},
         onSettings: () => opened = 'settings',
