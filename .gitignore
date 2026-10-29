@@ -51,7 +51,6 @@ app.*.map.json
 __pycache__/
 *.pyc
 .venv/
-/Trail Buddy*.md
 .idea/
 *.iml
 

@@ -10,6 +10,13 @@ Animals and the rules that pick them live in `lib/animals/`. For now there are t
 
 Not yet verified on a device: Health Connect permission flow, pull-to-refresh feel and the launcher icon.
 
+## Docs
+
+- `docs/product-design.md`: the original product design, written when the app was called Trail Buddy
+- `docs/rules.md`: one page on how an activity becomes an animal, with the chances
+- `docs/rule-parameters.md`: what a rule can look at, the values it can take and the fallback when a value is missing
+- `docs/animals.md`: the bases, species, affinities, colour species, hats and the assets to make
+
 ## Layout
 
 - `lib/main.dart`: app start, portrait lock, edge-to-edge bars, sync on launch and resume
