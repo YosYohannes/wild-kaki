@@ -184,7 +184,11 @@ void main() {
           for (final s in catalog.species)
             if (s.alsoHomeKinds.contains(kind)) s.baseId,
         };
-        final list = picks(kind: kind, count: 2000);
+        final list = picks(
+          kind: kind,
+          minutes: kind == 'Sleep' ? 480 : 30,
+          count: 2000,
+        );
         final visitors = list.where((p) => !homeIds.contains(p.baseId));
         expect(visitors.length / 2000, closeTo(0.15, 0.03), reason: kind);
       }

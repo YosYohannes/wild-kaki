@@ -37,6 +37,10 @@ class ActivityFacts {
   final SpeedBand? speedBand;
   final bool dayOff;
 
+  bool get isShortSleep =>
+      kind == sleepKind &&
+      (lengthBand == LengthBand.brief || lengthBand == LengthBand.short);
+
   Iterable<Band> get bands => [
     partOfDay,
     lengthBand,

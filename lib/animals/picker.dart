@@ -73,9 +73,13 @@ Pick pickFor({
   int recentExercise = sleepFullVisitorAt,
   String? timeZone,
 }) {
+  final plain = facts.isShortSleep;
   final completion = completionOf(catalog, met);
-  final boost = completionBoost(completion) * droughtBoost(drought);
-  final pull = familyPull(completion);
+  final boost = plain
+      ? 1.0
+      : completionBoost(completion) * droughtBoost(drought);
+  final pull = plain ? 1.0 : familyPull(completion);
+  final discovery = plain ? 1.0 : discoveryMultiplier;
   final hats = catalog.hats;
   final hatId = facts.dayOff && hats.isNotEmpty
       ? hats[(rolls.hat * hats.length).floor()].id
@@ -95,7 +99,9 @@ Pick pickFor({
   }
 
   final home = _homeCandidates(catalog, facts.kind);
-  final share = facts.kind == sleepKind
+  final share = plain
+      ? 0.0
+      : facts.kind == sleepKind
       ? visitorShare * sleepVisitorScale(recentExercise)
       : visitorShare;
   final candidates = rolls.visitor < share
@@ -116,7 +122,7 @@ Pick pickFor({
   final bases = candidates.keys.toList();
   final base = _choose(bases, [
     for (final b in bases)
-      (candidates[b]!.any(unmet) ? discoveryMultiplier : 1.0) *
+      (candidates[b]!.any(unmet) ? discovery : 1.0) *
           (baseUnmet(b) ? pull : 1.0),
   ], rolls.base);
 
@@ -134,7 +140,7 @@ Pick pickFor({
   final options = candidates[base]!;
   final species = _choose(options, [
     for (final s in options)
-      _affinityWeight(s, facts) * (unmet(s) ? discoveryMultiplier : 1.0),
+      _affinityWeight(s, facts) * (unmet(s) ? discovery : 1.0),
   ], rolls.species);
 
   var entryId = species.id;

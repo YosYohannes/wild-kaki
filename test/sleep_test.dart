@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wildkaki/animals/boosts.dart';
+import 'package:wildkaki/animals/catalog.dart';
 import 'package:wildkaki/animals/catalog_data.dart';
 import 'package:wildkaki/animals/facts.dart';
 import 'package:wildkaki/animals/holidays.dart';
@@ -10,8 +11,14 @@ import 'package:wildkaki/data/model.dart';
 const none = NoHolidays();
 final bedtime = DateTime(2026, 11, 4, 23);
 
-Outing at(String id, DateTime start, {String kind = 'Run'}) =>
-    Outing(id: id, kind: kind, start: start, distanceKm: 5, minutes: 30);
+Outing at(String id, DateTime start, {String kind = 'Run', int? minutes}) =>
+    Outing(
+      id: id,
+      kind: kind,
+      start: start,
+      distanceKm: 5,
+      minutes: minutes ?? (kind == sleepKind ? 480 : 30),
+    );
 
 final sleepHomeBases = {
   for (final b in defaultCatalog.bases)
@@ -199,6 +206,360 @@ void main() {
           met: const {'barn-owl'},
           drought: 120,
           recentExercise: 2,
+          holidays: none,
+        );
+        expect(pick(), pick());
+      }
+    });
+  });
+
+  group('short sleep', () {
+    const fillers = 197;
+
+    Base baseOf(String id, Set<String> kinds) => Base(
+      id: id,
+      name: id,
+      homeKinds: kinds,
+      habitat: Habitat.meadow,
+      sound: 'yip',
+      bubble: 'x',
+      arrival: '{activity}',
+      frames: const ['stub_fox_1'],
+      headPoints: const [(x: 0, y: 0)],
+    );
+
+    Species pad(int i) => Species(id: 'f$i', name: 'F', baseId: 'pad');
+
+    Catalog colourCatalog(Set<String> kinds) => Catalog(
+      bases: [baseOf('a', kinds), baseOf('pad', {})],
+      species: [
+        const Species(
+          id: 'x',
+          name: 'X',
+          baseId: 'a',
+          colours: [
+            ColourSpecies(
+              id: 'x-gold',
+              name: 'Gold',
+              shapeSpeciesId: 'x',
+              chance: 0.03,
+            ),
+          ],
+        ),
+        for (var i = 0; i < fillers; i++) pad(i),
+      ],
+      legends: const [Legend(id: 'a-leg', name: 'Leg', baseId: 'a')],
+      hats: const [],
+    );
+
+    Catalog pairCatalog(Set<String> kinds) => Catalog(
+      bases: [baseOf('a', kinds), baseOf('b', kinds), baseOf('pad', {})],
+      species: [
+        const Species(id: 'a1', name: 'A', baseId: 'a'),
+        const Species(
+          id: 'b1',
+          name: 'B',
+          baseId: 'b',
+          colours: [
+            ColourSpecies(
+              id: 'b1-c',
+              name: 'C',
+              shapeSpeciesId: 'b1',
+              chance: 0.1,
+            ),
+          ],
+        ),
+        for (var i = 0; i < 195; i++) pad(i),
+      ],
+      legends: const [
+        Legend(id: 'a-leg', name: 'A', baseId: 'a'),
+        Legend(id: 'b-leg', name: 'B', baseId: 'b'),
+      ],
+      hats: const [],
+    );
+
+    Pick at6(
+      Catalog catalog, {
+      required int minutes,
+      String kind = sleepKind,
+      Set<String> met = const {},
+      int drought = 0,
+      int recent = 3,
+      double visitor = 0.5,
+      double base = 0,
+      double species = 0,
+      double colour = 0.5,
+      double legend = 0.5,
+      double regional = 1,
+      String? timeZone,
+    }) => pickFor(
+      facts: ActivityFacts.from(
+        Outing(
+          id: 't',
+          kind: kind,
+          start: bedtime,
+          distanceKm: null,
+          minutes: minutes,
+        ),
+        none,
+      ),
+      rolls: Rolls(
+        visitor: visitor,
+        base: base,
+        species: species,
+        colour: colour,
+        hat: 0.5,
+        regional: regional,
+        legend: legend,
+      ),
+      met: met,
+      drought: drought,
+      recentExercise: recent,
+      catalog: catalog,
+      timeZone: timeZone,
+    );
+
+    Set<String> fillersMet(int count, [Set<String> extra = const {}]) => {
+      ...extra,
+      for (var i = 0; i < count - extra.length; i++) 'f$i',
+    };
+
+    test('under 360 minutes is short, 360 is not', () {
+      bool short(int minutes, {String kind = sleepKind}) => ActivityFacts.from(
+        Outing(
+          id: 't',
+          kind: kind,
+          start: bedtime,
+          distanceKm: null,
+          minutes: minutes,
+        ),
+        none,
+      ).isShortSleep;
+      expect(short(1), isTrue);
+      expect(short(239), isTrue);
+      expect(short(240), isTrue);
+      expect(short(359), isTrue);
+      expect(short(360), isFalse);
+      expect(short(540), isFalse);
+      expect(short(10, kind: 'Run'), isFalse);
+      expect(short(10, kind: 'Yoga'), isFalse);
+    });
+
+    test('an unmet species is not favoured', () {
+      final catalog = Catalog(
+        bases: [
+          baseOf('a', {sleepKind}),
+        ],
+        species: const [
+          Species(id: 'x', name: 'X', baseId: 'a'),
+          Species(id: 'y', name: 'Y', baseId: 'a'),
+        ],
+        hats: const [],
+      );
+      for (final (minutes, expected) in [(359, 'x'), (360, 'y')]) {
+        final p = at6(catalog, minutes: minutes, met: {'x'}, species: 0.4);
+        expect(p.speciesId, expected, reason: '$minutes');
+      }
+      expect(
+        at6(catalog, minutes: 359, met: {'x'}, species: 0.49).speciesId,
+        'x',
+      );
+      expect(
+        at6(catalog, minutes: 359, met: {'x'}, species: 0.51).speciesId,
+        'y',
+      );
+      expect(
+        at6(catalog, minutes: 360, met: {'x'}, species: 0.24).speciesId,
+        'x',
+      );
+      expect(
+        at6(catalog, minutes: 360, met: {'x'}, species: 0.26).speciesId,
+        'y',
+      );
+    });
+
+    test('an unmet base is not favoured', () {
+      final catalog = pairCatalog({sleepKind});
+      final met = {'a1', 'a-leg', 'b-leg'};
+      expect(at6(catalog, minutes: 300, met: met, base: 0.4).baseId, 'a');
+      expect(at6(catalog, minutes: 480, met: met, base: 0.4).baseId, 'b');
+    });
+
+    test('a short sleep never brings a visitor even after a busy week', () {
+      final homeless = Catalog(
+        bases: [
+          baseOf('h', {sleepKind}),
+          baseOf('v', {}),
+        ],
+        species: const [
+          Species(id: 'h1', name: 'H', baseId: 'h'),
+          Species(id: 'v1', name: 'V', baseId: 'v'),
+        ],
+        hats: const [],
+      );
+      for (final v in [0.0, 0.05, 0.1499]) {
+        expect(
+          at6(homeless, minutes: 359, visitor: v).baseId,
+          'h',
+          reason: '$v',
+        );
+        expect(
+          at6(homeless, minutes: 360, visitor: v).baseId,
+          'v',
+          reason: '$v',
+        );
+      }
+      for (var i = 0; i < 3000; i++) {
+        final p = pickAnimal(
+          activity: at('q$i', bedtime, kind: sleepKind, minutes: 300),
+          met: const {},
+          recentExercise: 7,
+          holidays: none,
+        );
+        expect(sleepHomeBases, contains(p.baseId));
+      }
+    });
+
+    test('no drought boost', () {
+      final catalog = colourCatalog({sleepKind});
+      expect(
+        at6(catalog, minutes: 359, drought: 700, colour: 0.1).entryId,
+        'x',
+      );
+      expect(
+        at6(catalog, minutes: 360, drought: 700, colour: 0.1).entryId,
+        'x-gold',
+      );
+      expect(
+        at6(catalog, minutes: 359, drought: 700, legend: 0.05).isLegend,
+        isFalse,
+      );
+      expect(
+        at6(catalog, minutes: 360, drought: 700, legend: 0.05).entryId,
+        'a-leg',
+      );
+    });
+
+    test('no completion tier', () {
+      final catalog = colourCatalog({sleepKind});
+      final met = fillersMet(196);
+      expect(at6(catalog, minutes: 359, met: met, colour: 0.1).entryId, 'x');
+      expect(
+        at6(catalog, minutes: 480, met: met, colour: 0.1).entryId,
+        'x-gold',
+      );
+      expect(
+        at6(catalog, minutes: 359, met: met, legend: 0.1).isLegend,
+        isFalse,
+      );
+      expect(
+        at6(catalog, minutes: 480, met: met, legend: 0.1).entryId,
+        'a-leg',
+      );
+    });
+
+    test('no family pull', () {
+      final catalog = pairCatalog({sleepKind});
+      final met = {
+        'a1',
+        'a-leg',
+        'b-leg',
+        'b1',
+        for (var i = 0; i < 195; i++) 'f$i',
+      };
+      expect(at6(catalog, minutes: 359, met: met, base: 0.4).baseId, 'a');
+      expect(at6(catalog, minutes: 359, met: met, base: 0.51).baseId, 'b');
+      expect(at6(catalog, minutes: 480, met: met, base: 0.4).baseId, 'b');
+      expect(at6(catalog, minutes: 480, met: met, base: 0.03).baseId, 'a');
+    });
+
+    test('base legends keep their plain chance', () {
+      final catalog = colourCatalog({sleepKind});
+      for (final drought in [0, 700]) {
+        expect(
+          at6(catalog, minutes: 300, drought: drought, legend: 0.0099).entryId,
+          'a-leg',
+        );
+        expect(
+          at6(catalog, minutes: 300, drought: drought, legend: 0.011).isLegend,
+          isFalse,
+        );
+      }
+    });
+
+    test('a regional legend still rolls first', () {
+      final p = at6(
+        defaultCatalog,
+        minutes: 120,
+        regional: 0.0019,
+        timeZone: 'Asia/Singapore',
+      );
+      expect(p.entryId, 'merlion');
+    });
+
+    test('exercise keeps every help, whatever its length', () {
+      final colour = colourCatalog({'Run'});
+      expect(
+        at6(colour, kind: 'Run', minutes: 5, drought: 700, colour: 0.1).entryId,
+        'x-gold',
+      );
+      expect(
+        at6(
+          colour,
+          kind: 'Run',
+          minutes: 5,
+          drought: 700,
+          legend: 0.05,
+        ).entryId,
+        'a-leg',
+      );
+      final pair = Catalog(
+        bases: [
+          baseOf('a', {'Run'}),
+        ],
+        species: const [
+          Species(id: 'x', name: 'X', baseId: 'a'),
+          Species(id: 'y', name: 'Y', baseId: 'a'),
+        ],
+        hats: const [],
+      );
+      expect(
+        at6(pair, kind: 'Run', minutes: 5, met: {'x'}, species: 0.4).speciesId,
+        'y',
+      );
+      expect(
+        at6(pair, kind: 'Run', minutes: 5, met: {'x'}, species: 0.26).speciesId,
+        'y',
+      );
+      final homeless = Catalog(
+        bases: [
+          baseOf('h', {'Run'}),
+          baseOf('v', {}),
+        ],
+        species: const [
+          Species(id: 'h1', name: 'H', baseId: 'h'),
+          Species(id: 'v1', name: 'V', baseId: 'v'),
+        ],
+        hats: const [],
+      );
+      expect(at6(homeless, kind: 'Run', minutes: 5, visitor: 0.1).baseId, 'v');
+    });
+
+    test('a 6 hour sleep keeps the help', () {
+      final catalog = colourCatalog({sleepKind});
+      expect(
+        at6(catalog, minutes: 360, drought: 700, colour: 0.1).entryId,
+        'x-gold',
+      );
+    });
+
+    test('the same short sleep gives the same animal', () {
+      for (var i = 0; i < 300; i++) {
+        Pick pick() => pickAnimal(
+          activity: at('sh$i', bedtime, kind: sleepKind, minutes: 200),
+          met: const {'barn-owl'},
+          drought: 400,
+          recentExercise: 3,
           holidays: none,
         );
         expect(pick(), pick());

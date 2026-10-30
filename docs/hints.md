@@ -1,6 +1,6 @@
 # Hints
 
-How the collection hints at animals you have not met yet. Hints describe an animal's habits; they never tell you what to do. A short, slow or late activity is never worse, so a hint is something to notice, not a task.
+How the collection hints at animals you have not met yet. Hints describe an animal's habits; they never tell you what to do. A short, slow or late exercise is never worse (only a night's sleep under 6 hours gets no help toward new animals), so a hint is something to notice, not a task.
 
 ## When a hint shows
 

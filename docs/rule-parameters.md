@@ -41,7 +41,7 @@ The decision looks at `kind`, `partOfDay`, the three bands and the rolls. `dayOf
 | `speedBand` | distance, duration, kind | Slow, Steady, Fast, or Unknown | How quickly you moved |
 | `dayOff` | datetime, holiday list | Day off, Working day | A Saturday, a Sunday or a public holiday. Looks only: the animal wears a hat |
 | `region` | the phone's time zone when the bush is opened | the regional legend whose time zones include it, or none | Which regional legend can appear |
-| `recentExercise` | the known activities and the sleep's bedtime | A whole number, 0 or more | For a Sleep only: how many known non-sleep activities started in the 7 days before bedtime, revealed or still waiting. Sets the sleep's visitor share |
+| `recentExercise` | the known activities and the sleep's bedtime | A whole number, 0 or more | For a Sleep only: how many known non-sleep activities started in the 7 days before bedtime, revealed or still waiting. Sets the sleep's visitor share (a short sleep has none) |
 | `completion` | the met entries and the catalog | 0 up to 1 | Met entries divided by all entries, not counting regional legends (89 today). Sets the completion bonus |
 | `drought` | the revealed activities, in the order they were revealed | A whole number, 0 or more | Activities revealed since the last one that showed something new. Only colour species and base legends you have not met use it |
 | `roll` | roll | seven independent numbers from 0 up to 1: regional, visitor, base, legend, species, colour, hat | Luck |
@@ -163,6 +163,16 @@ Completion `c` is the number of met entries divided by the number of entries tha
 - `B(c)` multiplies the base weight (step 2) of a candidate base that still has an unmet shape species, colour species or base legend among its candidates, on top of the ×3 for an unmet shape species. It applies to the home and the visitor candidates, so the home and visitor split is unchanged.
 - `c` comes from the met entries and the catalog, so the same activity with the same history gives the same animal.
 
+### Short sleep
+
+A Sleep is short when its `lengthBand` is Brief or Short, that is under 360 minutes (6 hours, the top of the Short band for Sleep). A short sleep is picked with plain odds:
+- no discovery multiplier (×3) on bases or species, so an unmet one counts like a met one;
+- no drought boost, no completion tier and no family pull;
+- visitor share 0, whatever `recentExercise` says, so only sleep home animals come;
+- base legends keep their plain chance (1%, or 2% when liked), and colour slices keep their listed chances.
+
+The regional legend still rolls first and the hat is unchanged. A Sleep of 360 minutes or more, and every other kind, are unaffected.
+
 ## Hats
 
 On a day off the animal wears a hat. The hat roll picks one of the five hats with equal odds. A hat is a small separate sprite drawn at the base's head point, mirrored when the animal faces left. The hat belongs to the sighting, so the card, the animal page and the animal in the meadow all show it.
@@ -192,3 +202,4 @@ Weather in particular never changes which animal you get: an activity can be syn
 15. Droughts are paid back: while nothing new has been revealed for D activities, an unmet colour species or base legend is `min(8, 1 + D / 100)` times as likely (colour slices total at most 1, a legend chance at most 1). Shape species keep the ×3 discovery, regional legends are never boosted, and D comes from the reveal order of the stored history so the pick stays deterministic.
 16. The closer the collection is to complete, the more the missing ones come: a step table on completion (regional legends excluded) multiplies unmet colours and base legends (×1.25 up to ×25, with the drought boost) and pulls the base weight of any family with something missing (×1.5 up to ×24). Met entries, shape species and regional legends are not boosted, the clamps stay, and the home or visitor split is unchanged.
 17. Sleep brings visitors only if you have been moving: its visitor share is the usual 15% times min(1, n / 3), with n the known non-sleep activities in the 7 days before bedtime (revealed or waiting). Exercise keeps the full share, regional legends still roll first on every kind, and n comes from the known activities, so the same activity with the same known activities gives the same animal.
+18. Bad sleep is not rewarded: a Sleep under 6 hours is picked with plain odds (no ×3 discovery, no drought boost, no completion tier, no family pull, no visitors), though it still gets a normal animal, regional legends still roll first and hats are unchanged. The "never worse" promise holds for exercise; for sleep, under 6 hours gets no help.

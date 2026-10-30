@@ -47,6 +47,16 @@ Discovery is only a multiplier: **×3 on the chance of a base or species you hav
 
 Sleep brings visitors only if you have been moving. With three or more activities in the week before, a sleep brings visitors as often as any activity (15%); with none, a sleep brings only sleep animals. In between it scales: one activity gives a third of the visitors, two give two thirds. The week is the 7 days before you went to bed, and it counts every activity the app knows about, whether you have opened its bush or not. Sleeps themselves do not count, and nothing changes for exercise.
 
+## Short sleep
+
+A night under 6 hours still brings an animal, but with no help toward new ones, so it is most likely one you have met. For a short sleep:
+- there is no ×3 for an unmet base or species, as if you had met everything;
+- there are no visitors, only sleep animals;
+- the drought boost, the completion bonus and the family pull are all off;
+- base legends keep their plain 1% (2% when liked), and a regional legend still rolls first.
+
+Hats are unchanged. A sleep of 6 hours or more, and every exercise, work as described everywhere else.
+
 ## The drought boost
 
 The drought is the number of activities you have revealed since the last time one showed you something new, an animal you had not met before. It counts the reveals in the order you opened them. Right after a new animal it is 0, and with no activities yet it is 0.
@@ -76,4 +86,4 @@ The closer you are to a full collection, the more the missing ones and their fam
 
 ## What never changes the pick
 
-Effort, streaks, missed days, steps, calories, heart rate, weather and location. The phone's time zone only decides which regional legend can appear. A short, slow or late activity is never worse, only different.
+Effort, streaks, missed days, steps, calories, heart rate, weather and location. The phone's time zone only decides which regional legend can appear. For exercise, a short, slow or late activity is never worse, only different. Sleep is the one exception: a night under 6 hours gets no help toward new animals (see Short sleep).

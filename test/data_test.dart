@@ -27,6 +27,14 @@ Outing outing(
   minutes: 30,
 );
 
+Outing longSleep(String id) => Outing(
+  id: id,
+  kind: sleepKind,
+  start: t0.add(const Duration(days: 10)),
+  distanceKm: null,
+  minutes: 480,
+);
+
 class FakeSource implements OutingSource {
   SourceStatus sourceStatus = SourceStatus.available;
   bool access = true;
@@ -730,7 +738,7 @@ void main() {
       'a sleep counts waiting and revealed exercise from the week before',
       () async {
         final store = await newStore();
-        final bed = outing('bed', 24 * 10, kind: sleepKind, km: null);
+        final bed = longSleep('bed');
         final week = [
           for (final d in [4, 5, 6]) outing('w$d', 24 * d),
         ];
@@ -743,7 +751,7 @@ void main() {
           final v = roll('visitor', id);
           return v > 0.06 && v < 0.14;
         });
-        final sleep = outing(id, 24 * 10, kind: sleepKind, km: null);
+        final sleep = longSleep(id);
         final known = [
           ...c.home.waiting,
           ...c.home.sightings.map((s) => s.outing),
