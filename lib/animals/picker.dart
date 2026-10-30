@@ -8,7 +8,7 @@ import 'facts.dart';
 import 'holidays.dart';
 import 'rolls.dart';
 
-const visitorShare = 0.12;
+const visitorShare = 0.15;
 const discoveryMultiplier = 3.0;
 const regionalLegendChance = 0.002;
 const legendChance = 0.01;
@@ -50,6 +50,7 @@ Pick pickAnimal({
   required Outing activity,
   required Set<String> met,
   int drought = 0,
+  int recentExercise = sleepFullVisitorAt,
   HolidayProvider? holidays,
   String? timeZone,
   Catalog? catalog,
@@ -58,6 +59,7 @@ Pick pickAnimal({
   rolls: Rolls.of(activity.id),
   met: met,
   drought: drought,
+  recentExercise: recentExercise,
   timeZone: timeZone,
   catalog: catalog ?? defaultCatalog,
 );
@@ -68,6 +70,7 @@ Pick pickFor({
   required Set<String> met,
   required Catalog catalog,
   int drought = 0,
+  int recentExercise = sleepFullVisitorAt,
   String? timeZone,
 }) {
   final completion = completionOf(catalog, met);
@@ -92,7 +95,10 @@ Pick pickFor({
   }
 
   final home = _homeCandidates(catalog, facts.kind);
-  final candidates = rolls.visitor < visitorShare
+  final share = facts.kind == sleepKind
+      ? visitorShare * sleepVisitorScale(recentExercise)
+      : visitorShare;
+  final candidates = rolls.visitor < share
       ? _visitorCandidates(catalog, home)
       : home;
 

@@ -1,6 +1,9 @@
 import '../data/model.dart';
 import 'catalog.dart';
 
+const sleepWindow = Duration(days: 7);
+const sleepFullVisitorAt = 3;
+
 const droughtStep = 100;
 const droughtCap = 8.0;
 
@@ -81,3 +84,20 @@ List<String> inRevealOrder(Iterable<Sighting> sightings) {
     for (final s in [...legacy, ...ordered]) s.animal,
   ];
 }
+
+int recentExercise(Outing sleep, Iterable<Outing> known) {
+  final from = sleep.start.subtract(sleepWindow);
+  return known
+      .where(
+        (o) =>
+            o.kind != sleepKind &&
+            !o.start.isBefore(from) &&
+            o.start.isBefore(sleep.start),
+      )
+      .length;
+}
+
+double sleepVisitorScale(int recentExercise) =>
+    recentExercise >= sleepFullVisitorAt
+    ? 1
+    : (recentExercise < 0 ? 0 : recentExercise / sleepFullVisitorAt);

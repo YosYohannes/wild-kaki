@@ -726,6 +726,54 @@ void main() {
       },
     );
 
+    test(
+      'a sleep counts waiting and revealed exercise from the week before',
+      () async {
+        final store = await newStore();
+        final bed = outing('bed', 24 * 10, kind: sleepKind, km: null);
+        final week = [
+          for (final d in [4, 5, 6]) outing('w$d', 24 * d),
+        ];
+        final old = outing('old', 24 * 2);
+        await store.addWaiting([bed, ...week, old]);
+        await store.reveal(week.first, 'red-fox');
+        await store.reveal(old, 'red-fox');
+        final c = WildController(store, source, holidays: const NoHolidays());
+        final id = [for (var i = 0; i < 5000; i++) 'night$i'].firstWhere((id) {
+          final v = roll('visitor', id);
+          return v > 0.06 && v < 0.14;
+        });
+        final sleep = outing(id, 24 * 10, kind: sleepKind, km: null);
+        final known = [
+          ...c.home.waiting,
+          ...c.home.sightings.map((s) => s.outing),
+        ];
+        expect(recentExercise(sleep, known), 3);
+        final pick = c.previewPick(sleep);
+        expect(c.previewPick(sleep), pick);
+        expect(
+          pick,
+          pickAnimal(
+            activity: sleep,
+            met: {'red-fox'},
+            drought: c.drought,
+            recentExercise: 3,
+            holidays: const NoHolidays(),
+          ),
+        );
+        final quiet = await newStore();
+        await quiet.addWaiting([bed, old]);
+        final calm = WildController(
+          quiet,
+          source,
+          holidays: const NoHolidays(),
+        );
+        final calmPick = calm.previewPick(sleep);
+        expect(calmPick.baseId, isIn(['owl', 'bat', 'mouse', 'raccoon']));
+        expect(pick.baseId, isNot(isIn(['owl', 'bat', 'mouse', 'raccoon'])));
+      },
+    );
+
     test('updatePrefs persists', () async {
       final c = await make();
       await c.updatePrefs(const Prefs(miles: true, animate: false));

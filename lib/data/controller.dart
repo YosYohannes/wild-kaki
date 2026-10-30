@@ -117,10 +117,16 @@ class WildController extends ChangeNotifier {
 
   int get drought => droughtSince(inRevealOrder(_home.sightings));
 
+  Iterable<Outing> get _knownOutings => [
+    ..._home.waiting,
+    for (final s in _home.sightings) s.outing,
+  ];
+
   Pick previewPick(Outing outing) => pickAnimal(
     activity: outing,
     met: {for (final s in _home.sightings) s.animal},
     drought: drought,
+    recentExercise: recentExercise(outing, _knownOutings),
     holidays: _holidays,
     timeZone: _timeZone(),
   );

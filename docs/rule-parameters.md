@@ -41,6 +41,7 @@ The decision looks at `kind`, `partOfDay`, the three bands and the rolls. `dayOf
 | `speedBand` | distance, duration, kind | Slow, Steady, Fast, or Unknown | How quickly you moved |
 | `dayOff` | datetime, holiday list | Day off, Working day | A Saturday, a Sunday or a public holiday. Looks only: the animal wears a hat |
 | `region` | the phone's time zone when the bush is opened | the regional legend whose time zones include it, or none | Which regional legend can appear |
+| `recentExercise` | the known activities and the sleep's bedtime | A whole number, 0 or more | For a Sleep only: how many known non-sleep activities started in the 7 days before bedtime, revealed or still waiting. Sets the sleep's visitor share |
 | `completion` | the met entries and the catalog | 0 up to 1 | Met entries divided by all entries, not counting regional legends (89 today). Sets the completion bonus |
 | `drought` | the revealed activities, in the order they were revealed | A whole number, 0 or more | Activities revealed since the last one that showed something new. Only colour species and base legends you have not met use it |
 | `roll` | roll | seven independent numbers from 0 up to 1: regional, visitor, base, legend, species, colour, hat | Luck |
@@ -94,7 +95,7 @@ Unknown for the other kinds, when the distance is missing, or for activities und
 
 ## The decision
 
-The animals, their bases and their affinities are in `animals.md`. The same activity with the same history always gives the same animal, but the kind does not fix the base: about 1 in 8 activities brings a visitor from another base.
+The animals, their bases and their affinities are in `animals.md`. The same activity with the same history always gives the same animal, but the kind does not fix the base: about 1 in 7 activities brings a visitor from another base.
 
 ### Step 0: regional legend
 
@@ -102,15 +103,16 @@ If the phone's time zone belongs to a regional legend (see `animals.md`) and the
 
 ### Step 1: home or visitor
 
-- If the visitor roll is 0.12 or more, the activity stays **home**: the candidate bases are the bases whose home kinds include the activity's kind. A species listed as "also home" on a kind (for example the Kingfisher on Swim) joins as if its base were home.
-- If the visitor roll is under 0.12, it brings a **visitor**: the candidate bases are all the other bases.
+- If the visitor roll is `visitorShare` (0.15) or more, the activity stays **home**: the candidate bases are the bases whose home kinds include the activity's kind. A species listed as "also home" on a kind (for example the Kingfisher on Swim) joins as if its base were home.
+- If the visitor roll is under `visitorShare`, it brings a **visitor**: the candidate bases are all the other bases.
 - A kind with no home base uses the Fox base.
+- For a **Sleep**, the share is `visitorShare × f`, with `f = min(1, n / 3)` and `n` the `recentExercise` count. So f is 0, 1/3, 2/3 or 1 for 0, 1, 2 or 3 or more activities, and a sleep with no exercise in the week never brings a visitor. `n` counts known non-sleep activities whose start is at or after bedtime minus 7 days and before bedtime. Other kinds always use the full share.
 
 ### Step 2: pick the base
 
 - Each candidate base starts with weight 1. A base that still has a shape species you have not met gets the **discovery multiplier** (×3), so its weight is 3. A base with any unmet entry (shape species, colour species or base legend) is also multiplied by the family pull `B(c)` (below).
 - The base roll picks one candidate, with odds in proportion to the weights.
-- The home or visitor split from step 1 is never changed by discovery: 88% stays home and 12% brings a visitor, always.
+- The home or visitor split from step 1 is never changed by discovery: 85% stays home and 15% brings a visitor (for a sleep, the visitor share is scaled as in step 1).
 
 This is how a non-rider still meets songbirds: a base you never reach at home keeps its place among the visitors, and the discovery multiplier makes it three times as likely as a base you have already met.
 
@@ -158,7 +160,7 @@ Completion `c` is the number of met entries divided by the number of entries tha
 | 0.98 | 25 | 24 |
 
 - `T(c)` multiplies the colour slice of a colour species you have not met and the legend chance of a base legend you have not met, together with the drought boost: the total is `T(c) × m`. Colour slices of a species total at most 1 and a legend chance is at most 1. Met colours and legends, shape species and regional legends are not boosted.
-- `B(c)` multiplies the base weight (step 2) of a candidate base that still has an unmet shape species, colour species or base legend among its candidates, on top of the ×3 for an unmet shape species. It applies to the home and the visitor candidates, so the 88% and 12% split is unchanged.
+- `B(c)` multiplies the base weight (step 2) of a candidate base that still has an unmet shape species, colour species or base legend among its candidates, on top of the ×3 for an unmet shape species. It applies to the home and the visitor candidates, so the home and visitor split is unchanged.
 - `c` comes from the met entries and the catalog, so the same activity with the same history gives the same animal.
 
 ## Hats
@@ -174,7 +176,7 @@ Weather in particular never changes which animal you get: an activity can be syn
 ## Decisions
 
 1. Decide with the processed parameters and the rolls only.
-2. Kind brings home bases; about 1 in 8 activities (12%) brings a visitor from another base instead.
+2. Kind brings home bases; about 1 in 7 activities (15%) brings a visitor from another base instead.
 3. Within a base, affinities pick the shape species. Discovery is a simple ×3 multiplier on the chance of an unmet base or unmet shape species. It never removes a choice and never changes the home or visitor split.
 4. Colour species hang off shape species and are picked by the colour roll. Rarity lives there.
 5. `partOfDay` has three values: Day, Twilight, Night. Sleep uses the time you went to bed.
@@ -189,3 +191,4 @@ Weather in particular never changes which animal you get: an activity can be syn
 14. Hedgehog is replaced by Raccoon as a Sleep base.
 15. Droughts are paid back: while nothing new has been revealed for D activities, an unmet colour species or base legend is `min(8, 1 + D / 100)` times as likely (colour slices total at most 1, a legend chance at most 1). Shape species keep the ×3 discovery, regional legends are never boosted, and D comes from the reveal order of the stored history so the pick stays deterministic.
 16. The closer the collection is to complete, the more the missing ones come: a step table on completion (regional legends excluded) multiplies unmet colours and base legends (×1.25 up to ×25, with the drought boost) and pulls the base weight of any family with something missing (×1.5 up to ×24). Met entries, shape species and regional legends are not boosted, the clamps stay, and the home or visitor split is unchanged.
+17. Sleep brings visitors only if you have been moving: its visitor share is the usual 15% times min(1, n / 3), with n the known non-sleep activities in the 7 days before bedtime (revealed or waiting). Exercise keeps the full share, regional legends still roll first on every kind, and n comes from the known activities, so the same activity with the same known activities gives the same animal.
