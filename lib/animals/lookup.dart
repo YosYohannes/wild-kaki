@@ -92,12 +92,16 @@ Hat? hatById(String? id) {
   return null;
 }
 
-String legacyEntryId(String stored) => switch (stored) {
-  'Fox' || 'fox' => 'red-fox',
-  'duck' => 'duck',
-  'bird' => 'sparrow',
-  _ => _entriesById.containsKey(stored) ? stored : defaultEntryId,
-};
+const Map<String, String> renamedEntries = {};
+
+String legacyEntryId(String stored) {
+  final id = renamedEntries[stored] ?? stored;
+  return switch (id) {
+    'Fox' || 'fox' => 'red-fox',
+    'bird' => 'sparrow',
+    _ => _entriesById.containsKey(id) ? id : defaultEntryId,
+  };
+}
 
 String entryNote(AnimalEntry entry, {Map<String, String> notes = entryNotes}) =>
     notes[entry.id] ??

@@ -12,6 +12,7 @@ class SettingsPage extends StatefulWidget {
     required this.onManage,
     required this.onStartOver,
     this.onDevTools,
+    this.version,
   });
 
   final Prefs prefs;
@@ -20,6 +21,7 @@ class SettingsPage extends StatefulWidget {
   final VoidCallback onManage;
   final VoidCallback onStartOver;
   final VoidCallback? onDevTools;
+  final String? version;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -132,7 +134,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'WildKaki 0.1 · Tiny5, OFL',
+                          widget.version == null
+                              ? 'WildKaki · Tiny5, OFL'
+                              : 'WildKaki ${widget.version} · Tiny5, OFL',
                           style: bodyText(12, color: Wild.bark),
                         ),
                       ],

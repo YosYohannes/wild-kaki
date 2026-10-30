@@ -7,11 +7,11 @@ The note is the line under the animal's name on its card and in the reveal; one 
 | shiba | Shiba | A shiba is steady, composed, and has already decided where the treat is. |
 | black-shiba | Black Shiba | Black Shiba: the same stubborn charm, dressed for midnight. |
 | corgi | Corgi | Short walks suit the corgi, whose legs are more of a suggestion. |
-| dachshund | Dachshund | Long dog, short outings: the dachshund is built for a gentle potter. |
+| dachshund | Dachshund | Long dog, short walks: the dachshund is built for a gentle potter. |
 | beagle | Beagle | A beagle follows its nose, and its nose follows everything. |
 | poodle | Poodle | Every stroll is a runway for a poodle, preferably at dusk. |
 | golden-poodle | Golden Poodle | The golden poodle has been gilded, and has mentioned it twice. |
-| pug | Pug | A pug's ideal outing is a quick waddle and a snore of great length. |
+| pug | Pug | A pug's ideal walk is a quick waddle and a snore of great length. |
 | husky | Husky | Huskies treat the horizon as a personal invitation. |
 | terrier | Terrier | A terrier is a bundle of zoomies with a little dog wrapped round it. |
 | tabby | Tabby | A tabby wears an M on its forehead. For meow, we assume. |
@@ -94,7 +94,7 @@ The note is the line under the animal's name on its card and in the reveal; one 
 | rat-king | Rat king | The rat king: a whole plague of rats, tangled tail to tail. |
 | bake-danuki | Bake-danuki | A leaf on its head means the bake-danuki is about to be someone else. |
 | merlion | Merlion | Half lion, half fish, wholly Singapore. Mind the spray. |
-| garuda | Garuda | Garuda spreads golden wings over the islands, and over your outing. |
+| garuda | Garuda | Garuda spreads golden wings over the islands, and over your day. |
 | qilin | Qilin | A qilin steps so lightly that the grass does not bend beneath it. |
 | naga | Naga | The naga coils in the shallows, jewelled hood held high. |
 | nessie | Nessie | Nessie! Blurry, as always, and gone before the photo. |

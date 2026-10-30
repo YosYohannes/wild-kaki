@@ -42,6 +42,7 @@ Widget _host({
   VoidCallback? onClose,
   VoidCallback? onFinished,
   int timesMet = 3,
+  String? hint,
   bool miles = false,
 }) {
   return Directionality(
@@ -58,6 +59,7 @@ Widget _host({
               hatId: hatId,
               first: first,
               timesMet: timesMet,
+              hint: hint,
               miles: miles,
               bushTopLeft: const Offset(171, 294),
               scale: 3,
@@ -197,6 +199,34 @@ void main() {
     await tester.pump();
     expect(find.text('Met 4 times'), findsOneWidget);
     expect(find.text('New in your collection'), findsNothing);
+  });
+
+  testWidgets('a repeat meeting shows a hint about someone unmet', (
+    tester,
+  ) async {
+    await _pumpHost(tester, _host(outing: _outing, animate: false));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('reveal-hint')), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    await _pumpHost(
+      tester,
+      _host(
+        outing: _outing,
+        first: false,
+        animate: false,
+        timesMet: 2,
+        hint: 'fennec',
+      ),
+    );
+    await tester.pump();
+    expect(find.byKey(const ValueKey('reveal-hint-title')), findsOneWidget);
+    expect(
+      find.text('Turns up on runs. Loves speed, fond of daylight.'),
+      findsOneWidget,
+    );
+    expect(find.text('Fennec'), findsNothing);
+    await _shot(tester, 'hint');
   });
 
   testWidgets('animate false shows the text immediately', (tester) async {

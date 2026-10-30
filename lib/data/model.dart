@@ -39,12 +39,13 @@ class Outing {
 }
 
 class Sighting {
-  const Sighting(this.outing, this.animal, {this.hat, this.order});
+  const Sighting(this.outing, this.animal, {this.hat, this.order, this.hint});
 
   final Outing outing;
   final String animal;
   final String? hat;
   final int? order;
+  final String? hint;
 }
 
 class HomeState {

@@ -1,17 +1,21 @@
 # Hints
 
-How the collection hints at animals you have not met yet. Hints describe an animal's habits; they never tell you what to do. A short, slow or late exercise is never worse (only a night's sleep under 6 hours gets no help toward new animals), so a hint is something to notice, not a task.
+How the collection hints at animals you have not met yet. Hints describe an animal's habits; they never tell you what to do. A short, slow or late activity is never worse (only a night's sleep under 6 hours gets no help toward new animals), so a hint is something to notice, not a task.
 
 ## When a hint shows
 
-| Entry | Before | After |
-|---|---|---|
-| Shape species | "???" tile, no hint | Once you have met any entry of its base: a dark silhouette on the tile, and a habit line when tapped |
-| Colour species | "???" tile, no hint | Once you have met its shape species: a silhouette, and "An uncommon coat of the Red fox" (12%) or "A very rare coat of the Red fox" (3%) |
-| Base legend | "???" tile, no hint | Once you have met any entry of its base: a silhouette, and its riddle |
-| Regional legend | Hidden outside its region | In its region: a silhouette and its riddle. Met: shown everywhere |
+A hint is a reward for meeting an animal you have already met. Each such repeat meeting reveals one hint, for an animal picked at random from those you have not met and have no hint for yet. The pick is fixed by the activity's id, so it is the same on every phone. A first meeting gives no hint, and neither does a night's sleep under 6 hours.
 
-A hint never names the animal; the name stays "???" until you meet it. Tapping a tile with no hint shows "Not met yet. Anything can turn up on any outing."
+| Entry | Can be picked | A revealed hint shows |
+|---|---|---|
+| Shape species | Always | A dark silhouette on the tile, and a habit line when tapped |
+| Colour species | Once you have met its shape species | A silhouette, and "An uncommon coat of the Red fox" (12%) or "A very rare coat of the Red fox" (3%) |
+| Base legend | Always | A silhouette, and its riddle |
+| Regional legend | Never (it has its own teaser) | In its region it always shows a silhouette and its riddle. Hidden outside its region. Met: shown everywhere |
+
+The hint is shown on the meeting card ("A hint about someone you have not met") and stays in the collection until you meet that animal. It is stored with the meeting, so it survives updates and clears with Start over.
+
+A hint never names the animal; the name stays "???" until you meet it. Tapping a tile with no hint shows "Not met yet. Anything can turn up."
 
 ## Habit lines (shape species)
 
@@ -47,10 +51,10 @@ A base with two home kinds joins them with "and" (Squirrel: "Found out on hikes 
 | Day | daylight | daytime naps |
 | Twilight | dusk and dawn | dusk and dawn |
 | Night | the night | the night |
-| Brief | quick outings | short naps |
-| Short | short outings | short sleeps |
-| Medium length | middling outings | a good night's sleep |
-| Long | long outings | long lie-ins |
+| Brief | quick activities | short naps |
+| Short | short activities | short sleeps |
+| Medium length | middling activities | a good night's sleep |
+| Long | long activities | long lie-ins |
 | Near | staying close | |
 | Far | going far | |
 | Slow | an easy pace | |
@@ -67,7 +71,7 @@ The second phrase is lower case: "Loves speed, fond of daylight." Two phrases of
 | nekomata | Two tails, two little flames, wandering after dark. |
 | kitsune | At dusk, a white fox with more tails than it needs. |
 | moon-rabbit | It came down from the moon one night, pestle and all. |
-| kamaitachi | A gust with claws. Only the quickest outings stir it. |
+| kamaitachi | A gust with claws. Only the quickest activities stir it. |
 | unicorn | Seen at the edge of dusk, with a single spiral horn. |
 | ratatoskr | A red blur by daylight, carrying messages up a great tree. |
 | phoenix | Feathers like embers, rising with the daylight. |

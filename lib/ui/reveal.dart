@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
+import '../animals/hints.dart';
 import '../animals/lookup.dart';
 import '../data/model.dart';
 import '../world/world_painter.dart';
@@ -154,6 +155,7 @@ class RevealOverlay extends StatefulWidget {
     required this.hatId,
     required this.first,
     required this.timesMet,
+    this.hint,
     required this.miles,
     required this.bushTopLeft,
     required this.scale,
@@ -169,6 +171,7 @@ class RevealOverlay extends StatefulWidget {
   final String? hatId;
   final bool first;
   final int timesMet;
+  final String? hint;
   final bool miles;
   final Offset bushTopLeft;
   final double scale;
@@ -467,6 +470,9 @@ class _RevealOverlayState extends State<RevealOverlay>
     final typed = _typed();
     final when = _whenLabel(widget.outing.start, widget.now ?? DateTime.now());
     final meta = '${outingMeta(widget.outing, miles: widget.miles)} · $when';
+    final hint = widget.hint == null
+        ? null
+        : hintText(findEntry(widget.hint!)!);
     final tag = widget.first
         ? 'New in your collection'
         : 'Met ${widget.timesMet} times';
@@ -528,6 +534,25 @@ class _RevealOverlayState extends State<RevealOverlay>
                       ),
                     ),
                   ),
+                  if (hint != null) ...[
+                    const SizedBox(height: 14),
+                    Text(
+                      'A hint about someone you have not met',
+                      key: const ValueKey('reveal-hint-title'),
+                      style: _bodyText(13, _bark),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 232),
+                      child: Text(
+                        hint,
+                        key: const ValueKey('reveal-hint'),
+                        style: _bodyText(15, _ink, italic: true),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

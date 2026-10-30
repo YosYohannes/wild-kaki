@@ -70,7 +70,12 @@ class WildStore {
     return home();
   }
 
-  Future<HomeState> reveal(Outing outing, String animal, {String? hat}) async {
+  Future<HomeState> reveal(
+    Outing outing,
+    String animal, {
+    String? hat,
+    String? hint,
+  }) async {
     final waiting = _readOutings(_waitingKey)
         .where((o) => o.id != outing.id)
         .toList();
@@ -78,7 +83,7 @@ class WildStore {
       ..removeWhere((s) => s.outing.id == outing.id);
     final next = sightings.fold(0, (m, s) => max(m, s.order ?? 0)) + 1;
     sightings
-      ..add(Sighting(outing, animal, hat: hat, order: next))
+      ..add(Sighting(outing, animal, hat: hat, order: next, hint: hint))
       ..sort((a, b) => b.outing.start.compareTo(a.outing.start));
     await _prefs.setString(_waitingKey, _write(waiting));
     await _prefs.setString(_sightingsKey, _writeSightings(sightings));
@@ -134,6 +139,7 @@ class WildStore {
         legacyEntryId((o['animal'] as String?) ?? ''),
         hat: o['hat'] as String?,
         order: o['order'] as int?,
+        hint: o['hint'] as String?,
       ),
   ];
 
@@ -169,6 +175,7 @@ class WildStore {
         'animal': s.animal,
         if (s.hat != null) 'hat': s.hat,
         if (s.order != null) 'order': s.order,
+        if (s.hint != null) 'hint': s.hint,
       },
   ]);
 }

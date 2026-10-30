@@ -4,12 +4,12 @@ const Map<String, String> entryNotes = {
   'black-shiba': 'Black Shiba: the same stubborn charm, dressed for midnight.',
   'corgi': 'Short walks suit the corgi, whose legs are more of a suggestion.',
   'dachshund':
-      'Long dog, short outings: the dachshund is built for a gentle potter.',
+      'Long dog, short walks: the dachshund is built for a gentle potter.',
   'beagle': 'A beagle follows its nose, and its nose follows everything.',
   'poodle': 'Every stroll is a runway for a poodle, preferably at dusk.',
   'golden-poodle':
       'The golden poodle has been gilded, and has mentioned it twice.',
-  'pug': 'A pug\'s ideal outing is a quick waddle and a snore of great length.',
+  'pug': 'A pug\'s ideal walk is a quick waddle and a snore of great length.',
   'husky': 'Huskies treat the horizon as a personal invitation.',
   'terrier':
       'A terrier is a bundle of zoomies with a little dog wrapped round it.',
@@ -116,8 +116,7 @@ const Map<String, String> entryNotes = {
   'bake-danuki':
       'A leaf on its head means the bake-danuki is about to be someone else.',
   'merlion': 'Half lion, half fish, wholly Singapore. Mind the spray.',
-  'garuda':
-      'Garuda spreads golden wings over the islands, and over your outing.',
+  'garuda': 'Garuda spreads golden wings over the islands, and over your day.',
   'qilin': 'A qilin steps so lightly that the grass does not bend beneath it.',
   'naga': 'The naga coils in the shallows, jewelled hood held high.',
   'nessie': 'Nessie! Blurry, as always, and gone before the photo.',

@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
 
 import '../animals/boosts.dart';
+import '../animals/facts.dart';
+import '../animals/hints.dart';
 import '../animals/holidays.dart';
 import '../animals/picker.dart';
+import '../animals/rolls.dart';
 import '../animals/zone.dart';
 import 'health_sync.dart';
 import 'model.dart';
@@ -131,9 +134,25 @@ class WildController extends ChangeNotifier {
     timeZone: _timeZone(),
   );
 
+  String? previewHint(Outing outing, Pick pick) {
+    final met = {for (final s in _home.sightings) s.animal};
+    if (!met.contains(pick.entryId)) return null;
+    if (ActivityFacts.from(outing, _holidays).isShortSleep) return null;
+    return duplicateHint(
+      met: met,
+      hinted: hintedIds(_home.sightings),
+      roll: roll('hint', outing.id),
+    );
+  }
+
   Future<void> reveal(Outing o) async {
     final pick = previewPick(o);
-    _home = await _store.reveal(o, pick.entryId, hat: pick.hatId);
+    _home = await _store.reveal(
+      o,
+      pick.entryId,
+      hat: pick.hatId,
+      hint: previewHint(o, pick),
+    );
     notifyListeners();
   }
 

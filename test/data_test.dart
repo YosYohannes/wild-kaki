@@ -582,6 +582,93 @@ void main() {
       }
     });
 
+    group('hints on repeat meetings', () {
+      Outing sleepOf(String id, int minutes) => Outing(
+        id: id,
+        kind: sleepKind,
+        start: t0.add(const Duration(hours: 1)),
+        distanceKm: null,
+        minutes: minutes,
+      );
+
+      Future<(WildController, String)> metOnce() async {
+        final first = sleepOf('first', 480);
+        source.outings = [first];
+        final c = await make();
+        await c.refresh();
+        await c.reveal(first);
+        return (c, c.home.sightings.single.animal);
+      }
+
+      Outing repeatOf(
+        WildController c,
+        String animal,
+        int minutes, {
+        Set<String> not = const {},
+      }) {
+        for (var i = 0; i < 5000; i++) {
+          final o = sleepOf('again-$i', minutes);
+          if (not.contains(o.id)) continue;
+          if (c.previewPick(o).entryId == animal) return o;
+        }
+        throw StateError('no repeat found');
+      }
+
+      test('a first meeting gives no hint', () async {
+        final (c, _) = await metOnce();
+        expect(c.home.sightings.single.hint, isNull);
+      });
+
+      test('a repeat meeting stores one hint for someone unmet', () async {
+        final (c, animal) = await metOnce();
+        final again = repeatOf(c, animal, 480);
+        final hint = c.previewHint(again, c.previewPick(again));
+        expect(hint, isNotNull);
+        expect(c.previewHint(again, c.previewPick(again)), hint);
+        await c.reveal(again);
+        final stored = c.home.sightings.firstWhere(
+          (s) => s.outing.id == again.id,
+        );
+        expect(stored.hint, hint);
+        expect(c.home.sightings.map((s) => s.animal), isNot(contains(hint)));
+      });
+
+      test('a hint is not given twice', () async {
+        final (c, animal) = await metOnce();
+        final given = <String>{};
+        final used = <String>{};
+        for (var n = 0; n < 6; n++) {
+          final again = repeatOf(c, animal, 480, not: used);
+          used.add(again.id);
+          await c.reveal(again);
+          final hint = c.home.sightings
+              .firstWhere((s) => s.outing.id == again.id)
+              .hint!;
+          expect(given.add(hint), isTrue, reason: hint);
+        }
+      });
+
+      test('a night under six hours gives no hint', () async {
+        final (c, animal) = await metOnce();
+        final short = repeatOf(c, animal, 300);
+        expect(c.previewHint(short, c.previewPick(short)), isNull);
+        await c.reveal(short);
+        expect(c.home.sightings.first.hint, isNull);
+      });
+
+      test('the hint survives a round trip through the store', () async {
+        final (c, animal) = await metOnce();
+        final again = repeatOf(c, animal, 480);
+        await c.reveal(again);
+        final hint = c.home.sightings
+            .firstWhere((s) => s.outing.id == again.id)
+            .hint;
+        await c.startOver();
+        expect(c.home.sightings, isEmpty);
+        expect(hint, isNotNull);
+      });
+    });
+
     test('the pick uses the time zone at the moment of the reveal', () async {
       final id = [for (var i = 0; i < 20000; i++) 'zone-$i']
           .firstWhere((id) => roll('regional', id) < regionalLegendChance);

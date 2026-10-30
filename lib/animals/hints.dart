@@ -1,3 +1,4 @@
+import '../data/model.dart';
 import 'bands.dart';
 import 'catalog.dart';
 import 'hints_data.dart';
@@ -27,10 +28,10 @@ const Map<Band, (String, String?)> _bandWords = {
   PartOfDay.day: ('daylight', 'daytime naps'),
   PartOfDay.twilight: ('dusk and dawn', 'dusk and dawn'),
   PartOfDay.night: ('the night', 'the night'),
-  LengthBand.brief: ('quick outings', 'short naps'),
-  LengthBand.short: ('short outings', 'short sleeps'),
-  LengthBand.medium: ('middling outings', 'a good night\'s sleep'),
-  LengthBand.long: ('long outings', 'long lie-ins'),
+  LengthBand.brief: ('quick activities', 'short naps'),
+  LengthBand.short: ('short activities', 'short sleeps'),
+  LengthBand.medium: ('middling activities', 'a good night\'s sleep'),
+  LengthBand.long: ('long activities', 'long lie-ins'),
   DistanceBand.near: ('staying close', null),
   DistanceBand.far: ('going far', null),
   SpeedBand.slow: ('an easy pace', null),
@@ -38,27 +39,43 @@ const Map<Band, (String, String?)> _bandWords = {
   SpeedBand.fast: ('speed', null),
 };
 
-bool _baseMet(Base base, Set<String> met) =>
-    met.any((id) => findEntry(id)?.base.id == base.id);
-
 bool hintUnlocked(
   AnimalEntry entry, {
   required Set<String> met,
+  Set<String> hinted = const {},
   String? timeZone,
 }) {
   if (met.contains(entry.id)) return false;
   final legend = entry.legend;
   if (legend != null && legend.isRegional) return legend.matchesZone(timeZone);
-  if (entry.colour != null) return met.contains(entry.shape!.id);
-  return _baseMet(entry.base, met);
+  return hinted.contains(entry.id);
 }
 
 String? hintFor(
   AnimalEntry entry, {
   required Set<String> met,
+  Set<String> hinted = const {},
   String? timeZone,
-}) =>
-    hintUnlocked(entry, met: met, timeZone: timeZone) ? hintText(entry) : null;
+}) => hintUnlocked(entry, met: met, hinted: hinted, timeZone: timeZone)
+    ? hintText(entry)
+    : null;
+
+String? duplicateHint({
+  required Set<String> met,
+  required Set<String> hinted,
+  required double roll,
+}) {
+  final open = [
+    for (final e in animalEntries)
+      if (!met.contains(e.id) &&
+          !hinted.contains(e.id) &&
+          !(e.legend?.isRegional ?? false) &&
+          (e.colour == null || met.contains(e.shape!.id)))
+        e,
+  ];
+  if (open.isEmpty) return null;
+  return open[(roll * open.length).floor().clamp(0, open.length - 1)].id;
+}
 
 String hintText(AnimalEntry entry) {
   final legend = entry.legend;
@@ -103,3 +120,8 @@ String _habitLine(Base base, Species species) {
   }
   return '$kind. $text.';
 }
+
+Set<String> hintedIds(Iterable<Sighting> sightings) => {
+  for (final s in sightings)
+    if (s.hint != null) s.hint!,
+};

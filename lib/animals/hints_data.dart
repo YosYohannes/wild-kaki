@@ -5,7 +5,7 @@ const Map<String, String> legendRiddles = {
   'nekomata': 'Two tails, two little flames, wandering after dark.',
   'kitsune': 'At dusk, a white fox with more tails than it needs.',
   'moon-rabbit': 'It came down from the moon one night, pestle and all.',
-  'kamaitachi': 'A gust with claws. Only the quickest outings stir it.',
+  'kamaitachi': 'A gust with claws. Only the quickest activities stir it.',
   'unicorn': 'Seen at the edge of dusk, with a single spiral horn.',
   'ratatoskr': 'A red blur by daylight, carrying messages up a great tree.',
   'phoenix': 'Feathers like embers, rising with the daylight.',

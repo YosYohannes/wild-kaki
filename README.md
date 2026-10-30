@@ -14,7 +14,7 @@ When the app opens it asks GitHub for the latest release of this repository (at 
 
 Animals and the rules that pick them live in `lib/animals/`: 15 bases and 94 animals including legends (`docs/animals.md`), picked by the rules in `docs/rules.md`. Only animals you have found appear in the scene.
 
-In the collection, an animal you have not met yet can show as a dark silhouette once you have met something from its family; tap it for a hint about its habits (never its name). The rules are in `docs/hints.md`.
+Meeting an animal you already know reveals a hint about one you have not met (picked at random, never its name): it shows as a dark silhouette in the collection, and tapping it tells you about its habits. Sleeps under six hours give no hint. The rules are in `docs/hints.md`.
 
 Not yet verified on a device: Health Connect permission flow, pull-to-refresh feel and the launcher icon.
 

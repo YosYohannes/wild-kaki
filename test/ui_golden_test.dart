@@ -58,8 +58,16 @@ final _recentSightings = [
 
 final _collected = [
   ..._meetings,
-  Sighting(_outing('g', 'Walk', DateTime(2025, 10, 29, 7), 2, 25), 'shiba'),
-  Sighting(_outing('d', 'Walk', DateTime(2025, 10, 29, 8), 1.8, 20), 'tabby'),
+  Sighting(
+    _outing('g', 'Walk', DateTime(2025, 10, 29, 7), 2, 25),
+    'shiba',
+    hint: 'corgi',
+  ),
+  Sighting(
+    _outing('d', 'Walk', DateTime(2025, 10, 29, 8), 1.8, 20),
+    'tabby',
+    hint: 'husky',
+  ),
   Sighting(_outing('e', 'Run', DateTime(2025, 10, 29, 9), 6, 40), 'black-cat'),
 ];
 
@@ -221,10 +229,7 @@ void main() {
     expect(find.bySemanticsLabel('Not met yet, hint available'), findsNothing);
     await tester.tap(find.text('???').first);
     await tester.pump();
-    expect(
-      find.text('Not met yet. Anything can turn up on any outing.'),
-      findsOneWidget,
-    );
+    expect(find.text('Not met yet. Anything can turn up.'), findsOneWidget);
     expect(find.byType(ColorFiltered), findsNothing);
     await tester.tap(find.byKey(const ValueKey('hint-close')));
     await tester.pump();
@@ -466,6 +471,23 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('confirm-start-over')));
     await tester.pump();
     expect(started, 1);
+    await _leave(tester);
+  });
+
+  testWidgets('settings footer shows the installed version', (tester) async {
+    Widget page(String? version) => SettingsPage(
+      prefs: _allPrefs,
+      onPrefs: (_) {},
+      onBack: () {},
+      onManage: () {},
+      onStartOver: () {},
+      version: version,
+    );
+    await _show(tester, page('1.2.3'));
+    expect(find.text('WildKaki 1.2.3 · Tiny5, OFL'), findsOneWidget);
+    await _leave(tester);
+    await _show(tester, page(null));
+    expect(find.text('WildKaki · Tiny5, OFL'), findsOneWidget);
     await _leave(tester);
   });
 

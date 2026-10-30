@@ -37,6 +37,7 @@ class _Revealing {
     this.spot,
     this.first,
     this.timesMet,
+    this.hint,
   );
 
   final Outing outing;
@@ -45,6 +46,7 @@ class _Revealing {
   final BushSpot? spot;
   final bool first;
   final int timesMet;
+  final String? hint;
 }
 
 String syncedAgo(DateTime then, DateTime now) {
@@ -86,6 +88,7 @@ class SceneScreen extends StatefulWidget {
 class _SceneScreenState extends State<SceneScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late SceneState _world;
+  String? _version;
   late final SceneSounds _sounds = widget.sounds ?? SceneSounds();
   late final Ticker _ticker;
   final _repaint = _Repaint();
@@ -132,6 +135,9 @@ class _SceneScreenState extends State<SceneScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    (widget.updates?.platform ?? PlatformApp()).installedVersion().then((v) {
+      if (mounted) setState(() => _version = v);
+    });
     _hour = widget.hourOverride ?? currentHour();
     _bindWeather();
     _weatherView = WeatherView(_weather.value);
@@ -306,6 +312,7 @@ class _SceneScreenState extends State<SceneScreen>
             b,
             met == 0,
             met + 1,
+            _c.previewHint(outing, pick),
           ),
         );
         return;
@@ -378,6 +385,7 @@ class _SceneScreenState extends State<SceneScreen>
             }
           },
           onDevTools: kDebugMode ? () => _go(_Page.devTools) : null,
+          version: _version,
         );
       case _Page.devTools:
         return DevToolsPage(
@@ -508,6 +516,7 @@ class _SceneScreenState extends State<SceneScreen>
                       hatId: reveal.hatId,
                       first: reveal.first,
                       timesMet: reveal.timesMet,
+                      hint: reveal.hint,
                       miles: _c.prefs.miles,
                       bushTopLeft: Offset(
                         ((reveal.spot?.x ?? 40) - 5) * scale,

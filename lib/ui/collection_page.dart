@@ -6,7 +6,7 @@ import '../data/model.dart';
 import 'pixel_icon.dart';
 import 'theme.dart';
 
-const _lockedHint = 'Not met yet. Anything can turn up on any outing.';
+const _lockedHint = 'Not met yet. Anything can turn up.';
 
 class CollectionPage extends StatefulWidget {
   const CollectionPage({
@@ -42,6 +42,7 @@ class _CollectionPageState extends State<CollectionPage> {
   @override
   Widget build(BuildContext context) {
     final met = {for (final s in widget.sightings) s.animal};
+    final hinted = hintedIds(widget.sightings);
     final cells = <Widget>[
       for (final entry in animalEntries)
         if (_shown(entry, met))
@@ -49,7 +50,12 @@ class _CollectionPageState extends State<CollectionPage> {
             entry: entry,
             found: met.contains(entry.id),
             isNew: met.contains(entry.id) && !widget.opened.contains(entry.id),
-            hinted: hintUnlocked(entry, met: met, timeZone: widget.timeZone),
+            hinted: hintUnlocked(
+              entry,
+              met: met,
+              hinted: hinted,
+              timeZone: widget.timeZone,
+            ),
             onTap: met.contains(entry.id)
                 ? () => widget.onOpen(entry.id)
                 : () => setState(() => _card = entry),
@@ -85,7 +91,12 @@ class _CollectionPageState extends State<CollectionPage> {
           if (card != null)
             _HintCard(
               entry: card,
-              hint: hintFor(card, met: met, timeZone: widget.timeZone),
+              hint: hintFor(
+                card,
+                met: met,
+                hinted: hinted,
+                timeZone: widget.timeZone,
+              ),
               onClose: () => setState(() => _card = null),
             ),
         ],
