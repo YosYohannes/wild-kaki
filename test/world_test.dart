@@ -6,8 +6,7 @@ import 'package:wildkaki/world/pixel_buffer.dart';
 import 'package:wildkaki/world/sky.dart';
 import 'package:wildkaki/world/world_painter.dart';
 
-const _out =
-    '/tmp/claude-1000/-home-yos-Desktop-wild-kaki/b522a0f8-ab30-4973-b0c2-dccd1164ca20/scratchpad';
+const _out = 'build/test_shots';
 
 void main() {
   group('Mulberry', () {
@@ -113,6 +112,7 @@ void main() {
     testWidgets('returns an image 120 wide and rows tall, renders PNGs', (
       tester,
     ) async {
+      Directory(_out).createSync(recursive: true);
       await tester.runAsync(() async {
         for (final e in {'day': 12.0, 'dusk': 18.5, 'night': 23.0}.entries) {
           final img = await paintWorld(e.value, 260);

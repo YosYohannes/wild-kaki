@@ -158,7 +158,7 @@ void main() {
     expect(dog.bubble, 'woof!');
     expect(dog.arrivalFor('walk'), 'trotted along on your walk');
     expect(catalog.baseById('songbird')!.habitat, Habitat.sky);
-    expect(catalog.baseById('owl')!.habitat, Habitat.sky);
+    expect(catalog.baseById('owl')!.habitat, Habitat.meadow);
     expect(catalog.baseById('bat')!.habitat, Habitat.sky);
     expect(catalog.baseById('waterfowl')!.habitat, Habitat.river);
     expect(catalog.baseById('otter')!.habitat, Habitat.river);

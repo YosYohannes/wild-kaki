@@ -116,7 +116,11 @@ class _SceneScreenState extends State<SceneScreen>
 
   List<MeadowAnimal> get _meadow => [
     for (final s in _c.home.sightings.take(maxFoxes))
-      (entryId: entryOrDefault(s.animal).id, hatId: s.hat),
+      (
+        outingId: s.outing.id,
+        entryId: entryOrDefault(s.animal).id,
+        hatId: s.hat,
+      ),
   ];
 
   bool get _motion =>
@@ -271,6 +275,18 @@ class _SceneScreenState extends State<SceneScreen>
       react(entryOrDefault(fox.entryId).base.sound);
       return;
     }
+    final swimmer = _world.swimmers.where((s) => s.hit(px, py)).firstOrNull;
+    if (swimmer != null) {
+      swimmer.startle();
+      react(entryOrDefault(swimmer.entryId).base.sound);
+      return;
+    }
+    final flyer = _world.flyers.where((f) => f.hit(px, py)).firstOrNull;
+    if (flyer != null) {
+      flyer.startle();
+      react(entryOrDefault(flyer.entryId).base.sound);
+      return;
+    }
     for (final b in _world.birds) {
       if (b.hit(px, py, layout)) {
         b.startle();
@@ -321,7 +337,8 @@ class _SceneScreenState extends State<SceneScreen>
   }
 
   void _close(_Revealing r) {
-    _world.addFox(r.spot?.x.toDouble() ?? 40, (
+    _world.addAnimal(r.spot?.x.toDouble() ?? 40, (
+      outingId: r.outing.id,
       entryId: r.entry.id,
       hatId: r.hatId,
     ));
@@ -561,6 +578,35 @@ class _ScenePainter extends CustomPainter {
     );
   }
 
+  void _animal(
+    Canvas canvas,
+    String entryId,
+    String? hatId,
+    int frame,
+    bool left,
+    int x,
+    int y,
+    double s,
+  ) {
+    final entry = entryOrDefault(entryId);
+    final frames = entry.frames;
+    final headPoints = entry.headPoints;
+    final i = frame % frames.length;
+    _sprite(canvas, sprites.named(frames[i], mirrored: left), x, y, s);
+    final hat = hatById(hatId);
+    if (hat == null) return;
+    final img = sprites.named(hat.sprite, mirrored: left);
+    final head = headPoints[i % headPoints.length];
+    final hx = left ? 31 - head.x : head.x;
+    _sprite(
+      canvas,
+      img,
+      x + hx - img.width ~/ 2,
+      y + head.y - img.height + 1,
+      s,
+    );
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final s = size.width / worldW;
@@ -627,6 +673,18 @@ class _ScenePainter extends CustomPainter {
         s,
       );
     }
+    for (final f in state.flyers) {
+      _animal(
+        canvas,
+        f.entryId,
+        f.hatId,
+        f.frame,
+        f.dir < 0,
+        f.x.round(),
+        f.y,
+        s,
+      );
+    }
 
     final clock = state.clock;
     final blink = motion && (clock % 3.2) > 3.0;
@@ -672,27 +730,44 @@ class _ScenePainter extends CustomPainter {
       items.add((
         f.feet,
         items.length,
+        () => _animal(
+          canvas,
+          f.entryId,
+          f.hatId,
+          f.frame,
+          f.dir < 0,
+          f.x.round(),
+          f.feet - 32,
+          s,
+        ),
+      ));
+    }
+    for (final w in state.swimmers) {
+      items.add((
+        w.feet,
+        items.length,
         () {
-          final entry = entryOrDefault(f.entryId);
-          final frames = entry.frames;
-          final headPoints = entry.headPoints;
-          final left = f.dir < 0;
-          final i = f.frame % frames.length;
-          final x = f.x.round();
-          final y = f.feet - 32;
-          _sprite(canvas, sprites.named(frames[i], mirrored: left), x, y, s);
-          final hat = hatById(f.hatId);
-          if (hat == null) return;
-          final img = sprites.named(hat.sprite, mirrored: left);
-          final head = headPoints[i % headPoints.length];
-          final hx = left ? 31 - head.x : head.x;
-          _sprite(
+          canvas.save();
+          canvas.clipRect(
+            Rect.fromLTRB(
+              0,
+              0,
+              size.width,
+              ((w.feet - Swimmer.waterline) * s).roundToDouble(),
+            ),
+            doAntiAlias: false,
+          );
+          _animal(
             canvas,
-            img,
-            x + hx - img.width ~/ 2,
-            y + head.y - img.height + 1,
+            w.entryId,
+            w.hatId,
+            w.frame,
+            w.dir < 0,
+            w.x.round(),
+            w.feet - 32,
             s,
           );
+          canvas.restore();
         },
       ));
     }
@@ -708,6 +783,24 @@ class _ScenePainter extends CustomPainter {
         entryOrDefault(f.entryId).base.bubble,
         (f.x + 16) * s,
         (f.feet - 20) * s,
+        s,
+      );
+    }
+    for (final w in state.swimmers.where((w) => w.bubble > 0)) {
+      _bubble(
+        canvas,
+        entryOrDefault(w.entryId).base.bubble,
+        (w.x + 16) * s,
+        (w.feet - 20) * s,
+        s,
+      );
+    }
+    for (final f in state.flyers.where((f) => f.bubble > 0)) {
+      _bubble(
+        canvas,
+        entryOrDefault(f.entryId).base.bubble,
+        (f.x + 16) * s,
+        (f.y + 12) * s,
         s,
       );
     }

@@ -29,7 +29,7 @@ Totals: 15 bases, 58 shape species, 16 colour species, 15 base legends and 5 reg
 | Waterfowl | Swim | river, paddles | quack | paddled along on your {activity} |
 | Otter | Swim | river, swims and dives | squeak | swam with you on your {activity} |
 | Lizard | Climb | meadow, darts and freezes | click | watched you from a wall on your {activity} |
-| Owl | Sleep | sky at night, glides | hoo | kept watch on your {activity} |
+| Owl | Sleep | meadow, hops | hoo | kept watch on your {activity} |
 | Bat | Sleep | sky at dusk and night, flits | eek | flitted around on your {activity} |
 | Mouse | Sleep | meadow, scurries | eep | scurried along on your {activity} |
 | Raccoon | Sleep | meadow, waddles | churr | rummaged around during your {activity} |

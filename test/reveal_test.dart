@@ -10,8 +10,7 @@ import 'package:wildkaki/data/model.dart';
 import 'package:wildkaki/ui/reveal.dart';
 import 'package:wildkaki/world/world_painter.dart';
 
-const _shots =
-    '/tmp/claude-1000/-home-yos-Desktop-wild-kaki/b522a0f8-ab30-4973-b0c2-dccd1164ca20/scratchpad';
+const _shots = 'build/test_shots';
 const _sprites = [
   'bush',
   'bush_blink',
@@ -99,6 +98,7 @@ Future<void> _shot(WidgetTester tester, String name) async {
     );
     final image = await boundary.toImage(pixelRatio: 2);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    Directory(_shots).createSync(recursive: true);
     await File('$_shots/flutter_reveal_$name.png')
         .writeAsBytes(bytes!.buffer.asUint8List());
   });

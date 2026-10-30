@@ -13,8 +13,7 @@ import 'package:wildkaki/ui/recent_page.dart';
 import 'package:wildkaki/ui/settings_page.dart';
 import 'package:wildkaki/ui/theme.dart';
 
-const _scratch =
-    '/tmp/claude-1000/-home-yos-Desktop-wild-kaki/b522a0f8-ab30-4973-b0c2-dccd1164ca20/scratchpad';
+const _scratch = 'build/test_shots';
 
 Future<void> _loadFont(String family, List<String> paths) async {
   final loader = FontLoader(family);
@@ -107,9 +106,8 @@ Future<void> _shot(WidgetTester tester, String name) async {
   );
   await tester.runAsync(() async {
     final bytes = await File('test/goldens/$name.png').readAsBytes();
-    if (Directory(_scratch).existsSync()) {
-      await File('$_scratch/flutter_$name.png').writeAsBytes(bytes);
-    }
+    Directory(_scratch).createSync(recursive: true);
+    await File('$_scratch/flutter_$name.png').writeAsBytes(bytes);
   });
 }
 

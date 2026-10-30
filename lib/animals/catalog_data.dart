@@ -131,7 +131,7 @@ const _bases = <Base>[
     id: 'owl',
     name: 'Owl',
     homeKinds: {'Sleep'},
-    habitat: Habitat.sky,
+    habitat: Habitat.meadow,
     sound: 'hoo',
     bubble: 'hoo!',
     arrival: 'kept watch on your {activity}',

@@ -25,8 +25,7 @@ import 'package:wildkaki/ui/settings_page.dart';
 import 'package:wildkaki/ui/theme.dart';
 import 'package:wildkaki/weather/weather_state.dart';
 
-const _scratch =
-    '/tmp/claude-1000/-home-yos-Desktop-wild-kaki/b522a0f8-ab30-4973-b0c2-dccd1164ca20/scratchpad';
+const _scratch = 'build/test_shots';
 
 class _FakeSource implements OutingSource {
   @override
@@ -77,6 +76,20 @@ Future<WildController> _controller({bool third = false}) async {
   return WildController(store, _FakeSource());
 }
 
+Future<WildController> _controllerWith(List<(String, String?)> animals) async {
+  SharedPreferences.setMockInitialValues({});
+  final store = await WildStore.open(systemAnimate: true);
+  final seen = [
+    for (var i = 0; i < animals.length; i++)
+      _outing('s$i', 'Swim', DateTime(2026, 10, 20 + i, 7, 0), 1, 30),
+  ];
+  await store.addWaiting(seen);
+  for (var i = 0; i < animals.length; i++) {
+    await store.reveal(seen[i], animals[i].$1, hat: animals[i].$2);
+  }
+  return WildController(store, _FakeSource());
+}
+
 final _boundary = GlobalKey();
 late SceneSprites _sprites;
 
@@ -88,6 +101,7 @@ Future<void> _show(
   Size size = const Size(1080, 2340),
   int seed = 5,
   WeatherState? weather,
+  SceneSounds? sounds,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 3;
@@ -103,7 +117,7 @@ Future<void> _show(
         debugShowCheckedModeBanner: false,
         theme: wildTheme(),
         home: SceneScreen(
-          sounds: _QuietSounds(),
+          sounds: sounds ?? _QuietSounds(),
           controller: controller,
           sprites: _sprites,
           hourOverride: hour,
@@ -127,10 +141,8 @@ Future<void> _shot(WidgetTester tester, String name, {String? copy}) async {
   );
   await tester.runAsync(() async {
     final bytes = await File('test/goldens/$name.png').readAsBytes();
-    if (Directory(_scratch).existsSync()) {
-      await File('$_scratch/${copy ?? 'flutter_$name'}.png')
-          .writeAsBytes(bytes);
-    }
+    Directory(_scratch).createSync(recursive: true);
+    await File('$_scratch/${copy ?? 'flutter_$name'}.png').writeAsBytes(bytes);
   });
 }
 
@@ -196,6 +208,13 @@ Future<List<int>> _render(
 class _QuietSounds extends SceneSounds {
   @override
   Future<void> play(String name) async {}
+}
+
+class _RecordingSounds extends SceneSounds {
+  final played = <String>[];
+
+  @override
+  Future<void> play(String name) async => played.add(name);
 }
 
 void main() {
@@ -450,6 +469,80 @@ void main() {
       foxes.map((f) => entryOrDefault(f.entryId).frames),
       everyElement(['red-fox_1', 'red-fox_2']),
     );
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('swimmers and bats take their lanes, wearing their hats', (
+    tester,
+  ) async {
+    _sprites = (await tester.runAsync(SceneSprites.load))!;
+    final c = (await tester.runAsync(
+      () => _controllerWith([
+        ('sparrow', 'party-hat'),
+        ('duck', 'beanie'),
+        ('vampire', 'top-hat'),
+        ('sparrow', 'bowler-hat'),
+        ('barn-owl', null),
+        ('nessie', null),
+      ]),
+    ))!;
+    await _show(tester, c, seed: 7);
+    final state = _state(tester);
+    expect(
+      state.swimmers.map((s) => s.entryId),
+      unorderedEquals(['duck', 'nessie']),
+    );
+    expect(
+      state.swimmers.map((s) => s.hatId),
+      unorderedEquals(['beanie', null]),
+    );
+    expect(
+      state.flyers.map((f) => f.entryId),
+      unorderedEquals(['vampire', 'sparrow']),
+    );
+    expect(
+      state.flyers.map((f) => f.hatId),
+      unorderedEquals(['top-hat', 'bowler-hat']),
+    );
+    expect(
+      state.foxes.map((f) => f.entryId),
+      unorderedEquals(['sparrow', 'barn-owl']),
+    );
+    expect(
+      state.foxes.map((f) => f.hatId),
+      unorderedEquals(['party-hat', null]),
+    );
+    await _shot(tester, 'scene_habitats');
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('tapping a swimmer or a bat reacts like a meadow animal', (
+    tester,
+  ) async {
+    _sprites = (await tester.runAsync(SceneSprites.load))!;
+    final c = (await tester.runAsync(
+      () => _controllerWith([('otter', null), ('vampire', 'top-hat')]),
+    ))!;
+    final sounds = _RecordingSounds();
+    await _show(tester, c, seed: 7, sounds: sounds);
+    final state = _state(tester);
+    final swimmer = state.swimmers.single;
+    final flyer = state.flyers.single;
+    expect(swimmer.alarm, 0);
+    expect(flyer.alarm, 0);
+
+    await tester.tapAt(Offset((swimmer.x + 16) * 3, (swimmer.feet - 12) * 3));
+    await tester.pump();
+    expect(swimmer.alarm, greaterThan(0));
+    expect(swimmer.bubble, greaterThan(0));
+    expect(flyer.alarm, 0);
+    expect(sounds.played, ['squeak']);
+
+    await tester.tapAt(Offset((flyer.x + 16) * 3, (flyer.y + 22) * 3));
+    await tester.pump();
+    expect(flyer.alarm, greaterThan(0));
+    expect(flyer.bubble, greaterThan(0));
+    expect(sounds.played, ['squeak', 'eek']);
     await tester.pumpWidget(const SizedBox());
   });
 
