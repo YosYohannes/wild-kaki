@@ -16,6 +16,8 @@ import '../ui/dev_tools.dart';
 import '../ui/reveal.dart';
 import '../ui/settings_page.dart';
 import '../ui/theme.dart';
+import '../ui/update_banner.dart';
+import '../update/update_service.dart';
 import '../weather/weather_state.dart';
 import '../world/pixel_buffer.dart';
 import '../world/sky.dart';
@@ -66,6 +68,7 @@ class SceneScreen extends StatefulWidget {
     this.random,
     this.sounds,
     this.weather,
+    this.updates,
   });
 
   final WildController controller;
@@ -74,6 +77,7 @@ class SceneScreen extends StatefulWidget {
   final math.Random? random;
   final SceneSounds? sounds;
   final WeatherState? weather;
+  final UpdateService? updates;
 
   @override
   State<SceneScreen> createState() => _SceneScreenState();
@@ -474,6 +478,25 @@ class _SceneScreenState extends State<SceneScreen>
                     ),
                   ),
                 ),
+                if (_page == _Page.scene &&
+                    reveal == null &&
+                    widget.updates != null)
+                  Positioned(
+                    top: top + 32,
+                    left: 16,
+                    right: 16,
+                    child: ValueListenableBuilder<UpdateInfo?>(
+                      valueListenable: widget.updates!.available,
+                      builder: (context, info, _) =>
+                          info == null || !_c.prefs.checkUpdates
+                          ? const SizedBox.shrink()
+                          : UpdateBanner(
+                              info: info,
+                              onLater: widget.updates!.dismiss,
+                              onUpdate: widget.updates!.openUpdate,
+                            ),
+                    ),
+                  ),
                 if (_page != _Page.scene)
                   Positioned.fill(child: _pageFor(_page)),
                 if (reveal != null)

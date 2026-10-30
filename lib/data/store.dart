@@ -38,6 +38,7 @@ class WildStore {
   static const _milesKey = 'miles';
   static const _animateKey = 'animate';
   static const _soundKey = 'sound';
+  static const _updatesKey = 'checkUpdates';
   static const _legacyKinds = {'run': 'Run', 'walk': 'Walk', 'climb': 'Climb'};
 
   DateTime get baseline =>
@@ -112,6 +113,7 @@ class WildStore {
       miles: _prefs.getBool(_milesKey) ?? false,
       animate: _prefs.getBool(_animateKey) ?? systemAnimate,
       sound: _prefs.getBool(_soundKey) ?? true,
+      checkUpdates: _prefs.getBool(_updatesKey) ?? true,
     );
   }
 
@@ -119,6 +121,7 @@ class WildStore {
     await _prefs.setBool(_milesKey, value.miles);
     await _prefs.setBool(_animateKey, value.animate);
     await _prefs.setBool(_soundKey, value.sound);
+    await _prefs.setBool(_updatesKey, value.checkUpdates);
   }
 
   List<Outing> _readOutings(String key) =>

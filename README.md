@@ -6,9 +6,11 @@ A running app that works offline, where every run reveals one wild animal, chose
 
 Flutter app, builds as a debug APK. The whole app is one pixel-art scene (sky, river, meadow) that follows the clock. Activities and sleep are read from Health Connect: everything Health Connect counts is an activity, once it starts after first launch. Each waiting activity hides an animal in a bush on the far bank (up to three at a time): tap a bush to meet the animal, the bench for the collection, the lamppost for Recent (the last 7 days), and pull down to sync. Tapping the animals in the scene makes them run off with a sound. Debug builds have Developer tools in Settings that write a fake run or a fake sleep into Health Connect.
 
-Public holidays (they give a day-off hat) come from the free Nager.Date service by the phone's country code, cached on the phone for 30 days, with the bundled Singapore list as the fallback. This is the only network use, and there is no server of ours: the request carries only the country code and the phone's IP address.
+Public holidays (they give a day-off hat) come from the free Nager.Date service by the phone's country code, cached on the phone for 30 days, with the bundled Singapore list as the fallback. There is no server of ours: the request carries only the country code and the phone's IP address.
 
 The weather in the scene's sky comes from the free Open-Meteo service for a representative city of the phone's time zone (no location permission), cached for 20 minutes, and falls back to clear. It only changes how the scene looks; the request carries only the rounded city coordinates and the phone's IP address.
+
+When the app opens it asks GitHub for the latest release of this repository (at most every six hours). If that release is newer, a banner offers it; Update opens the APK that matches the phone in the browser, and Later hides that version. The request carries only the phone's IP address, and Settings has a switch to turn it off. To follow a fork, build with `--dart-define=UPDATE_REPO=owner/name`.
 
 Animals and the rules that pick them live in `lib/animals/`: 15 bases and 94 animals including legends (`docs/animals.md`), picked by the rules in `docs/rules.md`. Only animals you have found appear in the scene.
 

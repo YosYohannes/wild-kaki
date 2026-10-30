@@ -62,16 +62,28 @@ class HomeState {
 }
 
 class Prefs {
-  const Prefs({required this.miles, required this.animate, this.sound = true});
+  const Prefs({
+    required this.miles,
+    required this.animate,
+    this.sound = true,
+    this.checkUpdates = true,
+  });
 
   final bool miles;
   final bool animate;
   final bool sound;
+  final bool checkUpdates;
 
-  Prefs copyWith({bool? miles, bool? animate, bool? sound}) => Prefs(
+  Prefs copyWith({
+    bool? miles,
+    bool? animate,
+    bool? sound,
+    bool? checkUpdates,
+  }) => Prefs(
     miles: miles ?? this.miles,
     animate: animate ?? this.animate,
     sound: sound ?? this.sound,
+    checkUpdates: checkUpdates ?? this.checkUpdates,
   );
 }
 

@@ -1,6 +1,8 @@
 package app.wildkaki
 
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
@@ -34,6 +36,20 @@ class MainActivity : FlutterFragmentActivity() {
                     "openSettings" -> openSettings(result)
                     "timeZone" -> result.success(TimeZone.getDefault().id)
                     "readOutings" -> readOutings(call, result)
+                    else -> result.notImplemented()
+                }
+            }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "app.wildkaki/app")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "version" -> result.success(packageManager.getPackageInfo(packageName, 0).versionName)
+                    "abis" -> result.success(Build.SUPPORTED_ABIS.toList())
+                    "open" -> try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(call.arguments as String)))
+                        result.success(null)
+                    } catch (e: Exception) {
+                        result.error("open", e.message, null)
+                    }
                     else -> result.notImplemented()
                 }
             }

@@ -23,6 +23,7 @@ import 'package:wildkaki/ui/dev_tools.dart';
 import 'package:wildkaki/ui/recent_page.dart';
 import 'package:wildkaki/ui/settings_page.dart';
 import 'package:wildkaki/ui/theme.dart';
+import 'package:wildkaki/update/update_service.dart';
 import 'package:wildkaki/weather/weather_state.dart';
 
 const _scratch = 'build/test_shots';
@@ -56,6 +57,19 @@ Future<void> _loadFont(String family, List<String> paths) async {
 
 Outing _outing(String id, String kind, DateTime start, double km, int min) =>
     Outing(id: id, kind: kind, start: start, distanceKm: km, minutes: min);
+
+class _UpdatePlatform implements AppPlatform {
+  final opened = <String>[];
+
+  @override
+  Future<String?> installedVersion() async => '1.0.1';
+
+  @override
+  Future<List<String>> abis() async => const [];
+
+  @override
+  Future<void> openUrl(String url) async => opened.add(url);
+}
 
 Future<WildController> _controller({bool third = false}) async {
   SharedPreferences.setMockInitialValues({});
@@ -102,6 +116,7 @@ Future<void> _show(
   int seed = 5,
   WeatherState? weather,
   SceneSounds? sounds,
+  UpdateService? updates,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 3;
@@ -123,6 +138,7 @@ Future<void> _show(
           hourOverride: hour,
           random: Random(seed),
           weather: weather,
+          updates: updates,
         ),
       ),
     ),
@@ -437,6 +453,37 @@ void main() {
     final c = (await tester.runAsync(_controller))!;
     await _show(tester, c, hour: 23);
     await _shot(tester, 'scene_night');
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a new version shows a banner that Later hides', (tester) async {
+    _sprites = (await tester.runAsync(SceneSprites.load))!;
+    final c = (await tester.runAsync(_controller))!;
+    final platform = _UpdatePlatform();
+    final updates = UpdateService(
+      enabled: () => c.prefs.checkUpdates,
+      repo: 'x/y',
+      platform: platform,
+      fetch: (_) async =>
+          '{"tag_name":"v9.0.0","html_url":"https://example.com/release"}',
+    );
+    await tester.runAsync(updates.refresh);
+    await _show(tester, c, updates: updates);
+    expect(find.text('Version 9.0.0 is ready'), findsOneWidget);
+    await _shot(tester, 'scene_update');
+
+    await tester.tap(find.text('Update'));
+    expect(platform.opened, ['https://example.com/release']);
+
+    await c.updatePrefs(c.prefs.copyWith(checkUpdates: false));
+    await tester.pump();
+    expect(find.text('Version 9.0.0 is ready'), findsNothing);
+    await c.updatePrefs(c.prefs.copyWith(checkUpdates: true));
+    await tester.pump();
+
+    await tester.tap(find.text('Later'));
+    await tester.pump();
+    expect(find.text('Version 9.0.0 is ready'), findsNothing);
     await tester.pumpWidget(const SizedBox());
   });
 

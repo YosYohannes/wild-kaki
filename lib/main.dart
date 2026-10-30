@@ -9,6 +9,7 @@ import 'data/controller.dart';
 import 'scene/scene_screen.dart';
 import 'scene/sprites.dart';
 import 'ui/theme.dart';
+import 'update/update_service.dart';
 import 'weather/weather_service.dart';
 
 Future<void> main() async {
@@ -37,6 +38,7 @@ Future<void> main() async {
         .accessibilityFeatures
         .disableAnimations,
   );
+  final updates = UpdateService(enabled: () => controller.prefs.checkUpdates);
   final sprites = await SceneSprites.load();
   runApp(
     WildKakiApp(
@@ -44,6 +46,7 @@ Future<void> main() async {
       holidays: holidays,
       phoneZone: phoneZone,
       weather: weather,
+      updates: updates,
       sprites: sprites,
     ),
   );
@@ -56,6 +59,7 @@ class WildKakiApp extends StatefulWidget {
     required this.holidays,
     required this.phoneZone,
     required this.weather,
+    required this.updates,
     required this.sprites,
   });
 
@@ -63,6 +67,7 @@ class WildKakiApp extends StatefulWidget {
   final HolidayService holidays;
   final PhoneTimeZone phoneZone;
   final WeatherService weather;
+  final UpdateService updates;
   final SceneSprites sprites;
 
   @override
@@ -77,6 +82,7 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
     widget.controller.syncQuietly();
     unawaited(widget.holidays.refresh());
     unawaited(widget.weather.refresh());
+    unawaited(widget.updates.refresh());
   }
 
   @override
@@ -92,6 +98,7 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
       widget.controller.syncQuietly();
       unawaited(widget.holidays.refresh());
       unawaited(widget.weather.refresh());
+      unawaited(widget.updates.refresh());
     }
   }
 
@@ -107,6 +114,7 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
           controller: widget.controller,
           sprites: widget.sprites,
           weather: widget.weather.state,
+          updates: widget.updates,
         ),
       ),
     );

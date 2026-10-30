@@ -439,6 +439,14 @@ void main() {
     await tester.pump();
     expect(prefs.miles, isFalse);
 
+    expect(prefs.checkUpdates, isTrue);
+    await tester.tap(find.byKey(const ValueKey('toggle-Check for updates')));
+    await tester.pump();
+    expect(prefs.checkUpdates, isFalse);
+    await tester.tap(find.byKey(const ValueKey('toggle-Check for updates')));
+    await tester.pump();
+    expect(prefs.checkUpdates, isTrue);
+
     await tester.drag(find.byType(ListView), const Offset(0, -800));
     await tester.pump();
     await tester.tap(find.text('Start over').last);

@@ -83,6 +83,17 @@ class _SettingsPageState extends State<SettingsPage> {
                           widget.onPrefs(_prefs.copyWith(sound: on)),
                     ),
                   ),
+                  const _Heading('Updates'),
+                  _Row(
+                    title: 'Check for updates',
+                    note: 'Asks GitHub for a newer version when the app opens',
+                    trailing: _Toggle(
+                      label: 'Check for updates',
+                      on: _prefs.checkUpdates,
+                      onChanged: (on) =>
+                          widget.onPrefs(_prefs.copyWith(checkUpdates: on)),
+                    ),
+                  ),
                   const _Heading('Your animals'),
                   if (_sure)
                     _confirm()
