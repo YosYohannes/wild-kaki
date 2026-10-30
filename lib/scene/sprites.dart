@@ -14,20 +14,12 @@ class SceneSprites {
     required this.bushBlink,
     required this.right,
     required this.left,
-    required this.birdRight,
-    required this.birdLeft,
-    required this.duckRight,
-    required this.duckLeft,
   });
 
   final ui.Image bench;
   final ui.Image lamppost;
   final ui.Image bush;
   final ui.Image bushBlink;
-  final List<ui.Image> birdRight;
-  final List<ui.Image> birdLeft;
-  final ui.Image duckRight;
-  final ui.Image duckLeft;
   final Map<String, ui.Image> right;
   final Map<String, ui.Image> left;
 
@@ -70,8 +62,6 @@ class SceneSprites {
     final left = {
       for (var i = 0; i < names.length; i++) names[i]: mirroredList[i],
     };
-    final birdRight = [await _load('bird_1'), await _load('bird_2')];
-    final duckRight = await _load('duck');
     return SceneSprites._(
       bench: await _load('bench'),
       lamppost: await _load('lamppost'),
@@ -79,10 +69,6 @@ class SceneSprites {
       bushBlink: await _load('bush_blink'),
       right: right,
       left: left,
-      birdRight: birdRight,
-      birdLeft: [for (final i in birdRight) await _mirrored(i)],
-      duckRight: duckRight,
-      duckLeft: await _mirrored(duckRight),
     );
   }
 }

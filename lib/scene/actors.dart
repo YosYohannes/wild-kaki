@@ -90,114 +90,6 @@ class Fox {
       px >= x + 1 && px < x + 31 && py >= feet - 17 && py < feet;
 }
 
-class Duck {
-  Duck(this.refFeet, this._lo, this._hi, this.dir, {Random? random})
-    : feet = refFeet,
-      _random = random ?? Random() {
-    x = _lo + _random.nextDouble() * (_hi - _lo);
-    _left = 2 + _random.nextDouble() * 4;
-    _speed = 3 + _random.nextDouble() * 2;
-  }
-
-  final Random _random;
-  final int refFeet;
-  int feet;
-  final double _lo;
-  final double _hi;
-  int dir;
-  late double x;
-  bool moving = true;
-  late double _left;
-  late final double _speed;
-  double alarm = 0;
-  double bubble = 0;
-
-  void fit(Layout layout) => feet = layout.y(refFeet);
-
-  bool hit(double px, double py) =>
-      px >= x - 2 && px < x + 18 && py >= feet - 14 && py < feet + 2;
-
-  void startle() {
-    alarm = 1.4;
-    bubble = 1.4;
-    moving = true;
-  }
-
-  void step(double dt) {
-    _left -= dt;
-    if (alarm > 0) alarm -= dt;
-    if (moving) {
-      x += dir * _speed * (alarm > 0 ? 3 : 1) * dt;
-      if (x <= _lo) {
-        x = _lo;
-        dir = 1;
-      }
-      if (x >= _hi) {
-        x = _hi;
-        dir = -1;
-      }
-    }
-    if (_left <= 0) {
-      moving = !moving;
-      _left = 2 + _random.nextDouble() * 4;
-      if (moving && _random.nextDouble() < 0.4) dir = -dir;
-    }
-  }
-}
-
-class Bird {
-  Bird(this._wait, {Random? random}) : _random = random ?? Random();
-
-  final Random _random;
-  double _wait;
-  bool active = false;
-  double x = 0;
-  double y = 0;
-  int dir = 1;
-  double t = 0;
-  double _speed = 18;
-  double alarm = 0;
-  double bubble = 0;
-
-  bool hit(double px, double py, Layout layout) {
-    final top = layout.y(y);
-    return active &&
-        px >= x + 5 &&
-        px < x + 27 &&
-        py >= top + 17 &&
-        py < top + 34;
-  }
-
-  void startle() {
-    alarm = 1.5;
-    bubble = 1.5;
-  }
-
-  void step(double dt, bool day) {
-    if (alarm > 0) alarm -= dt;
-    if (active) {
-      x += dir * _speed * (alarm > 0 ? 2.5 : 1) * dt;
-      t += dt;
-      if (x < -34 || x > worldW + 2) {
-        active = false;
-        _wait = 10 + _random.nextDouble() * 14;
-      }
-    } else {
-      _wait -= dt;
-      if (_wait <= 0 && day) {
-        active = true;
-        dir = _random.nextBool() ? 1 : -1;
-        x = dir > 0 ? -32 : worldW.toDouble();
-        y = -12 + _random.nextDouble() * 80;
-        _speed = 16 + _random.nextDouble() * 8;
-        t = 0;
-      }
-    }
-  }
-
-  int get frame => (t / 0.14).toInt() % 2;
-}
-
 class Swimmer {
   Swimmer(
     this.x,
@@ -379,15 +271,6 @@ class SceneState {
     for (final a in animals.take(maxFoxes)) {
       _add(a);
     }
-    ducks = [
-      Duck(150, 4, 98, 1, random: _random),
-      Duck(163, 6, 96, -1, random: _random),
-      Duck(176, 20, 80, 1, random: _random),
-    ];
-    for (final d in ducks) {
-      d.fit(_layout);
-    }
-    birds = [Bird(2, random: _random), Bird(9, random: _random)];
   }
 
   final Random _random;
@@ -396,12 +279,10 @@ class SceneState {
   final List<Fox> foxes = [];
   final List<Swimmer> swimmers = [];
   final List<Flyer> flyers = [];
-  late final List<Duck> ducks;
-  late final List<Bird> birds;
 
   int get animalCount => foxes.length + swimmers.length + flyers.length;
 
-  void step(double dt, bool motion, double night) {
+  void step(double dt, bool motion) {
     clock += dt;
     for (final f in foxes) {
       if (f.bubble > 0) f.bubble -= dt;
@@ -412,12 +293,6 @@ class SceneState {
     for (final f in flyers) {
       if (f.bubble > 0) f.bubble -= dt;
     }
-    for (final d in ducks) {
-      if (d.bubble > 0) d.bubble -= dt;
-    }
-    for (final b in birds) {
-      if (b.bubble > 0) b.bubble -= dt;
-    }
     if (!motion) return;
     for (final f in foxes) {
       f.step(dt);
@@ -427,12 +302,6 @@ class SceneState {
     }
     for (final f in flyers) {
       f.step(dt);
-    }
-    for (final d in ducks) {
-      d.step(dt);
-    }
-    for (final b in birds) {
-      b.step(dt, night < 0.5);
     }
   }
 
@@ -447,9 +316,6 @@ class SceneState {
     }
     for (final f in flyers) {
       f.fit(layout);
-    }
-    for (final d in ducks) {
-      d.fit(layout);
     }
   }
 

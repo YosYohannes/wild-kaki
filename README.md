@@ -10,7 +10,7 @@ Public holidays (they give a day-off hat) come from the free Nager.Date service 
 
 The weather in the scene's sky comes from the free Open-Meteo service for a representative city of the phone's time zone (no location permission), cached for 20 minutes, and falls back to clear. It only changes how the scene looks; the request carries only the rounded city coordinates and the phone's IP address.
 
-Animals and the rules that pick them live in `lib/animals/`. For now there are three animals (fox, duck, bird) and one rule: every activity brings a fox.
+Animals and the rules that pick them live in `lib/animals/`: 15 bases and 94 animals including legends (`docs/animals.md`), picked by the rules in `docs/rules.md`. Only animals you have found appear in the scene.
 
 In the collection, an animal you have not met yet can show as a dark silhouette once you have met something from its family; tap it for a hint about its habits (never its name). The rules are in `docs/hints.md`.
 

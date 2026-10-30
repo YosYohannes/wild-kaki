@@ -27,7 +27,6 @@ void main() {
       expect(l.riverTop(0), 136);
       expect(l.riverBot(0), 184 + roundHalfUp(2 * 0.8414709848));
       expect([for (var i = 0; i < 3; i++) l.bushBase(i)], [129, 130, 131]);
-      expect(l.duckFeet, [150, 163, 176]);
       expect(l.foxFeet(0), 214);
       expect(l.foxFeet(21), 235);
       expect(Layout.benchX, 14);
@@ -70,10 +69,6 @@ void main() {
       for (var i = 0; i < 22; i++) {
         expect(l.foxFeet(i), lessThan(rows));
         expect(l.foxFeet(i), greaterThan(l.riverBotY + 3));
-      }
-      for (final d in l.duckFeet) {
-        expect(d, greaterThan(l.riverTopY));
-        expect(d, lessThan(l.riverBotY + 8));
       }
     });
 

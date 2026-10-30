@@ -25,9 +25,6 @@ import 'sounds.dart';
 import 'sprites.dart';
 import 'weather_layer.dart';
 
-const _duckReaction = (sound: 'quack', bubble: 'quack!');
-const _birdReaction = (sound: 'tweet', bubble: 'tweet!');
-
 enum _Page { scene, collection, animal, settings, devTools, recent }
 
 class _Revealing {
@@ -198,7 +195,7 @@ class _SceneScreenState extends State<SceneScreen>
   void _onTick(Duration elapsed) {
     final dt = math.min((elapsed - _last).inMicroseconds / 1e6, 0.05);
     _last = elapsed;
-    _world.step(dt, _motion, skyAt(_hour).stars);
+    _world.step(dt, _motion);
     _weatherView.step(dt);
     _repaint.poke();
   }
@@ -286,20 +283,6 @@ class _SceneScreenState extends State<SceneScreen>
       flyer.startle();
       react(entryOrDefault(flyer.entryId).base.sound);
       return;
-    }
-    for (final b in _world.birds) {
-      if (b.hit(px, py, layout)) {
-        b.startle();
-        react(_birdReaction.sound);
-        return;
-      }
-    }
-    for (final d in _world.ducks) {
-      if (d.hit(px, py)) {
-        d.startle();
-        react(_duckReaction.sound);
-        return;
-      }
     }
     for (final b in bushes) {
       if (px >= b.x - 1 &&
@@ -665,15 +648,6 @@ class _ScenePainter extends CustomPainter {
               .withValues(alpha: night.clamp(0.0, 1.0)),
       );
     }
-    for (final b in state.birds.where((b) => b.active)) {
-      _sprite(
-        canvas,
-        (b.dir > 0 ? sprites.birdRight : sprites.birdLeft)[b.frame],
-        b.x.round(),
-        layout.y(b.y),
-        s,
-      );
-    }
     for (final f in state.flyers) {
       _animal(
         canvas,
@@ -705,24 +679,6 @@ class _ScenePainter extends CustomPainter {
             blink ? sprites.bushBlink : sprites.bush,
             b.x - 5 + rustle,
             b.base - 32,
-            s,
-          );
-        },
-      ));
-    }
-    for (final d in state.ducks) {
-      items.add((
-        d.feet,
-        items.length,
-        () {
-          final bob = motion && d.moving && ((clock * 1.5 + d.x) % 2) > 1
-              ? 1
-              : 0;
-          _sprite(
-            canvas,
-            d.dir > 0 ? sprites.duckRight : sprites.duckLeft,
-            d.x.round() - 8,
-            d.feet - 32 + bob,
             s,
           );
         },
@@ -803,24 +759,6 @@ class _ScenePainter extends CustomPainter {
         entryOrDefault(f.entryId).base.bubble,
         (f.x + 16) * s,
         (f.y + 12) * s,
-        s,
-      );
-    }
-    for (final d in state.ducks.where((d) => d.bubble > 0)) {
-      _bubble(
-        canvas,
-        _duckReaction.bubble,
-        (d.x + 8) * s,
-        (d.feet - 18) * s,
-        s,
-      );
-    }
-    for (final b in state.birds.where((b) => b.active && b.bubble > 0)) {
-      _bubble(
-        canvas,
-        _birdReaction.bubble,
-        (b.x + 16) * s,
-        (layout.y(b.y) + 12) * s,
         s,
       );
     }

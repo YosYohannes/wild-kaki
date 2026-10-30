@@ -56,40 +56,6 @@ void main() {
     expect(fox.hit(41, 210), isFalse);
   });
 
-  test('duck turns around at both ends', () {
-    final duck = Duck(150, 4, 98, 1, random: Random(7));
-    duck.x = 97.9;
-    duck.dir = 1;
-    duck.moving = true;
-    duck.step(1);
-    expect(duck.x, 98);
-    expect(duck.dir, -1);
-
-    duck.x = 4.1;
-    duck.dir = -1;
-    duck.moving = true;
-    duck.step(1);
-    expect(duck.x, 4);
-    expect(duck.dir, 1);
-  });
-
-  test('birds only take off by day', () {
-    final birds = [Bird(1, random: Random(1)), Bird(2, random: Random(2))];
-    for (var i = 0; i < 100; i++) {
-      for (final b in birds) {
-        b.step(0.5, false);
-      }
-    }
-    expect(birds.any((b) => b.active), isFalse);
-    for (final b in birds) {
-      b.step(0.5, true);
-    }
-    expect(birds.every((b) => b.active), isTrue);
-    for (final b in birds) {
-      expect(b.dir == 1 ? b.x : b.x - worldW, anyOf(-32, 0));
-    }
-  });
-
   test('scene caps foxes at six', () {
     final scene = SceneState(_meadow(10), random: Random(2));
     expect(scene.foxes, hasLength(maxFoxes));
@@ -126,7 +92,7 @@ void main() {
     expect(scene.foxes.last.hatId, 'top-hat');
   });
 
-  test('foxes and ducks follow the layout when the scene resizes', () {
+  test('foxes follow the layout when the scene resizes', () {
     final scene = SceneState(_meadow(4), random: Random(2));
     final lanes = [for (final f in scene.foxes) f.refFeet];
     final short = Layout.forRows(213);
@@ -136,7 +102,6 @@ void main() {
       expect(f.feet, short.y(f.refFeet));
       expect(f.feet, lessThan(213));
     }
-    expect(scene.ducks.map((d) => d.feet), short.duckFeet);
     scene.fit(Layout.reference);
     expect([for (final f in scene.foxes.take(4)) f.feet], lanes);
   });
@@ -157,52 +122,31 @@ void main() {
   test('scene step advances the clock and only moves actors with motion', () {
     final scene = SceneState(_meadow(1), random: Random(9));
     final x = scene.foxes.first.x;
-    scene.step(0.5, false, 0);
+    scene.step(0.5, false);
     expect(scene.clock, 0.5);
     expect(scene.foxes.first.x, x);
-    scene.step(0.5, true, 0);
+    scene.step(0.5, true);
     expect(scene.clock, 1.0);
     expect(scene.foxes.first.x, isNot(x));
   });
 
-  test('a duck hit box covers its body and startling speeds it up', () {
-    final d = Duck(150, 20, 80, 1, random: Random(1))..x = 40;
-    expect(d.hit(46, 145), isTrue);
-    expect(d.hit(46, 120), isFalse);
-    final before = d.x;
-    d.step(0.1);
-    final calm = d.x - before;
-    d
-      ..startle()
-      ..x = before
-      ..moving = true;
-    d.step(0.1);
-    expect(d.x - before, greaterThan(calm * 2));
-    expect(d.bubble, greaterThan(0));
-  });
-
-  test('a bird is only hit while flying and startling speeds it up', () {
-    final layout = Layout.reference;
-    final b = Bird(0, random: Random(2));
-    expect(b.hit(50, 40, layout), isFalse);
-    b.step(0.1, true);
-    expect(b.active, isTrue);
-    b
-      ..x = 40
-      ..y = 30;
-    expect(b.hit(50, layout.y(30) + 24, layout), isTrue);
-    expect(b.hit(50, layout.y(30) - 5, layout), isFalse);
-    final x = b.x;
-    b.startle();
-    b.step(0.1, true);
-    expect((b.x - x).abs(), greaterThan(18 * 0.1 * 2));
-  });
-
   test('bubbles fade even when motion is off', () {
-    final scene = SceneState(_meadow(0), random: Random(1));
-    scene.ducks.first.startle();
-    scene.step(2, false, 0);
-    expect(scene.ducks.first.bubble, lessThanOrEqualTo(0));
+    final scene = SceneState(_meadow(1), random: Random(1));
+    scene.foxes.first.startle();
+    scene.step(2, false);
+    expect(scene.foxes.first.bubble, lessThanOrEqualTo(0));
+  });
+
+  test('a scene with no sightings has no animals at all', () {
+    final scene = SceneState(const [], random: Random(1));
+    expect(scene.animalCount, 0);
+    expect(scene.foxes, isEmpty);
+    expect(scene.swimmers, isEmpty);
+    expect(scene.flyers, isEmpty);
+    for (var i = 0; i < 400; i++) {
+      scene.step(0.5, true);
+    }
+    expect(scene.animalCount, 0);
   });
 
   test('startling a fox makes it run off faster and show a bubble', () {
@@ -264,8 +208,6 @@ void main() {
     scene.addAnimal(40, (outingId: 'o0', entryId: 'otter', hatId: null));
     scene.addAnimal(40, (outingId: 'o0', entryId: 'vampire', hatId: null));
     expect(scene.animalCount, maxFoxes);
-    expect(scene.ducks, hasLength(3));
-    expect(scene.birds, hasLength(2));
   });
 
   test('new arrivals go to their lane', () {
@@ -368,9 +310,9 @@ void main() {
     final s = scene.swimmers.single;
     final f = scene.flyers.single;
     final x = [s.x, f.x];
-    scene.step(0.5, false, 0);
+    scene.step(0.5, false);
     expect([s.x, f.x], x);
-    scene.step(0.5, true, 0);
+    scene.step(0.5, true);
     expect(s.x, isNot(x[0]));
     expect(f.x, isNot(x[1]));
     final short = Layout.forRows(213);

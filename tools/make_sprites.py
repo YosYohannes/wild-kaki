@@ -24,7 +24,7 @@ SHEET_DIR = ROOT / "build/sprites"
 
 PAL = {
     "o": "#d9772f", "r": "#b3591f", "w": "#f6eedc", "k": "#2a2a22", "e": "#f3ecdc", "O": "#2e2218",
-    "y": "#e8a23a", "B": "#5a8ac0", "D": "#3a5a8a",
+    "y": "#e8a23a",
     "A": "#43893d", "M": "#2a6e36", "N": "#1b4f29", "T": "#6aad4c", "V": "#143c20",
 }
 
@@ -91,24 +91,6 @@ def fox_sleep():
     blob(g, 16.5, 7, 3.6, 3.2, "o")
     rect(g, 14, 2, 15, 4, "o"); put(g, 14, 2, "k"); rect(g, 18, 2, 19, 4, "o"); put(g, 19, 2, "k")
     rect(g, 17, 8, 20, 9, "w"); put(g, 21, 8, "k"); rect(g, 16, 6, 17, 6, "k")
-    return g
-
-
-def duck():
-    g = grid(14, 9)
-    rect(g, 1, 4, 11, 7, "w"); rect(g, 0, 5, 0, 6, "w"); rect(g, 8, 1, 11, 3, "w"); rect(g, 12, 2, 13, 3, "y")
-    put(g, 10, 2, "k"); put(g, 1, 4, "."); rect(g, 3, 6, 8, 6, "y")
-    return g
-
-
-def bird(frame):
-    g = grid(16, 11)
-    blob(g, 8, 5, 5, 2.6, "B"); rect(g, 6, 6, 10, 7, "w"); blob(g, 12, 4, 2.2, 2.2, "B")
-    rect(g, 14, 4, 15, 4, "y"); put(g, 12, 3, "k"); rect(g, 0, 4, 3, 5, "D")
-    if frame == 0:
-        rect(g, 5, 1, 9, 3, "D"); put(g, 5, 1, "."); put(g, 9, 1, "B"); rect(g, 6, 0, 8, 0, "D")
-    else:
-        rect(g, 5, 7, 9, 9, "D"); put(g, 5, 9, "."); rect(g, 6, 10, 8, 10, "D")
     return g
 
 
@@ -257,9 +239,6 @@ def legacy():
     save_grid(to32(fox_walk(0)), "fox_walk_1")
     save_grid(to32(fox_walk(1)), "fox_walk_2")
     save_grid(to32(fox_sleep()), "fox_sleep")
-    save_grid(to32(duck()), "duck")
-    save_grid(to32(bird(0)), "bird_1")
-    save_grid(to32(bird(1)), "bird_2")
     save_grid(to32(bush(False), outline=False), "bush")
     save_grid(to32(bush(True), outline=False), "bush_blink")
     save_grid(to32(fox_walk(0)), "stub_fox_1", STUB_FOX_PAL)

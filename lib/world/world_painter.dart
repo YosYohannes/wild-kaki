@@ -29,7 +29,6 @@ class Layout {
   int get riverBotY => y(184);
   int bushBase(int lane) => y(129 + lane);
   int foxFeet(int lane) => y(214 + lane);
-  List<int> get duckFeet => [y(150), y(163), y(176)];
 
   int fromGround(int ref) => ref + ground - refGround;
 
