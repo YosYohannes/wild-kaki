@@ -9,7 +9,9 @@ MAX_ART = SIZE - 2
 EMPTY, HEAD, ERASE = ".", "H", "-"
 RESERVED = {EMPTY, HEAD, ERASE, "O"}
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
-SPECIES_KEYS = {"palette", "patches"}
+SPECIES_KEYS = {"palette", "patches", "fly"}
+MOVE = "move"
+SAME = "same"
 MAX_HAT = 15
 
 
@@ -83,14 +85,14 @@ def check_frames(mod, errors):
     return ok
 
 
-def patch_list(sp, where, errors):
-    patches = sp.get("patches", [])
+def patch_list(sp, where, errors, key="patches"):
+    patches = sp.get(key, [])
     out = []
     if not isinstance(patches, (list, tuple)):
-        errors.append(f"{where}: patches must be a list of (frame, x, y, rows)")
+        errors.append(f"{where}: {key} must be a list of (frame, x, y, rows)")
         return out
     for i, p in enumerate(patches):
-        w = f"{where}.patches[{i}]"
+        w = f"{where}.{key}[{i}]"
         if not (isinstance(p, (list, tuple)) and len(p) == 4):
             errors.append(f"{w}: must be (frame, x, y, rows)")
             continue
@@ -108,24 +110,73 @@ def patch_list(sp, where, errors):
     return out
 
 
+def fly_list(parts, where, errors):
+    out = []
+    if not isinstance(parts, (list, tuple)):
+        errors.append(f"{where}: must be a list of (x, y, rows) or ('move', x, y, w, h, dx, dy)")
+        return out
+    for i, p in enumerate(parts):
+        w = f"{where}[{i}]"
+        if isinstance(p, (list, tuple)) and p and p[0] == MOVE:
+            if len(p) == 7 and all(isinstance(v, int) for v in p[1:]) and p[3] > 0 and p[4] > 0:
+                out.append((MOVE, *p[1:], w))
+            else:
+                errors.append(f"{w}: a move is ('move', x, y, w, h, dx, dy) with integers and w, h > 0")
+            continue
+        if not (isinstance(p, (list, tuple)) and len(p) == 3):
+            errors.append(f"{w}: must be (x, y, rows) or ('move', x, y, w, h, dx, dy)")
+            continue
+        x, y, rows = p
+        if isinstance(rows, str):
+            rows = [rows]
+        if not (isinstance(x, int) and isinstance(y, int)):
+            errors.append(f"{w}: x and y must be integers")
+            continue
+        if check_rows(rows, w, errors, allow=(EMPTY, ERASE, HEAD)):
+            out.append((None, x, y, list(rows), w))
+    return out
+
+
+def fly_list_checked(mod, errors):
+    fly = getattr(mod, "FLY", None)
+    if fly is None:
+        return None
+    if not isinstance(fly, (list, tuple)) or len(fly) != 2:
+        errors.append("FLY: must be a list of exactly two patch lists (wings up, wings down)")
+        return None
+    return [fly_list(fly[i], f"FLY[{i}]", errors) for i in (0, 1)]
+
+
 def origin(width, height):
     return (MAX_ART - width) // 2 + 1, SIZE - 1 - height
 
 
 def check_patch_bounds(patches, frames, errors):
     ox, oy = origin(len(frames[0][0]), len(frames[0]))
-    for _, x, y, rows, w in patches:
-        x0, y0, x1, y1 = ox + x, oy + y, ox + x + len(rows[0]) - 1, oy + y + len(rows) - 1
-        if x0 < 1 or y0 < 1 or x1 > SIZE - 2 or y1 > SIZE - 2:
-            errors.append(f"{w}: pixels fall outside the art area (grid x {1 - ox}..{SIZE - 2 - ox}, y {1 - oy}..{SIZE - 2 - oy})")
+    for p in patches:
+        w = p[-1]
+        if p[0] == MOVE:
+            _, x, y, pw, ph, dx, dy, _ = p
+            boxes = [(x, y, pw, ph), (x + dx, y + dy, pw, ph)]
+        else:
+            boxes = [(p[1], p[2], len(p[3][0]), len(p[3]))]
+        for bx, by, bw, bh in boxes:
+            check_box(ox, oy, bx, by, bw, bh, w, errors)
+
+
+def check_box(ox, oy, x, y, pw, ph, w, errors):
+    x0, y0, x1, y1 = ox + x, oy + y, ox + x + pw - 1, oy + y + ph - 1
+    if x0 < 1 or y0 < 1 or x1 > SIZE - 2 or y1 > SIZE - 2:
+        errors.append(f"{w}: pixels fall outside the art area (grid x {1 - ox}..{SIZE - 2 - ox}, y {1 - oy}..{SIZE - 2 - oy})")
 
 
 def used_roles(frames, patches):
     roles = {"b"}
     for rows in frames:
         roles |= {ch for r in rows for ch in r if is_role(ch)}
-    for _, _, _, rows, _ in patches:
-        roles |= {ch for r in rows for ch in r if is_role(ch)}
+    for p in patches:
+        if p[0] != MOVE:
+            roles |= {ch for r in p[3] for ch in r if is_role(ch)}
     return roles
 
 
@@ -134,6 +185,10 @@ def validate(mod, base_id, tree):
     if not check_frames(mod, errors):
         return errors, warnings, None
     frames = [list(f) for f in mod.FRAMES]
+    fly = fly_list_checked(mod, errors)
+    if getattr(mod, "FLY", None) is not None and fly is not None:
+        for part in fly:
+            check_patch_bounds(part, frames, errors)
     species = getattr(mod, "SPECIES", None)
     colours = getattr(mod, "COLOURS", {})
     if not isinstance(species, dict):
@@ -160,7 +215,7 @@ def validate(mod, base_id, tree):
             continue
         for k in sp:
             if k not in SPECIES_KEYS:
-                errors.append(f"{w}: unknown key {k!r} (allowed: palette, patches)")
+                errors.append(f"{w}: unknown key {k!r} (allowed: palette, patches, fly)")
         if "palette" not in sp:
             errors.append(f"{w}: missing 'palette'")
             continue
@@ -168,10 +223,23 @@ def validate(mod, base_id, tree):
             continue
         patches = patch_list(sp, w, errors)
         check_patch_bounds(patches, frames, errors)
-        missing = used_roles(frames, patches) - set(sp["palette"])
+        own_fly = None
+        flying = []
+        if "fly" in sp:
+            if fly is None:
+                errors.append(f"{w}: has 'fly' but the module defines no FLY")
+            elif sp["fly"] == SAME:
+                own_fly = SAME
+            else:
+                own_fly = patch_list(sp, w, errors, "fly")
+                check_patch_bounds(own_fly, frames, errors)
+                flying = own_fly
+        if fly is not None:
+            flying = flying + [p for part in fly for p in part]
+        missing = used_roles(frames, patches + flying) - set(sp["palette"])
         if missing:
             errors.append(f"{w}: palette lacks roles used in the art: {', '.join(sorted(missing))}")
-        valid[sid] = (sp["palette"], patches)
+        valid[sid] = (sp["palette"], patches, own_fly)
     valid_colours = {}
     for cid, over in colours.items():
         w = f"COLOURS[{cid!r}]"
@@ -197,21 +265,10 @@ def validate(mod, base_id, tree):
         warnings.append(f"missing entries: {', '.join(missing)}")
     if errors:
         return errors, warnings, None
-    return errors, warnings, (frames, valid, valid_colours)
+    return errors, warnings, (frames, valid, valid_colours, fly)
 
 
-def render_grid(frames, patches, frame):
-    rows = frames[frame]
-    w, h = len(rows[0]), len(rows)
-    ox, oy = origin(w, h)
-    g = [[EMPTY] * SIZE for _ in range(SIZE)]
-    head = None
-    for y, row in enumerate(rows):
-        for x, ch in enumerate(row):
-            if ch == HEAD:
-                head, ch = (ox + x, oy + y), "b"
-            if ch != EMPTY:
-                g[oy + y][ox + x] = ch
+def paint_patches(g, patches, frame, ox, oy, head):
     for fr, px, py, prows, _ in patches:
         if fr not in (None, frame):
             continue
@@ -223,6 +280,52 @@ def render_grid(frames, patches, frame):
                     head = (ox + px + x, oy + py + y)
                     continue
                 g[oy + py + y][ox + px + x] = EMPTY if ch == ERASE else ch
+    return head
+
+
+def move_region(g, part, ox, oy, head):
+    _, x, y, w, h, dx, dy, _ = part
+    x0, y0 = ox + x, oy + y
+    block = [(i, j, g[y0 + j][x0 + i]) for j in range(h) for i in range(w)]
+    for i, j, _ in block:
+        g[y0 + j][x0 + i] = EMPTY
+    for i, j, ch in block:
+        if ch != EMPTY:
+            g[y0 + j + dy][x0 + i + dx] = ch
+    if head and x0 <= head[0] < x0 + w and y0 <= head[1] < y0 + h:
+        head = (head[0] + dx, head[1] + dy)
+    return head
+
+
+def paint_grid(frames, patches, frame):
+    rows = frames[frame]
+    w, h = len(rows[0]), len(rows)
+    ox, oy = origin(w, h)
+    g = [[EMPTY] * SIZE for _ in range(SIZE)]
+    head = None
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch == HEAD:
+                head, ch = (ox + x, oy + y), "b"
+            if ch != EMPTY:
+                g[oy + y][ox + x] = ch
+    head = paint_patches(g, patches, frame, ox, oy, head)
+    return g, head, ox, oy
+
+
+def render_grid(frames, patches, frame):
+    g, head, _, _ = paint_grid(frames, patches, frame)
+    return outline(g), head
+
+
+def render_fly(frames, patches, fly, own_fly, frame):
+    g, head, ox, oy = paint_grid(frames, patches, 0)
+    for part in fly[frame]:
+        if part[0] == MOVE:
+            head = move_region(g, part, ox, oy, head)
+        else:
+            head = paint_patches(g, [part], frame, ox, oy, head)
+    head = paint_patches(g, own_fly, frame, ox, oy, head)
     return outline(g), head
 
 
@@ -241,14 +344,21 @@ def outline(g):
 
 
 def render_base(parsed, mod):
-    frames, shapes, colours = parsed
+    frames, shapes, colours, fly = parsed
     result = {}
-    for sid, (pal, patches) in shapes.items():
+    for sid, (pal, patches, own_fly) in shapes.items():
         rendered = [render_grid(frames, patches, f) for f in (0, 1)]
-        result[sid] = ([g for g, _ in rendered], {**pal, "O": OUTLINE}, [h for _, h in rendered])
+        grids, heads = [g for g, _ in rendered], [h for _, h in rendered]
+        fgrids = fheads = None
+        if own_fly == SAME:
+            fgrids, fheads = grids, heads
+        elif fly is not None:
+            flown = [render_fly(frames, patches, fly, own_fly or [], f) for f in (0, 1)]
+            fgrids, fheads = [g for g, _ in flown], [h for _, h in flown]
+        result[sid] = (grids, {**pal, "O": OUTLINE}, heads, fgrids, fheads)
     for cid, parent in colours.items():
-        grids, pal, heads = result[parent]
-        result[cid] = (grids, {**pal, **mod.COLOURS[cid]}, heads)
+        grids, pal, heads, fgrids, fheads = result[parent]
+        result[cid] = (grids, {**pal, **mod.COLOURS[cid]}, heads, fgrids, fheads)
     return result
 
 

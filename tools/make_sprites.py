@@ -276,22 +276,36 @@ def dart_art(entries):
         "import 'catalog.dart';",
         "",
         "class EntryArt {",
-        "  const EntryArt({required this.frames, required this.headPoints});",
+        "  const EntryArt({",
+        "    required this.frames,",
+        "    required this.headPoints,",
+        "    this.flyFrames = const [],",
+        "    this.flyHeadPoints = const [],",
+        "  });",
         "",
         "  final List<String> frames;",
         "  final List<HeadPoint> headPoints;",
+        "  final List<String> flyFrames;",
+        "  final List<HeadPoint> flyHeadPoints;",
         "}",
         "",
         "const Map<String, EntryArt> entryArt = {",
     ]
-    for eid, (_, _, heads) in entries.items():
+    for eid, (grids, _, heads, fly_grids, fly_heads) in entries.items():
         pts = ", ".join(f"(x: {x}, y: {y})" for x, y in heads)
         out += [
             f"  '{eid}': EntryArt(",
             f"    frames: ['{eid}_1', '{eid}_2'],",
             f"    headPoints: [{pts}],",
-            "  ),",
         ]
+        if fly_grids:
+            stem = eid if fly_grids is grids else f"{eid}_fly"
+            fpts = ", ".join(f"(x: {x}, y: {y})" for x, y in fly_heads)
+            out += [
+                f"    flyFrames: ['{stem}_1', '{stem}_2'],",
+                f"    flyHeadPoints: [{fpts}],",
+            ]
+        out.append("  ),")
     out += ["};", ""]
     ART_OUT.write_text("\n".join(out))
 
@@ -316,14 +330,17 @@ def build_base(base_id, tree, path, log):
     order = [e for s, cs in tree[base_id]["shapes"].items() for e in [s, *cs]] + tree[base_id]["legends"]
     entries = {e: entries[e] for e in order if e in entries}
     seen = {}
-    for eid, (grids, pal, _) in entries.items():
+    for eid, (grids, pal, *_) in entries.items():
         key = tuple(tuple(pal.get(c) for row in g for c in row) for g in grids)
         if key in seen:
             log(f"WARNING {base_id}: {eid} renders identically to {seen[key]}")
         seen.setdefault(key, eid)
-    for eid, (grids, pal, _) in entries.items():
+    for eid, (grids, pal, _, fly_grids, _) in entries.items():
         for n, g in enumerate(grids, 1):
             save_grid(g, f"{eid}_{n}", pal)
+        if fly_grids and fly_grids is not grids:
+            for n, g in enumerate(fly_grids, 1):
+                save_grid(g, f"{eid}_fly_{n}", pal)
     log(f"{base_id}: wrote {len(entries)} of {len(order)} entries")
     return entries
 
@@ -411,8 +428,10 @@ def sheet_sections(tree, built, hats, only):
         items = []
         for eid in order:
             if eid in got:
-                grids, pal, heads = got[eid]
+                grids, pal, heads, fly_grids, fly_heads = got[eid]
                 items.append((eid, [(g, pal, h) for g, h in zip(grids, heads)]))
+                if fly_grids and fly_grids is not grids:
+                    items.append((f"{eid} fly", [(g, pal, h) for g, h in zip(fly_grids, fly_heads)]))
             else:
                 items.append((f"{eid} (stub)", stub_frames()))
         sections.append((f"{info['name']} ({base_id}): {len(got)}/{len(order)} drawn", items))

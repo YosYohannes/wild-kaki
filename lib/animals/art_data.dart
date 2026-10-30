@@ -2,10 +2,17 @@
 import 'catalog.dart';
 
 class EntryArt {
-  const EntryArt({required this.frames, required this.headPoints});
+  const EntryArt({
+    required this.frames,
+    required this.headPoints,
+    this.flyFrames = const [],
+    this.flyHeadPoints = const [],
+  });
 
   final List<String> frames;
   final List<HeadPoint> headPoints;
+  final List<String> flyFrames;
+  final List<HeadPoint> flyHeadPoints;
 }
 
 const Map<String, EntryArt> entryArt = {

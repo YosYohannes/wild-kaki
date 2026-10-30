@@ -15,6 +15,16 @@ COLOURS = {"silver-fox": {"b": "#6c7079"}}         # overrides of its shape spec
 - Every role used in the art needs a colour in each palette. Colour species list only the roles that change, and must differ from their shape species.
 - Hats: `tools/sprites/hats.py` exposes `PALETTE` and `HATS = {"party-hat": rows, ...}`; odd width, at most 15x15, outline added. The bottom-centre pixel of `hat_<id>.png` (x = width // 2, y = height - 1) is drawn on the base's head point.
 
+## Flying frames (optional)
+
+A base for animals that also fly (the songbird) may define `FLY = [wings_up, wings_down]`, two patch lists. Each entry of the base then gets `<id>_fly_1.png` and `<id>_fly_2.png`, and `art_data.dart` lists them as `flyFrames` and `flyHeadPoints` (empty for bases without `FLY`).
+
+- Each fly frame is the species' rendered standing frame 0 (its own patches included, the hop frame is not used), then the `FLY` list for that frame, then the species' own `"fly"` patches. Colour species inherit the fly frames of their shape species.
+- A `FLY` item is `(x, y, rows)` (same row characters as patches, so legs can be erased with `-` and wings painted in the species' own roles) or `("move", x, y, w, h, dx, dy)`, which cuts that region and pastes it `dx, dy` away. A head marker `H` inside a moved region moves with it; an `H` in a patch sets the head point.
+- A species' `"fly": [(frame, x, y, rows), ...]` uses the usual patch form, `frame` being the fly frame (`0`, `1` or `None`). It touches up one species, e.g. a long tail or a beak.
+- `"fly": "same"` marks art that already shows the animal in flight (full redraws like the legends): its standing frames and head points double as its fly frames and no `_fly_` PNGs are written.
+- Every role used in `FLY` needs a colour in each species' palette.
+
 ## Roles (use these so bases look alike)
 
 `b` body, `d` shade (belly line, far limbs, back), `l` light (belly, muzzle, tail tip), `a` accent (inner ear, markings), `k` dark extremities (paws, ear tips), `e` eye, `n` nose, `p` pink, `y` beak or feet, `w` white highlight. Any other letter except `H O` works if it is in the palette.
