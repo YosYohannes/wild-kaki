@@ -217,7 +217,7 @@ A regional legend can only come to a phone whose time zone is in its region. Bef
 
 ## Words still to write
 
-The card notes, one for each of the 73 entries, live in `notes.md`. The bases above already have their arrival line and sound.
+The card notes, one for each of the 94 entries, live in `notes.md`. The bases above already have their arrival line and sound.
 
 ## Assets to make
 

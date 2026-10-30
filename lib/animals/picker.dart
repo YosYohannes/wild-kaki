@@ -1,11 +1,14 @@
+import 'dart:math';
+
 import '../data/model.dart';
 import 'catalog.dart';
 import 'catalog_data.dart';
+import 'boosts.dart';
 import 'facts.dart';
 import 'holidays.dart';
 import 'rolls.dart';
 
-const visitorShare = 0.10;
+const visitorShare = 0.12;
 const discoveryMultiplier = 3.0;
 const regionalLegendChance = 0.002;
 const legendChance = 0.01;
@@ -46,6 +49,7 @@ class Pick {
 Pick pickAnimal({
   required Outing activity,
   required Set<String> met,
+  int drought = 0,
   HolidayProvider? holidays,
   String? timeZone,
   Catalog? catalog,
@@ -53,6 +57,7 @@ Pick pickAnimal({
   facts: ActivityFacts.from(activity, holidays ?? holidaysForPhone()),
   rolls: Rolls.of(activity.id),
   met: met,
+  drought: drought,
   timeZone: timeZone,
   catalog: catalog ?? defaultCatalog,
 );
@@ -62,8 +67,12 @@ Pick pickFor({
   required Rolls rolls,
   required Set<String> met,
   required Catalog catalog,
+  int drought = 0,
   String? timeZone,
 }) {
+  final completion = completionOf(catalog, met);
+  final boost = completionBoost(completion) * droughtBoost(drought);
+  final pull = familyPull(completion);
   final hats = catalog.hats;
   final hatId = facts.dayOff && hats.isNotEmpty
       ? hats[(rolls.hat * hats.length).floor()].id
@@ -90,16 +99,28 @@ Pick pickFor({
   bool unmet(Species s) =>
       !met.contains(s.id) && !s.colours.any((c) => met.contains(c.id));
 
+  bool baseUnmet(String id) {
+    final legend = catalog.baseLegendOf(id);
+    return candidates[id]!.any(
+          (s) => unmet(s) || s.colours.any((c) => !met.contains(c.id)),
+        ) ||
+        (legend != null && !met.contains(legend.id));
+  }
+
   final bases = candidates.keys.toList();
   final base = _choose(bases, [
     for (final b in bases)
-      candidates[b]!.any(unmet) ? discoveryMultiplier : 1.0,
+      (candidates[b]!.any(unmet) ? discoveryMultiplier : 1.0) *
+          (baseUnmet(b) ? pull : 1.0),
   ], rolls.base);
 
   final legend = catalog.baseLegendOf(base);
   if (legend != null) {
     final liked = legend.likes != null && facts.bands.contains(legend.likes);
-    if (rolls.legend < (liked ? likedLegendChance : legendChance)) {
+    final chance =
+        (liked ? likedLegendChance : legendChance) *
+        (met.contains(legend.id) ? 1.0 : boost);
+    if (rolls.legend < chance) {
       return legendPick(legend);
     }
   }
@@ -113,11 +134,13 @@ Pick pickFor({
   var entryId = species.id;
   var lower = 0.0;
   for (final colour in species.colours) {
-    if (rolls.colour < lower + colour.chance) {
+    final chance = colour.chance * (met.contains(colour.id) ? 1.0 : boost);
+    final upper = min(1.0, lower + chance);
+    if (rolls.colour < upper) {
       entryId = colour.id;
       break;
     }
-    lower += colour.chance;
+    lower = upper;
   }
 
   return Pick(

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -73,8 +74,10 @@ class WildStore {
         .where((o) => o.id != outing.id)
         .toList();
     final sightings = _readSightings()
-      ..removeWhere((s) => s.outing.id == outing.id)
-      ..add(Sighting(outing, animal, hat: hat))
+      ..removeWhere((s) => s.outing.id == outing.id);
+    final next = sightings.fold(0, (m, s) => max(m, s.order ?? 0)) + 1;
+    sightings
+      ..add(Sighting(outing, animal, hat: hat, order: next))
       ..sort((a, b) => b.outing.start.compareTo(a.outing.start));
     await _prefs.setString(_waitingKey, _write(waiting));
     await _prefs.setString(_sightingsKey, _writeSightings(sightings));
@@ -127,6 +130,7 @@ class WildStore {
         _outingFrom(o),
         legacyEntryId((o['animal'] as String?) ?? ''),
         hat: o['hat'] as String?,
+        order: o['order'] as int?,
       ),
   ];
 
@@ -161,6 +165,7 @@ class WildStore {
         ..._outingJson(s.outing),
         'animal': s.animal,
         if (s.hat != null) 'hat': s.hat,
+        if (s.order != null) 'order': s.order,
       },
   ]);
 }

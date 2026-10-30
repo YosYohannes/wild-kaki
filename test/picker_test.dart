@@ -69,6 +69,7 @@ List<Pick> picks({
 Set<String> allEntries(Catalog c) => {
   ...c.species.map((s) => s.id),
   ...c.colourSpecies.map((s) => s.id),
+  ...c.legends.where((l) => !l.isRegional).map((l) => l.id),
 };
 
 double share(List<Pick> list, bool Function(Pick) test) =>
@@ -137,39 +138,39 @@ void main() {
   group('home and visitor', () {
     bool isVisitor(Pick p) => p.baseId != 'fox' && p.baseId != 'hare';
 
-    test('90 percent home with nothing met', () {
-      expect(share(picks(), isVisitor), closeTo(0.10, 0.015));
+    test('88 percent home with nothing met', () {
+      expect(share(picks(), isVisitor), closeTo(0.12, 0.015));
     });
 
     test('the split never changes with discovery', () {
       final empty = picks();
       final all = picks(met: everything);
       final half = picks(met: halfMet);
-      expect(share(all, isVisitor), closeTo(0.10, 0.015));
-      expect(share(half, isVisitor), closeTo(0.10, 0.015));
+      expect(share(all, isVisitor), closeTo(0.12, 0.015));
+      expect(share(half, isVisitor), closeTo(0.12, 0.015));
       for (var i = 0; i < n; i++) {
         expect(isVisitor(all[i]), isVisitor(empty[i]));
         expect(isVisitor(half[i]), isVisitor(empty[i]));
       }
     });
 
-    test('with everything unmet the two Run bases are 45 percent each', () {
+    test('with everything unmet the two Run bases are 44 percent each', () {
       final list = picks();
-      expect(share(list, (p) => p.baseId == 'fox'), closeTo(0.45, 0.02));
-      expect(share(list, (p) => p.baseId == 'hare'), closeTo(0.45, 0.02));
+      expect(share(list, (p) => p.baseId == 'fox'), closeTo(0.44, 0.02));
+      expect(share(list, (p) => p.baseId == 'hare'), closeTo(0.44, 0.02));
     });
 
     test('with everything met the split of the doc holds too', () {
       final list = picks(met: everything);
-      expect(share(list, (p) => p.baseId == 'fox'), closeTo(0.45, 0.02));
-      expect(share(list, (p) => p.baseId == 'hare'), closeTo(0.45, 0.02));
+      expect(share(list, (p) => p.baseId == 'fox'), closeTo(0.44, 0.02));
+      expect(share(list, (p) => p.baseId == 'hare'), closeTo(0.44, 0.02));
       final others = catalog.bases.where(
         (b) => b.id != 'fox' && b.id != 'hare',
       );
       for (final b in others) {
         expect(
           share(list, (p) => p.baseId == b.id),
-          closeTo(0.10 / 13, 0.006),
+          closeTo(0.12 / 13, 0.006),
           reason: b.id,
         );
       }
@@ -185,7 +186,7 @@ void main() {
         };
         final list = picks(kind: kind, count: 2000);
         final visitors = list.where((p) => !homeIds.contains(p.baseId));
-        expect(visitors.length / 2000, closeTo(0.10, 0.03), reason: kind);
+        expect(visitors.length / 2000, closeTo(0.12, 0.03), reason: kind);
       }
     });
 
@@ -212,9 +213,9 @@ void main() {
         kind: 'Kayak',
         count: 4000,
       ).where((p) => p.baseId == 'fox');
-      expect(unknownHome.length / 4000, closeTo(0.90, 0.03));
+      expect(unknownHome.length / 4000, closeTo(0.88, 0.03));
       final workout = picks(kind: 'Workout', count: 4000);
-      expect(share(workout, (p) => p.baseId == 'cat'), closeTo(0.90, 0.03));
+      expect(share(workout, (p) => p.baseId == 'cat'), closeTo(0.88, 0.03));
     });
   });
 
@@ -251,8 +252,8 @@ void main() {
       final a = list.where((p) => p.baseId == 'a').length;
       final b = list.where((p) => p.baseId == 'b').length;
       expect(b / a, closeTo(3, 0.25));
-      expect(a / n, closeTo(0.9 * 0.25, 0.015));
-      expect(share(list, (p) => p.baseId == 'c'), closeTo(0.10, 0.015));
+      expect(a / n, closeTo(0.88 * 0.25, 0.015));
+      expect(share(list, (p) => p.baseId == 'c'), closeTo(0.12, 0.015));
     });
 
     test('an unmet species is three times as likely as a met one', () {
@@ -305,7 +306,7 @@ void main() {
     test('unmet colour species do not make a base unmet', () {
       final tabbyOnly = {for (final s in catalog.speciesOf('cat')) s.id};
       final list = picks(kind: 'Yoga', met: tabbyOnly);
-      expect(share(list, (p) => p.baseId == 'cat'), closeTo(0.9, 0.015));
+      expect(share(list, (p) => p.baseId == 'cat'), closeTo(0.88, 0.015));
     });
 
     test('a visitor base keeps its place and is three times as likely', () {
@@ -316,8 +317,8 @@ void main() {
       final list = picks(met: allButSongbird);
       final songbird = share(list, (p) => p.baseId == 'songbird');
       final other = share(list, (p) => p.baseId == 'owl');
-      expect(songbird, closeTo(0.10 * 3 / 14, 0.008));
-      expect(other, closeTo(0.10 / 14, 0.005));
+      expect(songbird, closeTo(0.12 * 3 / 14, 0.008));
+      expect(other, closeTo(0.12 / 14, 0.005));
     });
   });
 
@@ -341,14 +342,14 @@ void main() {
       double expected(String baseId, String speciesId) {
         final all = catalog.speciesOf(baseId);
         final total = all.map((s) => weight(s, facts)).reduce((a, b) => a + b);
-        return 0.45 * weight(catalog.speciesById(speciesId)!, facts) / total;
+        return 0.44 * weight(catalog.speciesById(speciesId)!, facts) / total;
       }
 
       for (final (base, sp, doc) in [
-        ('fox', 'fennec', 0.26),
+        ('fox', 'fennec', 0.25),
         ('fox', 'red-fox', 0.13),
         ('fox', 'grey-fox', 0.06),
-        ('hare', 'hare', 0.26),
+        ('hare', 'hare', 0.25),
         ('hare', 'rabbit', 0.13),
         ('hare', 'jackrabbit', 0.06),
       ]) {
@@ -358,15 +359,15 @@ void main() {
       }
       expect(
         share(list, (p) => p.entryId == 'silver-fox'),
-        closeTo(0.45 * 2 / 7 * 0.12, 0.005),
+        closeTo(0.44 * 2 / 7 * 0.12, 0.005),
       );
       expect(
         share(list, (p) => p.entryId == 'arctic-fox'),
-        closeTo(0.45 * 2 / 7 * 0.03, 0.003),
+        closeTo(0.44 * 2 / 7 * 0.03, 0.003),
       );
       expect(
         share(list, (p) => p.entryId == 'snow-hare'),
-        closeTo(0.45 * 4 / 7 * 0.03, 0.004),
+        closeTo(0.44 * 4 / 7 * 0.03, 0.004),
       );
     });
 
@@ -392,7 +393,7 @@ void main() {
       final total = dogs.map((s) => weight(s, f)).reduce((a, b) => a + b);
       for (final s in dogs) {
         final expected =
-            0.9 *
+            0.88 *
             weight(s, f) /
             total *
             (1 - s.colours.fold(0.0, (a, c) => a + c.chance));
@@ -427,7 +428,7 @@ void main() {
       final tabby = cats.firstWhere((s) => s.id == 'tabby');
       expect(
         share(list, (p) => p.speciesId == 'tabby'),
-        closeTo(0.9 * weight(tabby, f) / total, 0.012),
+        closeTo(0.88 * weight(tabby, f) / total, 0.012),
       );
     });
   });
@@ -743,9 +744,9 @@ void main() {
         'base-5',
         'Climb',
         false,
-        'squirrel',
-        'flying-squirrel',
-        'flying-squirrel',
+        'small-deer',
+        'mouse-deer',
+        'mouse-deer',
         null,
       ),
       ('base-6', 'Yoga', true, 'cat', 'tabby', 'tabby', 'beanie'),

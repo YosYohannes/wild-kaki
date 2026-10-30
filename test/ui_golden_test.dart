@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:wildkaki/animals/hints.dart';
+import 'package:wildkaki/animals/hints_data.dart';
 import 'package:wildkaki/animals/lookup.dart';
 import 'package:wildkaki/data/model.dart';
 import 'package:wildkaki/ui/animal_page.dart';
@@ -139,13 +141,124 @@ void main() {
     expect(find.byKey(const ValueKey('new-dot')), findsOneWidget);
     await _shot(tester, 'collection');
     await tester.tap(find.text('???').first);
+    await tester.pump();
     expect(opened, '');
+    await tester.tap(find.byKey(const ValueKey('hint-close')));
+    await tester.pump();
     await tester.tap(find.text('Black cat'));
     expect(opened, 'black-cat');
     await tester.tap(find.text('Shiba'));
     expect(opened, 'shiba');
     await _leave(tester);
   });
+
+  testWidgets('unmet tiles with a hint show a silhouette and open a card', (
+    tester,
+  ) async {
+    var opened = '';
+    await _show(
+      tester,
+      CollectionPage(
+        sightings: _collected,
+        opened: const {'shiba', 'tabby'},
+        onSettings: () {},
+        onClose: () {},
+        onOpen: (a) => opened = a,
+      ),
+    );
+    final silhouette = find.byKey(const ValueKey('silhouette-corgi'));
+    expect(silhouette, findsOneWidget);
+    expect(
+      tester.widget<ColorFiltered>(silhouette).colorFilter,
+      ColorFilter.mode(Wild.ink.withValues(alpha: 0.75), BlendMode.srcIn),
+    );
+    expect(find.byKey(const ValueKey('silhouette-husky')), findsOneWidget);
+    expect(find.byKey(const ValueKey('silhouette-hare')), findsNothing);
+    expect(find.byKey(const ValueKey('silhouette-shiba')), findsNothing);
+    expect(find.bySemanticsLabel('Not met yet, hint available'), findsWidgets);
+    expect(find.bySemanticsLabel('Not met yet'), findsWidgets);
+
+    expect(find.byKey(const ValueKey('hint-card')), findsNothing);
+    await tester.tap(silhouette);
+    await tester.pump();
+    expect(find.byKey(const ValueKey('hint-card')), findsOneWidget);
+    expect(find.text(hintText(findEntry('corgi')!)), findsOneWidget);
+    expect(find.text('Corgi'), findsNothing);
+    expect(opened, '');
+    await _settleImages(tester);
+    await _shot(tester, 'collection_hint');
+
+    await tester.tap(find.byKey(const ValueKey('hint-close')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('hint-card')), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('silhouette-corgi')));
+    await tester.pump();
+    await tester.tapAt(
+      tester.getTopLeft(find.byKey(const ValueKey('hint-scrim'))) +
+          const Offset(20, 100),
+    );
+    await tester.pump();
+    expect(find.byKey(const ValueKey('hint-card')), findsNothing);
+
+    await tester.tap(find.text('Shiba'));
+    expect(opened, 'shiba');
+    await _leave(tester);
+  });
+
+  testWidgets('an unmet tile with no hint opens the locked card', (
+    tester,
+  ) async {
+    await _show(
+      tester,
+      CollectionPage(
+        sightings: const [],
+        opened: const {},
+        onSettings: () {},
+        onClose: () {},
+        onOpen: (_) {},
+      ),
+    );
+    expect(find.byType(ColorFiltered), findsNothing);
+    expect(find.bySemanticsLabel('Not met yet, hint available'), findsNothing);
+    await tester.tap(find.text('???').first);
+    await tester.pump();
+    expect(
+      find.text('Not met yet. Anything can turn up on any outing.'),
+      findsOneWidget,
+    );
+    expect(find.byType(ColorFiltered), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('hint-close')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('hint-card')), findsNothing);
+    await _leave(tester);
+  });
+
+  testWidgets(
+    'a regional legend shows a silhouette and its riddle in its zone',
+    (tester) async {
+      await _show(
+        tester,
+        CollectionPage(
+          sightings: const [],
+          opened: const {},
+          timeZone: 'Asia/Singapore',
+          onSettings: () {},
+          onClose: () {},
+          onOpen: (_) {},
+        ),
+      );
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('silhouette-merlion')),
+        300,
+        scrollable: find.byType(Scrollable),
+      );
+      await tester.tap(find.byKey(const ValueKey('silhouette-merlion')));
+      await tester.pump();
+      expect(find.text(legendRiddles['merlion']!), findsOneWidget);
+      await _leave(tester);
+    },
+  );
 
   testWidgets('collection scrolls to the last entry', (tester) async {
     final last = animalEntries.last;

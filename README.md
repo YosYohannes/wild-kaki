@@ -12,6 +12,8 @@ The weather in the scene's sky comes from the free Open-Meteo service for a repr
 
 Animals and the rules that pick them live in `lib/animals/`. For now there are three animals (fox, duck, bird) and one rule: every activity brings a fox.
 
+In the collection, an animal you have not met yet can show as a dark silhouette once you have met something from its family; tap it for a hint about its habits (never its name). The rules are in `docs/hints.md`.
+
 Not yet verified on a device: Health Connect permission flow, pull-to-refresh feel and the launcher icon.
 
 ## Docs
@@ -20,6 +22,7 @@ Not yet verified on a device: Health Connect permission flow, pull-to-refresh fe
 - `docs/rules.md`: one page on how an activity becomes an animal, with the chances
 - `docs/rule-parameters.md`: what a rule can look at, the values it can take and the fallback when a value is missing
 - `docs/animals.md`: the bases, species, affinities, colour species, hats and the assets to make
+- `docs/hints.md`: when the collection hints at an animal you have not met, the habit lines and the legend riddles
 
 ## Layout
 

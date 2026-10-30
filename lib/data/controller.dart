@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../animals/boosts.dart';
 import '../animals/holidays.dart';
 import '../animals/picker.dart';
 import '../animals/zone.dart';
@@ -114,9 +115,12 @@ class WildController extends ChangeNotifier {
     _home = await _store.addWaiting(counted);
   }
 
+  int get drought => droughtSince(inRevealOrder(_home.sightings));
+
   Pick previewPick(Outing outing) => pickAnimal(
     activity: outing,
     met: {for (final s in _home.sightings) s.animal},
+    drought: drought,
     holidays: _holidays,
     timeZone: _timeZone(),
   );

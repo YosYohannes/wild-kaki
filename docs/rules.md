@@ -9,11 +9,11 @@ Every activity Health Connect reports (an exercise or a sleep) hides one animal.
 | Step | What decides it | Chances |
 |---|---|---|
 | 0. Regional legend | the phone's time zone and the regional roll | Only where a regional legend lives (the Merlion in Singapore). **0.2%**, about 1 in 500 activities, whatever else is true. If it hits, it is the animal; skip to step 5 |
-| 1. Home or visitor | the visitor roll | **90%** home: the bases that live with this kind of activity (a run brings Fox or Hare). **10%** visitor: any other base |
-| 2. Base | equal weights, ×3 for a base with something unmet, then the base roll | With everything unmet or everything met: two home bases are 45% each, and a visitor is about 0.8% for each of the other 13 bases. An unmet base is three times as likely as a met one |
-| 2b. Base legend | the legend roll | **1%** that the animal is the base's legend (a Kitsune for Fox), **2%** when the activity matches what the legend likes. If it hits, skip to step 5 |
+| 1. Home or visitor | the visitor roll | **88%** home: the bases that live with this kind of activity (a run brings Fox or Hare). **12%** visitor: any other base |
+| 2. Base | equal weights, ×3 for a base with something unmet, then the base roll | With everything unmet or everything met: two home bases are 44% each, and a visitor is about 0.9% for each of the other 13 bases. An unmet base is three times as likely as a met one. Near a full collection, a base with something missing is pulled harder (Completion bonus, below) |
+| 2b. Base legend | the legend roll | **1%** that the animal is the base's legend (a Kitsune for Fox), **2%** when the activity matches what the legend likes. Raised by the drought boost and the completion bonus while you have not met that legend (below). If it hits, skip to step 5 |
 | 3. Shape species | affinities, ×3 for an unmet species, then the species roll | Each species' weight is its affinities multiplied: avoids ×0.25, neutral ×1, likes ×2, loves ×4. An unmet species is three times as likely as a met one. Odds are in proportion to the weights |
-| 4. Colour species | the colour roll | If the species has colour species: usually **12%** for a common colour (Black cat) and **3%** for a rare one (Golden cat). No discovery multiplier here, so rare stays rare |
+| 4. Colour species | the colour roll | If the species has colour species: usually **12%** for a common colour (Black cat) and **3%** for a rare one (Golden cat). No discovery multiplier here, so rare stays rare. Raised by the drought boost and the completion bonus for a colour you have not met (below) |
 | 5. Hat | day off (weekend or public holiday) and the hat roll | **100%** on a day off, **0%** otherwise. Five hats, **20%** each |
 
 Affinities look at three things about the activity, each a band set per kind:
@@ -26,22 +26,49 @@ The run is Twilight, Medium length, Medium distance and Fast.
 
 | Base (chance) | Species | Weight | Chance overall |
 |---|---|---|---|
-| Fox (45%) | Fennec: loves Fast | 4 | 26% |
+| Fox (44%) | Fennec: loves Fast | 4 | 25% |
 | | Red fox: likes Twilight | 2 | 13%, of which Silver fox 1.5% and Arctic fox 0.4% |
 | | Grey fox | 1 | 6% |
-| Hare (45%) | Hare: loves Fast | 4 | 26%, of which Snow hare 0.8% |
+| Hare (44%) | Hare: loves Fast | 4 | 25%, of which Snow hare 0.8% |
 | | Rabbit: likes Twilight | 2 | 13% |
 | | Jackrabbit | 1 | 6% |
-| Visitor (10%) | any other base | | about 0.8% per base |
+| Visitor (12%) | any other base | | about 0.9% per base |
 
 It is a Saturday, so whatever comes wears a hat: party hat, sombrero, beanie, top hat or bowler hat, 20% each.
 
 ## What discovery does
 
-Discovery is only a multiplier: **×3 on the chance of a base or species you have not met yet.** It never removes a choice, never forces one, and never changes the 90% home and 10% visitor split.
+Discovery is only a multiplier: **×3 on the chance of a base or species you have not met yet.** It never removes a choice, never forces one, and never changes the 88% home and 12% visitor split.
 - **New animals come a bit faster, not in a fixed order.** An unmet species is three times as likely as a met one, and everything else about the pick stays the same.
-- **Activities you never do still pay off, slowly.** A base you never reach at home sits among the visitors. At the start (everything unmet) a visitor base is about 0.8% per activity. Once you have met most other bases, an unmet base is about 2%. If you never ride, songbirds arrive roughly once in 130 activities at first, and once in about 50 later.
-- **Colours and legends are pure luck:** a golden animal or a legend is never guaranteed, and discovery does not touch them.
+- **Activities you never do still pay off, slowly.** A base you never reach at home sits among the visitors. At the start (everything unmet) a visitor base is about 0.9% per activity. Once you have met most other bases, an unmet base is about 2.4%. If you never ride, songbirds arrive roughly once in 110 activities at first, and once in about 40 later.
+- **Colours and legends are luck:** a golden animal or a legend is never guaranteed, and discovery does not touch them. Only the drought boost and the completion bonus below help them.
+
+## The drought boost
+
+The drought is the number of activities you have revealed since the last time one showed you something new, an animal you had not met before. It counts the reveals in the order you opened them. Right after a new animal it is 0, and with no activities yet it is 0.
+
+While the drought lasts, the chance of a **colour species or a base legend you have not met** is multiplied by 1 + drought / 100, up to ×8. After 100 dry activities the chance is doubled, after 300 it is four times as much, and from 700 on it stays at ×8 (a 1% legend becomes 8%, a 3% golden coat becomes 24%). The longer you go without something new, the closer the rare ones come.
+- **Only what you have not met.** A colour or a legend you already have keeps its normal chance. Shape species keep their ×3 discovery and nothing more, and regional legends are never boosted.
+- **It stays a chance.** The chances of a species' colours never add up to more than 100%, and a legend is never certain.
+- **It adds to the completion bonus.** The two multiply (see below).
+- **Nothing is lost.** The first new animal sets the drought back to 0, and the same activity still gives the same animal for the same history.
+
+## Completion bonus
+
+Completion is how much of the collection you have: the entries you have met, divided by all the entries, not counting the regional legends (89 today, because a regional legend can only be met in its own region). A step table gives the bonus from the highest step you have reached.
+
+| Completion | Unmet colour or legend chance | Pull toward a base with something missing |
+|---|---|---|
+| under 70% | ×1 | ×1 |
+| 70% | ×1.25 | ×1.5 |
+| 80% | ×1.5 | ×3 |
+| 90% | ×4 | ×6 |
+| 95% | ×10 | ×12 |
+| 98% | ×25 | ×24 |
+
+The closer you are to a full collection, the more the missing ones and their families come to you.
+- **Missing colours and legends.** The first column multiplies the chance of a colour species or a base legend you have not met, together with the drought boost (for example ×4 at 90% and a drought of 100 is ×8). A colour's slices still total at most 100% and a legend is never certain. Met ones and regional legends are not boosted.
+- **Families with something missing.** The second column multiplies the weight of a base that still has an unmet shape species, colour species or base legend. It comes on top of the ×3 for an unmet shape species, and works for home and visitor bases alike. It never changes the 88% home and 12% visitor split.
 
 ## What never changes the pick
 

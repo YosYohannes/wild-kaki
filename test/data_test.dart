@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wildkaki/animals/boosts.dart';
 import 'package:wildkaki/animals/holidays.dart';
 import 'package:wildkaki/animals/lookup.dart';
 import 'package:wildkaki/animals/catalog_data.dart';
@@ -253,6 +254,21 @@ void main() {
       ]);
       expect(after.waiting.map((o) => o.id), ['b', 'd']);
       expect(after.sightings.length, 2);
+    });
+
+    test('reveal keeps the order of revealing across a round trip', () async {
+      final store = await newStore();
+      await store.addWaiting([outing('a', 1), outing('b', 2), outing('c', 3)]);
+      await store.reveal(outing('c', 3), 'duck');
+      await store.reveal(outing('a', 1), 'red-fox');
+      await store.reveal(outing('b', 2), 'tabby');
+      final reread = WildStore(
+        await SharedPreferences.getInstance(),
+        systemAnimate: true,
+      );
+      final sightings = reread.home().sightings;
+      expect(sightings.map((s) => s.animal), ['duck', 'tabby', 'red-fox']);
+      expect(inRevealOrder(sightings), ['duck', 'red-fox', 'tabby']);
     });
 
     test('markOpened is remembered once per animal', () async {
@@ -663,6 +679,52 @@ void main() {
       );
       expect(metChangesSomePick, isTrue);
     });
+
+    test('previewPick passes the drought and stays deterministic', () async {
+      final store = await newStore();
+      final seen = [for (var i = 1; i <= 301; i++) outing('s$i', i)];
+      await store.addWaiting(seen);
+      for (final o in seen) {
+        await store.reveal(o, 'red-fox');
+      }
+      final c = WildController(store, source, holidays: const NoHolidays());
+      expect(c.drought, 300);
+      final met = {'red-fox'};
+      var differs = false;
+      for (var i = 0; i < 400; i++) {
+        final o = outing('p$i', 400);
+        final pick = c.previewPick(o);
+        expect(c.previewPick(o), pick);
+        expect(
+          pick,
+          pickAnimal(
+            activity: o,
+            met: met,
+            drought: 300,
+            holidays: const NoHolidays(),
+          ),
+        );
+        differs |=
+            pick !=
+            pickAnimal(activity: o, met: met, holidays: const NoHolidays());
+      }
+      expect(differs, isTrue);
+    });
+
+    test(
+      'revealing out of start order counts the drought in reveal order',
+      () async {
+        final store = await newStore();
+        final os = [for (var i = 1; i <= 4; i++) outing('r$i', i)];
+        await store.addWaiting(os);
+        await store.reveal(os[3], 'tabby');
+        await store.reveal(os[0], 'red-fox');
+        await store.reveal(os[2], 'red-fox');
+        await store.reveal(os[1], 'red-fox');
+        final c = WildController(store, source, holidays: const NoHolidays());
+        expect(c.drought, 2);
+      },
+    );
 
     test('updatePrefs persists', () async {
       final c = await make();
