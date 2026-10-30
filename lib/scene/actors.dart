@@ -310,7 +310,7 @@ class Flyer {
   int get frame => (t / 0.14).toInt() % 2;
 
   bool hit(double px, double py) =>
-      px >= x + 1 && px < x + 31 && py >= y + 14 && py < y + 32;
+      px >= x + 1 && px < x + 31 && py >= y + 8 && py < y + 32;
 
   void startle() {
     alarm = 1.5;

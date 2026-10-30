@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wildkaki/animals/art_data.dart';
 import 'package:wildkaki/animals/lookup.dart';
@@ -83,6 +85,69 @@ void main() {
     final map = {'a': _art('x'), 'b': _art('y')};
     expect(spriteNamesUsed(map), {'x_1', 'x_2', 'y_1', 'y_2'});
     expect(spriteNamesUsed(const {}), isEmpty);
+  });
+
+  test('fly frames default to none and count as used sprites', () {
+    expect(_art('x').flyFrames, isEmpty);
+    expect(_art('x').flyHeadPoints, isEmpty);
+    const flying = EntryArt(
+      frames: ['x_1', 'x_2'],
+      headPoints: [(x: 1, y: 2), (x: 3, y: 4)],
+      flyFrames: ['x_fly_1', 'x_fly_2'],
+      flyHeadPoints: [(x: 5, y: 6), (x: 7, y: 8)],
+    );
+    expect(spriteNamesUsed({'a': flying}), {
+      'x_1',
+      'x_2',
+      'x_fly_1',
+      'x_fly_2',
+    });
+    expect(red.artFrom({red.id: flying}).flyFrames, ['x_fly_1', 'x_fly_2']);
+  });
+
+  test('an entry without fly art flies with its standing frames', () {
+    expect(red.flyFrames, red.frames);
+    expect(red.flyHeadPoints, red.headPoints);
+    final bat = entryOrDefault('fruit-bat');
+    expect(bat.flyFrames, bat.frames);
+    expect(bat.flyHeadPoints, bat.headPoints);
+  });
+
+  test('songbirds fly with their own frames and head points', () {
+    for (final id in [
+      'sparrow',
+      'robin',
+      'myna',
+      'pigeon',
+      'white-pigeon',
+      'crow',
+      'swallow',
+      'magpie',
+      'kingfisher',
+      'golden-kingfisher',
+    ]) {
+      final e = entryOrDefault(id);
+      expect(e.flyFrames, ['${id}_fly_1', '${id}_fly_2'], reason: id);
+      expect(e.flyHeadPoints, hasLength(2), reason: id);
+      expect(e.flyFrames, isNot(e.frames), reason: id);
+    }
+    for (final id in ['phoenix', 'garuda']) {
+      final e = entryOrDefault(id);
+      expect(e.flyFrames, e.frames, reason: id);
+      expect(e.flyHeadPoints, e.headPoints, reason: id);
+    }
+  });
+
+  test('every fly frame has a sprite file', () {
+    for (final e in animalEntries) {
+      for (final name in e.flyFrames) {
+        expect(
+          File('assets/sprites/$name.png').existsSync(),
+          isTrue,
+          reason: name,
+        );
+      }
+    }
   });
 
   test('entryNote falls back to the placeholder', () {

@@ -205,6 +205,44 @@ Future<List<int>> _render(
   return tester == null ? go() : (await tester.runAsync(go))!;
 }
 
+Future<double> _coverage(
+  WidgetTester tester,
+  ui.Image sprite,
+  int x,
+  int y,
+) async {
+  return (await tester.runAsync(() async {
+    final boundary =
+        _boundary.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+    final scene = await boundary.toImage();
+    final sceneBytes = (await scene.toByteData())!;
+    final spriteBytes = (await sprite.toByteData())!;
+    var opaque = 0;
+    var same = 0;
+    for (var py = 0; py < sprite.height; py++) {
+      for (var px = 0; px < sprite.width; px++) {
+        final at = (py * sprite.width + px) * 4;
+        if (spriteBytes.getUint8(at + 3) == 0) continue;
+        opaque++;
+        final sx = (x + px) * 3 + 1;
+        final sy = (y + py) * 3 + 1;
+        if (sx < 0 || sy < 0 || sx >= scene.width || sy >= scene.height) {
+          continue;
+        }
+        final to = (sy * scene.width + sx) * 4;
+        var match = true;
+        for (var c = 0; c < 4; c++) {
+          if (sceneBytes.getUint8(to + c) != spriteBytes.getUint8(at + c)) {
+            match = false;
+          }
+        }
+        if (match) same++;
+      }
+    }
+    return same / opaque;
+  }))!;
+}
+
 class _QuietSounds extends SceneSounds {
   @override
   Future<void> play(String name) async {}
@@ -513,6 +551,43 @@ void main() {
       unorderedEquals(['party-hat', null]),
     );
     await _shot(tester, 'scene_habitats');
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('a sky songbird draws its fly frames, a ground one stands', (
+    tester,
+  ) async {
+    _sprites = (await tester.runAsync(SceneSprites.load))!;
+    final c = (await tester.runAsync(
+      () => _controllerWith([
+        ('sparrow', null),
+        ('otter', null),
+        ('otter', null),
+        ('sparrow', null),
+      ]),
+    ))!;
+    await _show(tester, c, seed: 7);
+    final state = _state(tester);
+    final sky = state.flyers.single;
+    final ground = state.foxes.singleWhere((f) => f.entryId == 'sparrow');
+    final skyEntry = entryOrDefault(sky.entryId);
+    final groundEntry = entryOrDefault(ground.entryId);
+    ui.Image named(String n, bool left) => _sprites.named(n, mirrored: left);
+
+    final flying = named(skyEntry.flyFrames[sky.frame], sky.dir < 0);
+    final standing = named(skyEntry.frames[sky.frame], sky.dir < 0);
+    expect(await _coverage(tester, flying, sky.x.round(), sky.y), 1);
+    expect(
+      await _coverage(tester, standing, sky.x.round(), sky.y),
+      lessThan(0.9),
+    );
+
+    final walking = named(groundEntry.frames[ground.frame], ground.dir < 0);
+    final wings = named(groundEntry.flyFrames[ground.frame], ground.dir < 0);
+    final gx = ground.x.round();
+    final gy = ground.feet - 32;
+    expect(await _coverage(tester, walking, gx, gy), 1);
+    expect(await _coverage(tester, wings, gx, gy), lessThan(0.9));
     await tester.pumpWidget(const SizedBox());
   });
 

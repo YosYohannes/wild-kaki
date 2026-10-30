@@ -586,11 +586,12 @@ class _ScenePainter extends CustomPainter {
     bool left,
     int x,
     int y,
-    double s,
-  ) {
+    double s, {
+    bool flying = false,
+  }) {
     final entry = entryOrDefault(entryId);
-    final frames = entry.frames;
-    final headPoints = entry.headPoints;
+    final frames = flying ? entry.flyFrames : entry.frames;
+    final headPoints = flying ? entry.flyHeadPoints : entry.headPoints;
     final i = frame % frames.length;
     _sprite(canvas, sprites.named(frames[i], mirrored: left), x, y, s);
     final hat = hatById(hatId);
@@ -683,6 +684,7 @@ class _ScenePainter extends CustomPainter {
         f.x.round(),
         f.y,
         s,
+        flying: true,
       );
     }
 

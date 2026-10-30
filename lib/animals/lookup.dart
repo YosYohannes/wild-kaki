@@ -28,6 +28,16 @@ class AnimalEntry {
 
   List<HeadPoint> get headPoints => artFrom(entryArt).headPoints;
 
+  List<String> get flyFrames {
+    final art = artFrom(entryArt);
+    return art.flyFrames.isEmpty ? art.frames : art.flyFrames;
+  }
+
+  List<HeadPoint> get flyHeadPoints {
+    final art = artFrom(entryArt);
+    return art.flyHeadPoints.isEmpty ? art.headPoints : art.flyHeadPoints;
+  }
+
   EntryArt artFrom(Map<String, EntryArt> art) {
     final own = art[id] ?? (isColour ? art[shape!.id] : null);
     return own ?? EntryArt(frames: base.frames, headPoints: base.headPoints);
@@ -35,7 +45,7 @@ class AnimalEntry {
 }
 
 Set<String> spriteNamesUsed(Map<String, EntryArt> art) => {
-  for (final a in art.values) ...a.frames,
+  for (final a in art.values) ...[...a.frames, ...a.flyFrames],
 };
 
 final List<AnimalEntry> animalEntries = [

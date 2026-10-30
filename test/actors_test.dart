@@ -356,6 +356,7 @@ void main() {
     expect(f.x - 60, greaterThan(calm * 2));
     expect(f.bubble, greaterThan(0));
     expect(f.hit(f.x + 10, f.y + 20), isTrue);
+    expect(f.hit(f.x + 10, f.y + 9), isTrue);
     expect(f.hit(f.x + 10, f.y + 5), isFalse);
   });
 
