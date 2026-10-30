@@ -11,6 +11,7 @@ RESERVED = {EMPTY, HEAD, ERASE, "O"}
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 SPECIES_KEYS = {"palette", "patches", "fly"}
 MOVE = "move"
+CLEAR = "clear"
 SAME = "same"
 MAX_HAT = 15
 
@@ -113,7 +114,7 @@ def patch_list(sp, where, errors, key="patches"):
 def fly_list(parts, where, errors):
     out = []
     if not isinstance(parts, (list, tuple)):
-        errors.append(f"{where}: must be a list of (x, y, rows) or ('move', x, y, w, h, dx, dy)")
+        errors.append(f"{where}: must be a list of (x, y, rows), ('move', ...) or ('clear', ...)")
         return out
     for i, p in enumerate(parts):
         w = f"{where}[{i}]"
@@ -123,8 +124,14 @@ def fly_list(parts, where, errors):
             else:
                 errors.append(f"{w}: a move is ('move', x, y, w, h, dx, dy) with integers and w, h > 0")
             continue
+        if isinstance(p, (list, tuple)) and p and p[0] == CLEAR:
+            if len(p) == 6 and all(isinstance(v, int) for v in p[1:5]) and p[3] > 0 and p[4] > 0 and isinstance(p[5], str) and p[5] and all(is_role(c) for c in p[5]):
+                out.append((CLEAR, *p[1:], w))
+            else:
+                errors.append(f"{w}: a clear is ('clear', x, y, w, h, roles) with integers, w, h > 0 and role letters")
+            continue
         if not (isinstance(p, (list, tuple)) and len(p) == 3):
-            errors.append(f"{w}: must be (x, y, rows) or ('move', x, y, w, h, dx, dy)")
+            errors.append(f"{w}: must be (x, y, rows), ('move', x, y, w, h, dx, dy) or ('clear', x, y, w, h, roles)")
             continue
         x, y, rows = p
         if isinstance(rows, str):
@@ -158,6 +165,8 @@ def check_patch_bounds(patches, frames, errors):
         if p[0] == MOVE:
             _, x, y, pw, ph, dx, dy, _ = p
             boxes = [(x, y, pw, ph), (x + dx, y + dy, pw, ph)]
+        elif p[0] == CLEAR:
+            boxes = [p[1:5]]
         else:
             boxes = [(p[1], p[2], len(p[3][0]), len(p[3]))]
         for bx, by, bw, bh in boxes:
@@ -175,7 +184,7 @@ def used_roles(frames, patches):
     for rows in frames:
         roles |= {ch for r in rows for ch in r if is_role(ch)}
     for p in patches:
-        if p[0] != MOVE:
+        if p[0] not in (MOVE, CLEAR):
             roles |= {ch for r in p[3] for ch in r if is_role(ch)}
     return roles
 
@@ -297,6 +306,15 @@ def move_region(g, part, ox, oy, head):
     return head
 
 
+def clear_region(g, part, ox, oy, head):
+    _, x, y, w, h, roles, _ = part
+    for j in range(h):
+        for i in range(w):
+            if g[oy + y + j][ox + x + i] in roles:
+                g[oy + y + j][ox + x + i] = EMPTY
+    return head
+
+
 def paint_grid(frames, patches, frame):
     rows = frames[frame]
     w, h = len(rows[0]), len(rows)
@@ -323,6 +341,8 @@ def render_fly(frames, patches, fly, own_fly, frame):
     for part in fly[frame]:
         if part[0] == MOVE:
             head = move_region(g, part, ox, oy, head)
+        elif part[0] == CLEAR:
+            head = clear_region(g, part, ox, oy, head)
         else:
             head = paint_patches(g, [part], frame, ox, oy, head)
     head = paint_patches(g, own_fly, frame, ox, oy, head)

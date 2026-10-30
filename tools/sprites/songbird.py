@@ -72,6 +72,47 @@ KINGFISHER = {
 
 WIPE = (None, 0, 0, ["-" * 20] * 13)
 
+TUCK = [
+    ("clear", 6, 9, 9, 4, "s"),
+    ("move", 9, 1, 1, 3, 0, 2),
+    ("move", 10, 1, 12, 8, 0, 2),
+    ("move", -5, 0, 29, 13, 0, -3),
+]
+
+FLY = [
+    TUCK + [
+        (1, -9, [
+            "..k........",
+            ".ddk.......",
+            ".ddd.......",
+            ".dddd......",
+            "..dddd.....",
+            "..dddd.....",
+            "..ddddd....",
+            "...ddddd...",
+            "...dddddd..",
+            "....dddddd.",
+            ".....ddddd.",
+            "......dddd.",
+        ]),
+    ],
+    TUCK + [
+        (3, 1, [
+            "...dddd....",
+            "..ddddddd..",
+            "..dddddddd.",
+            "..ddddddd..",
+            "..dddddd...",
+            "..ddddd....",
+            "..dddd.....",
+            ".dddd......",
+            ".dddd......",
+            ".ddd.......",
+            "ddd........",
+            "kd.........",
+        ]),
+    ],
+]
 
 SPECIES = {
     "sparrow": {
@@ -90,6 +131,7 @@ SPECIES = {
         ),
     },
     "myna": {
+        "fly": [(0, 5, -2, ["ww", "ww"]), (1, 5, 6, ["ww", "ww"])],
         "palette": MYNA,
         "patches": patches(
             body(0, 1, [
@@ -108,6 +150,7 @@ SPECIES = {
         ),
     },
     "pigeon": {
+        "fly": [(0, 5, -2, "kkk"), (0, 6, 0, "kkk"), (1, 5, 3, "kkk"), (1, 5, 5, "kkk")],
         "palette": PIGEON,
         "patches": patches(
             body(8, 4, ["gg"]),
@@ -148,6 +191,7 @@ SPECIES = {
         ),
     },
     "magpie": {
+        "fly": [(0, 5, -3, ["ww", "ww", "ww"]), (1, 5, 5, ["ww", "ww", "ww"])],
         "palette": MAGPIE,
         "patches": patches(
             body(6, 6, ["wwww"]),
@@ -168,6 +212,7 @@ SPECIES = {
         ),
     },
     "phoenix": {
+        "fly": "same",
         "palette": {"b": "#ff8a1e", "d": "#d4281c", "l": "#ffd23a", "w": "#fff4b0", "y": "#f8e07a", "e": "#1a0f0a", "s": "#fff6c8", "a": "#ff8a1e", "f": "#ff8a1e", "k": "#ff8a1e", "t": "#ff8a1e"},
         "patches": [
             WIPE,
@@ -224,6 +269,7 @@ SPECIES = {
         ],
     },
     "garuda": {
+        "fly": "same",
         "palette": {"b": "#e0a020", "d": "#a8640c", "k": "#6a3c08", "l": "#ffe27a", "w": "#fff4d6", "r": "#d02828", "y": "#f08a14", "j": "#38c0e8", "e": "#14100c", "a": "#e0a020", "f": "#e0a020", "t": "#e0a020", "s": "#e0a020"},
         "patches": [
             WIPE,
