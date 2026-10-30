@@ -8,24 +8,28 @@ class AnimalEntry {
     required this.id,
     required this.name,
     required this.base,
-    required this.shape,
+    this.shape,
     this.colour,
+    this.legend,
   });
 
   final String id;
   final String name;
   final Base base;
-  final Species shape;
+  final Species? shape;
   final ColourSpecies? colour;
+  final Legend? legend;
 
   bool get isColour => colour != null;
+
+  bool get isLegend => legend != null;
 
   List<String> get frames => artFrom(entryArt).frames;
 
   List<HeadPoint> get headPoints => artFrom(entryArt).headPoints;
 
   EntryArt artFrom(Map<String, EntryArt> art) {
-    final own = art[id] ?? (isColour ? art[shape.id] : null);
+    final own = art[id] ?? (isColour ? art[shape!.id] : null);
     return own ?? EntryArt(frames: base.frames, headPoints: base.headPoints);
   }
 }
@@ -35,7 +39,7 @@ Set<String> spriteNamesUsed(Map<String, EntryArt> art) => {
 };
 
 final List<AnimalEntry> animalEntries = [
-  for (final base in defaultCatalog.bases)
+  for (final base in defaultCatalog.bases) ...[
     for (final shape in defaultCatalog.speciesOf(base.id)) ...[
       AnimalEntry(id: shape.id, name: shape.name, base: base, shape: shape),
       for (final colour in shape.colours)
@@ -47,6 +51,16 @@ final List<AnimalEntry> animalEntries = [
           colour: colour,
         ),
     ],
+    for (final regional in [false, true])
+      for (final legend in defaultCatalog.legends)
+        if (legend.baseId == base.id && legend.isRegional == regional)
+          AnimalEntry(
+            id: legend.id,
+            name: legend.name,
+            base: base,
+            legend: legend,
+          ),
+  ],
 ];
 
 final Map<String, AnimalEntry> _entriesById = {

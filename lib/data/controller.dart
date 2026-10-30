@@ -2,13 +2,19 @@ import 'package:flutter/foundation.dart';
 
 import '../animals/holidays.dart';
 import '../animals/picker.dart';
+import '../animals/zone.dart';
 import 'health_sync.dart';
 import 'model.dart';
 import 'store.dart';
 
 class WildController extends ChangeNotifier {
-  WildController(this._store, this._source, {HolidayProvider? holidays})
-    : _holidays = holidays ?? holidaysForPhone() {
+  WildController(
+    this._store,
+    this._source, {
+    HolidayProvider? holidays,
+    TimeZoneProvider? timeZone,
+  }) : _holidays = holidays ?? holidaysForPhone(),
+       _timeZone = timeZone ?? (() => null) {
     _home = _store.home();
     _prefs = _store.prefsState();
   }
@@ -18,11 +24,13 @@ class WildController extends ChangeNotifier {
     OutingSource? source,
     WildStore? store,
     HolidayProvider? holidays,
+    TimeZoneProvider? timeZone,
   }) async {
     final controller = WildController(
       store ?? await WildStore.open(systemAnimate: systemAnimate),
       source ?? HealthConnectSource(),
       holidays: holidays,
+      timeZone: timeZone,
     );
     await controller._checkStatus();
     return controller;
@@ -31,6 +39,7 @@ class WildController extends ChangeNotifier {
   final WildStore _store;
   final OutingSource _source;
   final HolidayProvider _holidays;
+  final TimeZoneProvider _timeZone;
   late HomeState _home;
   late Prefs _prefs;
   SourceStatus _status = SourceStatus.missing;
@@ -41,6 +50,7 @@ class WildController extends ChangeNotifier {
   Prefs get prefs => _prefs;
   bool get refreshing => _refreshing;
   String? get notice => _notice;
+  String? get timeZone => _timeZone();
   bool get connected => _status == SourceStatus.available;
 
   Future<void> _checkStatus() async {
@@ -108,6 +118,7 @@ class WildController extends ChangeNotifier {
     activity: outing,
     met: {for (final s in _home.sightings) s.animal},
     holidays: _holidays,
+    timeZone: _timeZone(),
   );
 
   Future<void> reveal(Outing o) async {

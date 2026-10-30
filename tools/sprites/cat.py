@@ -151,6 +151,25 @@ SPECIES = {
             (None, 4, 9, ["d", "d"]),
         ],
     },
+    "nekomata": {
+        "palette": {
+            "b": "#4b4468", "d": "#363050", "l": "#9a90c0", "a": "#6a5f8e", "k": "#2b2640", "p": "#d98ac0",
+            "e": "#ffe45a", "q": "#1f1a14", "n": "#e08ab8", "f": "#5b7dff", "g": "#b38cff", "w": "#f2ecff",
+        },
+        "patches": [
+            (None, 0, 1, ["..-", ".--", "--.", "--.", "--.", "--.", "--."]),
+            (None, 4, 8, ["a..a..a..a", "a..a..a..a", "...a..a..a"]),
+            (None, 12, 2, ["a.a.a"]),
+            (None, 13, 3, ["a...a"]),
+            (None, 3, -9, ["...g.", "..gf.", ".fgwf", "fgwwf", "fgwgf", ".fff.", "b.f.b", "bb.bb", ".bbb.", "..bb.", "..bb.", "..bb.", ".bb..", "bb..."]),
+            (None, 0, 5, ["..bb", ".bb.", "bbb."]),
+            (None, -5, -6, ["...g.", "..gf.", ".fgwf", "fgwwf", "fgwgf", ".fff.", "b.f.b", "bb.bb", ".bbb.", "..bb.", "..bb."]),
+            (None, -2, 5, ["bb"]),
+            (None, -1, 6, ["bb"]),
+            (1, 3, -9, [".g...", ".fg..", "fwgf.", "fwwgf", "fgwgf", ".fff."]),
+            (1, -5, -6, [".g...", ".fg..", "fwgf.", "fwwgf", "fgwgf", ".fff."]),
+        ],
+    },
 }
 
 COLOURS = {

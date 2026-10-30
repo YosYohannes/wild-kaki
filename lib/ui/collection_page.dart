@@ -12,6 +12,7 @@ class CollectionPage extends StatelessWidget {
     required this.onSettings,
     required this.onClose,
     required this.onOpen,
+    this.timeZone,
   });
 
   final List<Sighting> sightings;
@@ -19,18 +20,26 @@ class CollectionPage extends StatelessWidget {
   final VoidCallback onSettings;
   final VoidCallback onClose;
   final void Function(String entryId) onOpen;
+  final String? timeZone;
+
+  bool _shown(AnimalEntry entry, Set<String> met) {
+    final legend = entry.legend;
+    if (legend == null || !legend.isRegional) return true;
+    return met.contains(entry.id) || legend.matchesZone(timeZone);
+  }
 
   @override
   Widget build(BuildContext context) {
     final met = {for (final s in sightings) s.animal};
     final cells = <Widget>[
       for (final entry in animalEntries)
-        _Cell(
-          entry: entry,
-          found: met.contains(entry.id),
-          isNew: met.contains(entry.id) && !opened.contains(entry.id),
-          onTap: () => onOpen(entry.id),
-        ),
+        if (_shown(entry, met))
+          _Cell(
+            entry: entry,
+            found: met.contains(entry.id),
+            isNew: met.contains(entry.id) && !opened.contains(entry.id),
+            onTap: () => onOpen(entry.id),
+          ),
     ];
     final bottom = MediaQuery.paddingOf(context).bottom;
     return Material(

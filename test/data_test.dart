@@ -2,7 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wildkaki/animals/holidays.dart';
 import 'package:wildkaki/animals/lookup.dart';
+import 'package:wildkaki/animals/catalog_data.dart';
 import 'package:wildkaki/animals/picker.dart';
+import 'package:wildkaki/animals/rolls.dart';
+import 'package:wildkaki/animals/zone.dart';
 import 'package:wildkaki/data/controller.dart';
 import 'package:wildkaki/data/health_sync.dart';
 import 'package:wildkaki/data/model.dart';
@@ -185,7 +188,7 @@ void main() {
               '[{"id":"n","kind":"Swim","start":4,"minutes":30},'
               '{"id":"m","kind":"Run","start":5,"minutes":30,"animal":"Fox"},'
               '{"id":"o","kind":"Run","start":6,"minutes":30,"animal":"fox"},'
-              '{"id":"p","kind":"Run","start":7,"minutes":30,"animal":"dragon"}]',
+              '{"id":"p","kind":"Run","start":7,"minutes":30,"animal":"yeti"}]',
           'opened': ['Fox'],
         },
       );
@@ -411,6 +414,7 @@ void main() {
       DateTime? now,
       DateTime Function()? clock,
       HolidayProvider? holidays,
+      TimeZoneProvider? timeZone,
     }) async {
       final store = await newStore(initial: initial, now: now, clock: clock);
       return WildController.create(
@@ -418,6 +422,7 @@ void main() {
         source: source,
         store: store,
         holidays: holidays ?? const NoHolidays(),
+        timeZone: timeZone,
       );
     }
 
@@ -551,6 +556,51 @@ void main() {
         expect(stored.animal, pick.entryId);
         expect(stored.hat, pick.hatId);
       }
+    });
+
+    test('the pick uses the time zone at the moment of the reveal', () async {
+      final id = [for (var i = 0; i < 20000; i++) 'zone-$i']
+          .firstWhere((id) => roll('regional', id) < regionalLegendChance);
+      final o = outing(id, 1);
+      source.outings = [o];
+      String? zone = 'Europe/Berlin';
+      final c = await make(timeZone: () => zone);
+      await c.refresh();
+      expect(c.timeZone, 'Europe/Berlin');
+      expect(c.previewPick(o).entryId, isNot('merlion'));
+      zone = 'Asia/Singapore';
+      expect(c.previewPick(o).entryId, 'merlion');
+      await c.reveal(o);
+      expect(c.home.sightings.single.animal, 'merlion');
+    });
+
+    test('without a time zone provider there is no regional legend', () async {
+      final id = [for (var i = 0; i < 20000; i++) 'zone-$i']
+          .firstWhere((id) => roll('regional', id) < regionalLegendChance);
+      final c = await make();
+      expect(c.timeZone, isNull);
+      final regionalIds = [
+        for (final l in defaultCatalog.legends)
+          if (l.isRegional) l.id,
+      ];
+      expect(
+        regionalIds,
+        isNot(contains(c.previewPick(outing(id, 1)).entryId)),
+      );
+    });
+
+    test('the phone time zone keeps the last known zone', () async {
+      String? reading = 'Asia/Tokyo';
+      final phone = PhoneTimeZone(() async => reading);
+      expect(phone.zone, isNull);
+      await phone.refresh();
+      expect(phone.zone, 'Asia/Tokyo');
+      reading = null;
+      await phone.refresh();
+      expect(phone.zone, 'Asia/Tokyo');
+      reading = 'Asia/Singapore';
+      await phone.refresh();
+      expect(phone.zone, 'Asia/Singapore');
     });
 
     test('a hat is stored on a day off and not on a weekday', () async {

@@ -14,7 +14,7 @@ MAX_LEN = 80
 
 def catalog_ids():
     text = CATALOG.read_text()
-    return re.findall(r"Species\(\s*id:\s*'([^']+)'", text)
+    return re.findall(r"Species\(\s*id:\s*'([^']+)'", text) + re.findall(r"\bLegend\(\s*id:\s*'([^']+)'", text)
 
 
 def note_rows():

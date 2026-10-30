@@ -8,9 +8,11 @@ The animals to start with. How one is picked is in `rule-parameters.md`.
 - **Shape species:** a base with its own parts and palette, for example a Siamese is the cat base with slim ears and a pointed palette. Shape species are picked by affinities.
 - **Colour species:** a shape species with a different palette and its own name, for example the Golden cat is a Tabby in gold. They are picked by the colour roll after the shape species, and they are where rarity lives.
 
-Every species, shape or colour, is its own entry in the collection. All animals are fox-sized or smaller.
+- **Legend:** a mythical animal drawn as a twist on a base. Base legends come from a 1% legend roll after the base is picked; regional legends come only to phones in their time zones (see Legends below).
 
-Totals: 15 bases, 57 shape species, 16 colour species, 73 entries in the collection. The aim is 50 to 120; more species can be added to a base later with new parts and a palette.
+Every species, shape, colour or legend, is its own entry in the collection. All animals are fox-sized or smaller.
+
+Totals: 15 bases, 58 shape species, 16 colour species, 15 base legends and 5 regional legends, 94 entries in the collection. The aim is 50 to 120; more species can be added to a base later with new parts and a palette.
 
 ## Bases
 
@@ -30,7 +32,7 @@ Totals: 15 bases, 57 shape species, 16 colour species, 73 entries in the collect
 | Owl | Sleep | sky at night, glides | hoo | kept watch on your {activity} |
 | Bat | Sleep | sky at dusk and night, flits | eek | flitted around on your {activity} |
 | Mouse | Sleep | meadow, scurries | eep | scurried along on your {activity} |
-| Hedgehog | Sleep | meadow, shuffles | snuff | snuffled along on your {activity} |
+| Raccoon | Sleep | meadow, waddles | churr | rummaged around during your {activity} |
 
 For Sleep every animal uses the arrival line "watched over your sleep". Kinds with no home base (none today) fall back to the Fox base.
 
@@ -163,16 +165,55 @@ Affinities list only what a species cares about; everything else is neutral. Sca
 | Dormouse | Long | | | |
 | Hamster | | Night | | White hamster 12% |
 
-### Hedgehog (home: Sleep)
+### Raccoon (home: Sleep)
 
 | Species | Loves | Likes | Avoids | Colour species |
 |---|---|---|---|---|
-| Hedgehog | | Long, Night | | |
-| Tenrec | | Brief | | |
+| Raccoon | Night | Long | | |
+| Red panda | | Day, Short | | |
+| Tanuki | | Twilight, Medium length | | |
 
 ## Hats
 
 Five hats, one picked at random on a day off: party hat, sombrero, beanie, top hat, bowler hat. Hats sit on each base's head point, so every species of a base shares them.
+
+## Legends
+
+A legend is its own entry in the collection, drawn as a twist on its base. It has no colour species, and it wears a hat on a day off like any other animal.
+
+### Base legends
+
+One per base. After the base is picked, the legend roll turns the animal into the base's legend at **1%**, or **2%** when the activity matches what the legend likes. No discovery multiplier.
+
+| Legend | Base | Likes | Look | From |
+|---|---|---|---|---|
+| Cerberus pup | Dog | Night | three heads on one puppy | Greek |
+| Nekomata | Cat | Night | twin forked tails tipped with ghost-fire | Japanese |
+| Kitsune | Fox | Twilight | white, a fan of nine tails, red face markings | Japanese |
+| Moon rabbit | Hare | Night | white and glowing, a crescent mark, a tiny mortar and pestle | Chinese and Japanese |
+| Kamaitachi | Mustelid | Fast | whirlwind weasel with sickle claws and wind swirls | Japanese |
+| Unicorn | Small deer | Twilight | spiral horn, pastel mane | European |
+| Ratatoskr | Squirrel | Day | ember-red, a tiny scroll, rune marks | Norse |
+| Phoenix | Songbird | Day | flame plumage, long streamer tail, sparks | Greek and Egyptian |
+| Hamsa | Waterfowl | Twilight | white swan with a lotus crown | Hindu and Buddhist |
+| Kappa | Otter | Twilight | green, a shell on its back, a water dish on its head | Japanese |
+| Dragon | Lizard | Long | tiny wyrmling with wings, horns and a spiked tail | everywhere |
+| Owl of Athena | Owl | Night | silver feathers, an olive sprig | Greek |
+| Vampire | Bat | Night | fangs and a red-lined cape | European |
+| Rat king | Mouse | Night | the plague: a swarm of rats with tangled tails | European |
+| Bake-danuki | Raccoon | Twilight | a shape-shifting tanuki with a leaf on its head | Japanese |
+
+### Regional legends
+
+A regional legend can only come to a phone whose time zone is in its region. Before anything else, the regional roll gives it at **0.2%** (about 1 in 500 activities), whatever the kind, time or bands. No discovery multiplier. It is drawn on its base and uses its base's sound, habitat and arrival line.
+
+| Legend | Base | Time zones | Look |
+|---|---|---|---|
+| Merlion | Otter | Asia/Singapore | lion head with a mane, a fish tail with scales |
+| Garuda | Songbird | Asia/Jakarta, Asia/Pontianak, Asia/Makassar, Asia/Jayapura | golden eagle-spirit with a red crown |
+| Qilin | Small deer | Asia/Shanghai, Asia/Urumqi, Asia/Hong_Kong, Asia/Macau, Asia/Taipei | green scales, a flame mane, one antler |
+| Naga | Lizard | Asia/Bangkok, Asia/Vientiane, Asia/Phnom_Penh | crested serpent with a jewelled hood |
+| Nessie | Waterfowl | Europe/London | black long-necked loch monster with humps, like the old photos |
 
 ## Words still to write
 
@@ -180,12 +221,12 @@ The card notes, one for each of the 73 entries, live in `notes.md`. The bases ab
 
 ## Assets to make
 
-| Asset | Count | Already there |
+Sprites are generated from `tools/sprites/<base>.py` (see `tools/sprites/README.md`).
+
+| Asset | Count | Status |
 |---|---|---|
-| Base drawings | 30 (15 bases × 2 frames) | fox ×2, songbird ×2, duck ×1 |
-| Parts | about 60 (ears, tails, beaks, crests, faces) | none |
-| Palettes | 73 (one per species) | fox, songbird, duck |
-| Head points | 30 (one per base frame) | none |
-| Hats | 5 | none |
-| Tap sounds | 15 (one per base) | yip, quack, tweet |
-| Holiday list | Singapore to start | none |
+| Base modules (2 frames, species, colours) | 15 | all but Raccoon |
+| Hats | 5 | done |
+| Legends | 20 (15 base, 5 regional) | none |
+| Tap sounds | 15 | all but churr |
+| Holiday list | Singapore bundled, live for others | done |

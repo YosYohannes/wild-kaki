@@ -77,6 +77,33 @@ class ColourSpecies {
   final double chance;
 }
 
+class Legend {
+  const Legend({
+    required this.id,
+    required this.name,
+    required this.baseId,
+    this.likes,
+    this.regionZones = const {},
+    this.regionPrefix,
+  });
+
+  final String id;
+  final String name;
+  final String baseId;
+  final Band? likes;
+  final Set<String> regionZones;
+  final String? regionPrefix;
+
+  bool get isRegional => regionZones.isNotEmpty || regionPrefix != null;
+
+  bool matchesZone(String? zone) {
+    if (zone == null) return false;
+    final prefix = regionPrefix;
+    return regionZones.contains(zone) ||
+        (prefix != null && zone.startsWith(prefix));
+  }
+}
+
 class Hat {
   const Hat({required this.id, required this.name, required this.sprite});
 
@@ -86,12 +113,17 @@ class Hat {
 }
 
 class Catalog {
-  Catalog({required this.bases, required this.species, required this.hats})
-    : _speciesById = {for (final s in species) s.id: s},
-      _baseById = {for (final b in bases) b.id: b};
+  Catalog({
+    required this.bases,
+    required this.species,
+    this.legends = const [],
+    required this.hats,
+  }) : _speciesById = {for (final s in species) s.id: s},
+       _baseById = {for (final b in bases) b.id: b};
 
   final List<Base> bases;
   final List<Species> species;
+  final List<Legend> legends;
   final List<Hat> hats;
   final Map<String, Species> _speciesById;
   final Map<String, Base> _baseById;
@@ -103,6 +135,20 @@ class Catalog {
   Base? baseById(String id) => _baseById[id];
 
   Species? speciesById(String id) => _speciesById[id];
+
+  Legend? baseLegendOf(String baseId) {
+    for (final l in legends) {
+      if (l.baseId == baseId && !l.isRegional) return l;
+    }
+    return null;
+  }
+
+  Legend? regionalLegendFor(String? zone) {
+    for (final l in legends) {
+      if (l.isRegional && l.matchesZone(zone)) return l;
+    }
+    return null;
+  }
 
   List<Species> speciesOf(String baseId) => [
     for (final s in species)

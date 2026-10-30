@@ -85,6 +85,21 @@ SPECIES = {
             (1, 16, 11, ["rr", "rr"]),
         ],
     },
+    "kitsune": {
+        "palette": {
+            **RED, "b": "#fbf6ec", "d": "#e0d9ee", "l": "#ffffff", "k": "#d63a3a", "e": "#b86a12",
+            "r": "#d63a3a", "g": "#f2b92e", "y": "#fff0a0", "o": "#f29a4a", "s": "#d9702c", "w": "#ffffff",
+        },
+        "patches": [
+            (None, 0, 4, ["-----", "-----", "-----", "-----", "-----"]),
+            (None, 5, 6, "b"),
+            (0, -1, -9, [".......w.........", "......ww.........", ".....www.........", ".....wwww.....w..", "w....www....ww...", "www...oo...www...", "www..ooo...www...", "www..oooo.ssw....", ".sss.oooossss....", ".ssssoooosss..ww.", "..sssooossss.wwww", "w.sssooosssowwwww", "woosssosssoowwww.", "wooossoosooooo...", "ooooosooooooo....", "..ooooooooo......"]),
+            (1, -1, -9, ["......w..........", ".....ww..........", ".....www.........", "w...wwww.........", "ww...www.....ww..", "www..ooo....www..", "www..ooo....www..", ".wws.ooo...sww...", ".ssssooo..sss....", "..sssooo.sssswwww", "..sssooossss.wwww", "...ssooosssowwww.", "woossooosooowww..", "wooossoosoooo....", "ooooosoooooo.....", ".oooooooooo......"]),
+            (None, 20, 3, ["rrr"]),
+            (None, 19, 5, ["rr"]),
+            (None, 19, 9, ["yg", "gg"]),
+        ],
+    },
 }
 
 COLOURS = {

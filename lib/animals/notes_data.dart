@@ -91,6 +91,34 @@ const Map<String, String> entryNotes = {
   'hamster': 'A hamster stuffs its cheeks at night, just in case of snacks.',
   'white-hamster':
       'White hamster: a snowball with whiskers and cheeks full of seeds.',
-  'hedgehog': 'A hedgehog is a walking pincushion with a long night ahead.',
-  'tenrec': 'A tenrec dresses as a hedgehog; the family tree says otherwise.',
+  'raccoon':
+      'A raccoon wears a mask for the night shift and washes everything twice.',
+  'red-panda':
+      'The red panda: not a panda, not a fox, fully committed to naps.',
+  'tanuki': 'A tanuki is round, cheerful and suspiciously good at disguises.',
+  'cerberus-pup': 'Three heads, three noses, one very confused game of fetch.',
+  'nekomata': 'Two tails, nine lives, and a ghost-fire glow for the walk home.',
+  'kitsune': 'Nine tails at dusk. Count them twice; a kitsune likes a trick.',
+  'moon-rabbit':
+      'The moon rabbit hopped down from the moon, still holding its pestle.',
+  'kamaitachi': 'A gust, a blur, a kamaitachi: gone before the wind settles.',
+  'unicorn': 'The unicorn is real. It just only shows itself at dusk.',
+  'ratatoskr':
+      'Ratatoskr runs messages up the world tree. Today it ran with you.',
+  'phoenix': 'The phoenix keeps rising, mostly to see where you are going.',
+  'hamsa': 'The hamsa glides by in a lotus crown, serene as a still pond.',
+  'kappa': 'Bow to a kappa and it bows back. Mind the water dish on its head.',
+  'dragon': 'A pocket-sized dragon with a hoard of exactly one shiny pebble.',
+  'owl-of-athena':
+      'The owl of Athena sees everything, and has opinions on most of it.',
+  'vampire': 'This vampire only wants a sip of nectar and a nice dark cape.',
+  'rat-king': 'The rat king: a whole plague of rats, tangled tail to tail.',
+  'bake-danuki':
+      'A leaf on its head means the bake-danuki is about to be someone else.',
+  'merlion': 'Half lion, half fish, wholly Singapore. Mind the spray.',
+  'garuda':
+      'Garuda spreads golden wings over the islands, and over your outing.',
+  'qilin': 'A qilin steps so lightly that the grass does not bend beneath it.',
+  'naga': 'The naga coils in the shallows, jewelled hood held high.',
+  'nessie': 'Nessie! Blurry, as always, and gone before the photo.',
 };

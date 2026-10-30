@@ -130,7 +130,8 @@ def hats(out, only):
         rendered = _core.render_base(parsed, bmod)
         shapes = [e for e in tree[b]["shapes"] if e in rendered]
         own = [e for e in shapes[1:] if rendered[e][2] != rendered[shapes[0]][2]]
-        for eid in shapes[:1] + own:
+        legends = [e for e in tree[b]["legends"] if e in rendered]
+        for eid in shapes[:1] + own + legends:
             heads = rendered[eid][2]
             for hid, hat in hat_imgs.items():
                 frames = []

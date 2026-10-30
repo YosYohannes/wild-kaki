@@ -84,6 +84,10 @@ Future<void> _show(WidgetTester tester, Widget page) async {
       ),
     ),
   );
+  await _settleImages(tester);
+}
+
+Future<void> _settleImages(WidgetTester tester) async {
   await tester.runAsync(() async {
     for (final e in find.byType(Image).evaluate()) {
       await precacheImage((e.widget as Image).image, e);
@@ -128,7 +132,7 @@ void main() {
         onOpen: (a) => opened = a,
       ),
     );
-    expect(animalEntries, hasLength(73));
+    expect(animalEntries, hasLength(94));
     expect(find.text('Shiba'), findsOneWidget);
     expect(find.text('Tabby'), findsOneWidget);
     expect(find.text('Black cat'), findsOneWidget);
@@ -167,6 +171,7 @@ void main() {
     await tester.drag(find.byType(GridView), const Offset(0, -20000));
     await tester.pump();
     expect(find.text(last.name), findsOneWidget);
+    await _settleImages(tester);
     await _shot(tester, 'collection_end');
     final longest = animalEntries.reduce(
       (a, b) => a.name.length >= b.name.length ? a : b,
@@ -179,7 +184,45 @@ void main() {
     await tester.pump();
     expect(tester.getSize(find.text(longest.name)).height, lessThan(18));
     expect(tester.getSize(find.text(longest.name)).width, lessThan(109));
+    await _settleImages(tester);
     await _shot(tester, 'collection_longest');
+    await _leave(tester);
+  });
+
+  testWidgets('regional legends show only when met or in their zone', (
+    tester,
+  ) async {
+    Future<void> showWith(List<Sighting> seen, String? zone) => _show(
+      tester,
+      CollectionPage(
+        sightings: seen,
+        opened: const {},
+        timeZone: zone,
+        onSettings: () {},
+        onClose: () {},
+        onOpen: (_) {},
+      ),
+    );
+    final regional = animalEntries.where((e) => e.legend?.isRegional ?? false);
+    final base = animalEntries.length - 5;
+    expect(regional, hasLength(5));
+
+    Future<int> count(List<Sighting> seen, String? zone) async {
+      await showWith(seen, zone);
+      final grid = tester.widget<GridView>(find.byType(GridView));
+      return (grid.childrenDelegate as SliverChildListDelegate).children.length;
+    }
+
+    expect(await count(const [], null), base);
+    expect(await count(const [], 'Europe/Berlin'), base);
+    expect(await count(const [], 'Asia/Singapore'), base + 1);
+    expect(await count(const [], 'Europe/London'), base + 1);
+    final merlion = Sighting(
+      _outing('m', 'Swim', DateTime(2025, 10, 22, 6, 55), 1, 30),
+      'merlion',
+    );
+    expect(await count([merlion], 'Europe/Berlin'), base + 1);
+    expect(await count([merlion], 'Asia/Singapore'), base + 1);
     await _leave(tester);
   });
 

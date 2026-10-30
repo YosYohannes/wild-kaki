@@ -313,7 +313,7 @@ def build_base(base_id, tree, path, log):
     if parsed is None:
         return None
     entries = _core.render_base(parsed, mod)
-    order = [e for s, cs in tree[base_id]["shapes"].items() for e in [s, *cs]]
+    order = [e for s, cs in tree[base_id]["shapes"].items() for e in [s, *cs]] + tree[base_id]["legends"]
     entries = {e: entries[e] for e in order if e in entries}
     seen = {}
     for eid, (grids, pal, _) in entries.items():
@@ -407,7 +407,7 @@ def sheet_sections(tree, built, hats, only):
         if only and only != base_id:
             continue
         got = built.get(base_id) or {}
-        order = [e for s, cs in info["shapes"].items() for e in [s, *cs]]
+        order = [e for s, cs in info["shapes"].items() for e in [s, *cs]] + info["legends"]
         items = []
         for eid in order:
             if eid in got:

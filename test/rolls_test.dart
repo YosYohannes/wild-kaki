@@ -16,6 +16,21 @@ void main() {
     expect(r.hat, 3632085317 / 4294967296);
   });
 
+  test('the regional and legend rolls have their own salts', () {
+    final r = Rolls.of('a0');
+    expect(r.regional, roll('regional', 'a0'));
+    expect(r.legend, roll('legend', 'a0'));
+    expect({
+      r.visitor,
+      r.base,
+      r.species,
+      r.colour,
+      r.hat,
+      r.regional,
+      r.legend,
+    }, hasLength(7));
+  });
+
   test('the same id gives the same rolls', () {
     final a = Rolls.of('x');
     final b = Rolls.of('x');

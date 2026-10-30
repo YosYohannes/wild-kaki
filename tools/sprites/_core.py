@@ -142,7 +142,7 @@ def validate(mod, base_id, tree):
     if not isinstance(colours, dict):
         errors.append("COLOURS: must be a dict of colour-species-id -> {role: '#rrggbb'}")
         return errors, warnings, None
-    shapes = tree["shapes"]
+    shapes = {**tree["shapes"], **{lid: [] for lid in tree.get("legends", [])}}
     colour_parent = {c: s for s, cs in shapes.items() for c in cs}
     for sid in species:
         if sid not in shapes:

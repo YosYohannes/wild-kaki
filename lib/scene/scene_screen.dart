@@ -337,6 +337,7 @@ class _SceneScreenState extends State<SceneScreen>
         return CollectionPage(
           sightings: _c.home.sightings,
           opened: _c.home.opened,
+          timeZone: _c.timeZone,
           onSettings: () {
             _settingsFrom = _Page.collection;
             _go(_Page.settings);

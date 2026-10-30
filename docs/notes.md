@@ -75,5 +75,26 @@ The note is the line under the animal's name on its card and in the reveal; one 
 | dormouse | Dormouse | The dormouse is named for sleep, and loves the long version. |
 | hamster | Hamster | A hamster stuffs its cheeks at night, just in case of snacks. |
 | white-hamster | White hamster | White hamster: a snowball with whiskers and cheeks full of seeds. |
-| hedgehog | Hedgehog | A hedgehog is a walking pincushion with a long night ahead. |
-| tenrec | Tenrec | A tenrec dresses as a hedgehog; the family tree says otherwise. |
+| raccoon | Raccoon | A raccoon wears a mask for the night shift and washes everything twice. |
+| red-panda | Red panda | The red panda: not a panda, not a fox, fully committed to naps. |
+| tanuki | Tanuki | A tanuki is round, cheerful and suspiciously good at disguises. |
+| cerberus-pup | Cerberus pup | Three heads, three noses, one very confused game of fetch. |
+| nekomata | Nekomata | Two tails, nine lives, and a ghost-fire glow for the walk home. |
+| kitsune | Kitsune | Nine tails at dusk. Count them twice; a kitsune likes a trick. |
+| moon-rabbit | Moon rabbit | The moon rabbit hopped down from the moon, still holding its pestle. |
+| kamaitachi | Kamaitachi | A gust, a blur, a kamaitachi: gone before the wind settles. |
+| unicorn | Unicorn | The unicorn is real. It just only shows itself at dusk. |
+| ratatoskr | Ratatoskr | Ratatoskr runs messages up the world tree. Today it ran with you. |
+| phoenix | Phoenix | The phoenix keeps rising, mostly to see where you are going. |
+| hamsa | Hamsa | The hamsa glides by in a lotus crown, serene as a still pond. |
+| kappa | Kappa | Bow to a kappa and it bows back. Mind the water dish on its head. |
+| dragon | Dragon | A pocket-sized dragon with a hoard of exactly one shiny pebble. |
+| owl-of-athena | Owl of Athena | The owl of Athena sees everything, and has opinions on most of it. |
+| vampire | Vampire | This vampire only wants a sip of nectar and a nice dark cape. |
+| rat-king | Rat king | The rat king: a whole plague of rats, tangled tail to tail. |
+| bake-danuki | Bake-danuki | A leaf on its head means the bake-danuki is about to be someone else. |
+| merlion | Merlion | Half lion, half fish, wholly Singapore. Mind the spray. |
+| garuda | Garuda | Garuda spreads golden wings over the islands, and over your outing. |
+| qilin | Qilin | A qilin steps so lightly that the grass does not bend beneath it. |
+| naga | Naga | The naga coils in the shallows, jewelled hood held high. |
+| nessie | Nessie | Nessie! Blurry, as always, and gone before the photo. |

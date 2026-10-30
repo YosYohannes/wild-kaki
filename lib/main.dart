@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'animals/holidays_live.dart';
+import 'animals/zone.dart';
 import 'data/controller.dart';
 import 'scene/scene_screen.dart';
 import 'scene/sprites.dart';
@@ -25,8 +26,11 @@ Future<void> main() async {
   );
   final holidays = await HolidayService.open();
   final weather = await WeatherService.open();
+  final phoneZone = PhoneTimeZone();
+  await phoneZone.refresh();
   final controller = await WildController.create(
     holidays: holidays,
+    timeZone: () => phoneZone.zone,
     systemAnimate: !WidgetsBinding
         .instance
         .platformDispatcher
@@ -38,6 +42,7 @@ Future<void> main() async {
     WildKakiApp(
       controller: controller,
       holidays: holidays,
+      phoneZone: phoneZone,
       weather: weather,
       sprites: sprites,
     ),
@@ -49,12 +54,14 @@ class WildKakiApp extends StatefulWidget {
     super.key,
     required this.controller,
     required this.holidays,
+    required this.phoneZone,
     required this.weather,
     required this.sprites,
   });
 
   final WildController controller;
   final HolidayService holidays;
+  final PhoneTimeZone phoneZone;
   final WeatherService weather;
   final SceneSprites sprites;
 
@@ -81,6 +88,7 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(widget.phoneZone.refresh());
       widget.controller.syncQuietly();
       unawaited(widget.holidays.refresh());
       unawaited(widget.weather.refresh());

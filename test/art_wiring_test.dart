@@ -9,12 +9,12 @@ EntryArt _art(String tag) => EntryArt(
 
 void main() {
   final red = animalEntries.firstWhere((e) => e.isColour);
-  final fox = entryOrDefault(red.shape.id);
+  final fox = entryOrDefault(red.shape!.id);
 
   test('colour entries are built on a shape species', () {
     expect(red.isColour, isTrue);
     expect(fox.isColour, isFalse);
-    expect(red.shape.id, fox.id);
+    expect(red.shape!.id, fox.id);
   });
 
   test('an entry without art falls back to the base stub', () {
@@ -46,6 +46,37 @@ void main() {
       expect(e.frames, isNotEmpty, reason: e.id);
       expect(e.headPoints, isNotEmpty, reason: e.id);
     }
+  });
+
+  test(
+    'a legend without art uses its base stub, with its own art otherwise',
+    () {
+      final legend = animalEntries.firstWhere((e) => e.isLegend);
+      expect(legend.shape, isNull);
+      expect(legend.isColour, isFalse);
+      final bare = legend.artFrom(const {});
+      expect(bare.frames, legend.base.frames);
+      expect(bare.headPoints, legend.base.headPoints);
+      expect(legend.artFrom({legend.id: _art('own')}).frames, [
+        'own_1',
+        'own_2',
+      ]);
+    },
+  );
+
+  test('legends follow their base species, regional after base legends', () {
+    final ids = [for (final e in animalEntries) e.id];
+    final raccoons = [
+      for (final e in animalEntries)
+        if (e.base.id == 'raccoon') e.id,
+    ];
+    expect(raccoons, ['raccoon', 'red-panda', 'tanuki', 'bake-danuki']);
+    final otters = [
+      for (final e in animalEntries)
+        if (e.base.id == 'otter') e.id,
+    ];
+    expect(otters, ['otter', 'beaver', 'kappa', 'merlion']);
+    expect(ids.toSet(), hasLength(94));
   });
 
   test('sprite names used are the union of all entry frames', () {

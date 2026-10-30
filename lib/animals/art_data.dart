@@ -49,6 +49,10 @@ const Map<String, EntryArt> entryArt = {
     frames: ['terrier_1', 'terrier_2'],
     headPoints: [(x: 22, y: 16), (x: 22, y: 16)],
   ),
+  'cerberus-pup': EntryArt(
+    frames: ['cerberus-pup_1', 'cerberus-pup_2'],
+    headPoints: [(x: 18, y: 12), (x: 18, y: 12)],
+  ),
   'tabby': EntryArt(
     frames: ['tabby_1', 'tabby_2'],
     headPoints: [(x: 20, y: 16), (x: 20, y: 16)],
@@ -81,6 +85,10 @@ const Map<String, EntryArt> entryArt = {
     frames: ['sphynx_1', 'sphynx_2'],
     headPoints: [(x: 20, y: 16), (x: 20, y: 16)],
   ),
+  'nekomata': EntryArt(
+    frames: ['nekomata_1', 'nekomata_2'],
+    headPoints: [(x: 20, y: 16), (x: 20, y: 16)],
+  ),
   'red-fox': EntryArt(
     frames: ['red-fox_1', 'red-fox_2'],
     headPoints: [(x: 24, y: 18), (x: 24, y: 18)],
@@ -101,21 +109,93 @@ const Map<String, EntryArt> entryArt = {
     frames: ['grey-fox_1', 'grey-fox_2'],
     headPoints: [(x: 24, y: 18), (x: 24, y: 18)],
   ),
+  'kitsune': EntryArt(
+    frames: ['kitsune_1', 'kitsune_2'],
+    headPoints: [(x: 24, y: 18), (x: 24, y: 18)],
+  ),
   'hare': EntryArt(
     frames: ['hare_1', 'hare_2'],
-    headPoints: [(x: 24, y: 15), (x: 24, y: 14)],
+    headPoints: [(x: 20, y: 18), (x: 22, y: 17)],
   ),
   'snow-hare': EntryArt(
     frames: ['snow-hare_1', 'snow-hare_2'],
-    headPoints: [(x: 24, y: 15), (x: 24, y: 14)],
+    headPoints: [(x: 20, y: 18), (x: 22, y: 17)],
   ),
   'rabbit': EntryArt(
     frames: ['rabbit_1', 'rabbit_2'],
-    headPoints: [(x: 24, y: 15), (x: 24, y: 14)],
+    headPoints: [(x: 20, y: 18), (x: 22, y: 17)],
   ),
   'jackrabbit': EntryArt(
     frames: ['jackrabbit_1', 'jackrabbit_2'],
-    headPoints: [(x: 24, y: 15), (x: 24, y: 14)],
+    headPoints: [(x: 20, y: 18), (x: 22, y: 17)],
+  ),
+  'moon-rabbit': EntryArt(
+    frames: ['moon-rabbit_1', 'moon-rabbit_2'],
+    headPoints: [(x: 20, y: 18), (x: 22, y: 17)],
+  ),
+  'badger': EntryArt(
+    frames: ['badger_1', 'badger_2'],
+    headPoints: [(x: 26, y: 22), (x: 26, y: 22)],
+  ),
+  'albino-badger': EntryArt(
+    frames: ['albino-badger_1', 'albino-badger_2'],
+    headPoints: [(x: 26, y: 22), (x: 26, y: 22)],
+  ),
+  'stoat': EntryArt(
+    frames: ['stoat_1', 'stoat_2'],
+    headPoints: [(x: 26, y: 22), (x: 26, y: 22)],
+  ),
+  'weasel': EntryArt(
+    frames: ['weasel_1', 'weasel_2'],
+    headPoints: [(x: 26, y: 22), (x: 26, y: 22)],
+  ),
+  'ferret': EntryArt(
+    frames: ['ferret_1', 'ferret_2'],
+    headPoints: [(x: 26, y: 22), (x: 26, y: 22)],
+  ),
+  'kamaitachi': EntryArt(
+    frames: ['kamaitachi_1', 'kamaitachi_2'],
+    headPoints: [(x: 18, y: 20), (x: 18, y: 20)],
+  ),
+  'muntjac': EntryArt(
+    frames: ['muntjac_1', 'muntjac_2'],
+    headPoints: [(x: 18, y: 10), (x: 18, y: 10)],
+  ),
+  'mouse-deer': EntryArt(
+    frames: ['mouse-deer_1', 'mouse-deer_2'],
+    headPoints: [(x: 20, y: 21), (x: 20, y: 21)],
+  ),
+  'unicorn': EntryArt(
+    frames: ['unicorn_1', 'unicorn_2'],
+    headPoints: [(x: 18, y: 10), (x: 18, y: 10)],
+  ),
+  'qilin': EntryArt(
+    frames: ['qilin_1', 'qilin_2'],
+    headPoints: [(x: 18, y: 10), (x: 18, y: 10)],
+  ),
+  'red-squirrel': EntryArt(
+    frames: ['red-squirrel_1', 'red-squirrel_2'],
+    headPoints: [(x: 19, y: 18), (x: 19, y: 21)],
+  ),
+  'black-squirrel': EntryArt(
+    frames: ['black-squirrel_1', 'black-squirrel_2'],
+    headPoints: [(x: 19, y: 18), (x: 19, y: 21)],
+  ),
+  'grey-squirrel': EntryArt(
+    frames: ['grey-squirrel_1', 'grey-squirrel_2'],
+    headPoints: [(x: 19, y: 18), (x: 19, y: 21)],
+  ),
+  'chipmunk': EntryArt(
+    frames: ['chipmunk_1', 'chipmunk_2'],
+    headPoints: [(x: 17, y: 20), (x: 17, y: 24)],
+  ),
+  'flying-squirrel': EntryArt(
+    frames: ['flying-squirrel_1', 'flying-squirrel_2'],
+    headPoints: [(x: 18, y: 18), (x: 18, y: 21)],
+  ),
+  'ratatoskr': EntryArt(
+    frames: ['ratatoskr_1', 'ratatoskr_2'],
+    headPoints: [(x: 19, y: 18), (x: 19, y: 21)],
   ),
   'sparrow': EntryArt(
     frames: ['sparrow_1', 'sparrow_2'],
@@ -157,6 +237,14 @@ const Map<String, EntryArt> entryArt = {
     frames: ['golden-kingfisher_1', 'golden-kingfisher_2'],
     headPoints: [(x: 18, y: 19), (x: 18, y: 18)],
   ),
+  'phoenix': EntryArt(
+    frames: ['phoenix_1', 'phoenix_2'],
+    headPoints: [(x: 23, y: 13), (x: 23, y: 13)],
+  ),
+  'garuda': EntryArt(
+    frames: ['garuda_1', 'garuda_2'],
+    headPoints: [(x: 24, y: 8), (x: 24, y: 8)],
+  ),
   'duck': EntryArt(
     frames: ['duck_1', 'duck_2'],
     headPoints: [(x: 18, y: 15), (x: 18, y: 15)],
@@ -180,5 +268,121 @@ const Map<String, EntryArt> entryArt = {
   'grebe': EntryArt(
     frames: ['grebe_1', 'grebe_2'],
     headPoints: [(x: 18, y: 15), (x: 18, y: 15)],
+  ),
+  'hamsa': EntryArt(
+    frames: ['hamsa_1', 'hamsa_2'],
+    headPoints: [(x: 24, y: 9), (x: 24, y: 10)],
+  ),
+  'nessie': EntryArt(
+    frames: ['nessie_1', 'nessie_2'],
+    headPoints: [(x: 22, y: 8), (x: 23, y: 8)],
+  ),
+  'otter': EntryArt(
+    frames: ['otter_1', 'otter_2'],
+    headPoints: [(x: 25, y: 20), (x: 25, y: 20)],
+  ),
+  'beaver': EntryArt(
+    frames: ['beaver_1', 'beaver_2'],
+    headPoints: [(x: 25, y: 20), (x: 25, y: 20)],
+  ),
+  'kappa': EntryArt(
+    frames: ['kappa_1', 'kappa_2'],
+    headPoints: [(x: 19, y: 14), (x: 19, y: 14)],
+  ),
+  'merlion': EntryArt(
+    frames: ['merlion_1', 'merlion_2'],
+    headPoints: [(x: 16, y: 11), (x: 16, y: 10)],
+  ),
+  'gecko': EntryArt(
+    frames: ['gecko_1', 'gecko_2'],
+    headPoints: [(x: 25, y: 21), (x: 25, y: 21)],
+  ),
+  'golden-gecko': EntryArt(
+    frames: ['golden-gecko_1', 'golden-gecko_2'],
+    headPoints: [(x: 25, y: 21), (x: 25, y: 21)],
+  ),
+  'chameleon': EntryArt(
+    frames: ['chameleon_1', 'chameleon_2'],
+    headPoints: [(x: 25, y: 21), (x: 25, y: 21)],
+  ),
+  'iguana': EntryArt(
+    frames: ['iguana_1', 'iguana_2'],
+    headPoints: [(x: 25, y: 21), (x: 25, y: 21)],
+  ),
+  'dragon': EntryArt(
+    frames: ['dragon_1', 'dragon_2'],
+    headPoints: [(x: 22, y: 17), (x: 22, y: 17)],
+  ),
+  'naga': EntryArt(
+    frames: ['naga_1', 'naga_2'],
+    headPoints: [(x: 24, y: 13), (x: 24, y: 13)],
+  ),
+  'barn-owl': EntryArt(
+    frames: ['barn-owl_1', 'barn-owl_2'],
+    headPoints: [(x: 16, y: 12), (x: 16, y: 11)],
+  ),
+  'snowy-owl': EntryArt(
+    frames: ['snowy-owl_1', 'snowy-owl_2'],
+    headPoints: [(x: 16, y: 12), (x: 16, y: 11)],
+  ),
+  'tawny-owl': EntryArt(
+    frames: ['tawny-owl_1', 'tawny-owl_2'],
+    headPoints: [(x: 16, y: 12), (x: 16, y: 11)],
+  ),
+  'eagle-owl': EntryArt(
+    frames: ['eagle-owl_1', 'eagle-owl_2'],
+    headPoints: [(x: 16, y: 12), (x: 16, y: 11)],
+  ),
+  'owl-of-athena': EntryArt(
+    frames: ['owl-of-athena_1', 'owl-of-athena_2'],
+    headPoints: [(x: 16, y: 12), (x: 16, y: 11)],
+  ),
+  'fruit-bat': EntryArt(
+    frames: ['fruit-bat_1', 'fruit-bat_2'],
+    headPoints: [(x: 18, y: 20), (x: 18, y: 20)],
+  ),
+  'pipistrelle': EntryArt(
+    frames: ['pipistrelle_1', 'pipistrelle_2'],
+    headPoints: [(x: 18, y: 23), (x: 18, y: 23)],
+  ),
+  'vampire': EntryArt(
+    frames: ['vampire_1', 'vampire_2'],
+    headPoints: [(x: 18, y: 21), (x: 18, y: 20)],
+  ),
+  'mouse': EntryArt(
+    frames: ['mouse_1', 'mouse_2'],
+    headPoints: [(x: 21, y: 23), (x: 21, y: 23)],
+  ),
+  'dormouse': EntryArt(
+    frames: ['dormouse_1', 'dormouse_2'],
+    headPoints: [(x: 22, y: 23), (x: 22, y: 23)],
+  ),
+  'hamster': EntryArt(
+    frames: ['hamster_1', 'hamster_2'],
+    headPoints: [(x: 21, y: 23), (x: 21, y: 23)],
+  ),
+  'white-hamster': EntryArt(
+    frames: ['white-hamster_1', 'white-hamster_2'],
+    headPoints: [(x: 21, y: 23), (x: 21, y: 23)],
+  ),
+  'rat-king': EntryArt(
+    frames: ['rat-king_1', 'rat-king_2'],
+    headPoints: [(x: 26, y: 15), (x: 26, y: 16)],
+  ),
+  'raccoon': EntryArt(
+    frames: ['raccoon_1', 'raccoon_2'],
+    headPoints: [(x: 24, y: 20), (x: 24, y: 20)],
+  ),
+  'red-panda': EntryArt(
+    frames: ['red-panda_1', 'red-panda_2'],
+    headPoints: [(x: 24, y: 20), (x: 24, y: 20)],
+  ),
+  'tanuki': EntryArt(
+    frames: ['tanuki_1', 'tanuki_2'],
+    headPoints: [(x: 24, y: 20), (x: 24, y: 20)],
+  ),
+  'bake-danuki': EntryArt(
+    frames: ['bake-danuki_1', 'bake-danuki_2'],
+    headPoints: [(x: 24, y: 20), (x: 24, y: 20)],
   ),
 };

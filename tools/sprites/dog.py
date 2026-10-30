@@ -511,6 +511,48 @@ SPECIES = {
             ]),
         ],
     },
+    "cerberus-pup": {
+        "palette": {
+            "b": "#33333b", "x": "#292930", "c": "#464651", "d": "#222228", "l": "#5e5e69", "k": "#1c1c22", "e": "#ffc83a", "n": "#ff7a45",
+            "p": "#ff5a3c", "a": "#e8a0a0", "f": "#ff6a1f", "g": "#ffe066",
+        },
+        "patches": [
+            (None, 16, 0, ["----------", "----------", "----------", "----------"]),
+            (None, 21, 4, ["-----"]),
+            (None, 21, 5, ["----"]),
+            (None, 23, 6, "-"),
+            (None, 14, 2, ["bbbbbbbb", "bbbbbbbb"]),
+            (None, 8, -1, [
+                "xx.xx...",
+                "xxxxxx..",
+                "xxxexxx.",
+                "xxxxxlln",
+                ".xxxlllp",
+                "..ddddd.",
+            ]),
+            (None, 15, -4, [
+                "cc.cc...",
+                "cccccc..",
+                "ccceccc.",
+                "ccccclln",
+                ".ccclllp",
+                "..ddddd.",
+            ]),
+            (None, 20, 1, [
+                "bb.bb...",
+                "bbbbbb..",
+                "bbbebbb.",
+                "bbbbblln",
+                ".bbblllp",
+                "..ddddd.",
+            ]),
+            (None, 17, -4, "H"),
+            (0, 3, -3, [".f.", "fgf", ".g."]),
+            (1, 3, -3, ["f.f", "fgf", ".g."]),
+            (None, 4, 0, ["bb", "bb"]),
+            (None, 6, 3, ["bb"]),
+        ],
+    },
 }
 
 COLOURS = {

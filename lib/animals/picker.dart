@@ -7,6 +7,9 @@ import 'rolls.dart';
 
 const visitorShare = 0.10;
 const discoveryMultiplier = 3.0;
+const regionalLegendChance = 0.002;
+const legendChance = 0.01;
+const likedLegendChance = 0.02;
 const fallbackBaseId = 'fox';
 
 class Pick {
@@ -15,12 +18,14 @@ class Pick {
     required this.speciesId,
     required this.entryId,
     required this.hatId,
+    this.isLegend = false,
   });
 
   final String baseId;
   final String speciesId;
   final String entryId;
   final String? hatId;
+  final bool isLegend;
 
   @override
   bool operator ==(Object other) =>
@@ -28,10 +33,11 @@ class Pick {
       other.baseId == baseId &&
       other.speciesId == speciesId &&
       other.entryId == entryId &&
-      other.hatId == hatId;
+      other.hatId == hatId &&
+      other.isLegend == isLegend;
 
   @override
-  int get hashCode => Object.hash(baseId, speciesId, entryId, hatId);
+  int get hashCode => Object.hash(baseId, speciesId, entryId, hatId, isLegend);
 
   @override
   String toString() => 'Pick($baseId, $speciesId, $entryId, hat: $hatId)';
@@ -41,11 +47,13 @@ Pick pickAnimal({
   required Outing activity,
   required Set<String> met,
   HolidayProvider? holidays,
+  String? timeZone,
   Catalog? catalog,
 }) => pickFor(
   facts: ActivityFacts.from(activity, holidays ?? holidaysForPhone()),
   rolls: Rolls.of(activity.id),
   met: met,
+  timeZone: timeZone,
   catalog: catalog ?? defaultCatalog,
 );
 
@@ -54,7 +62,26 @@ Pick pickFor({
   required Rolls rolls,
   required Set<String> met,
   required Catalog catalog,
+  String? timeZone,
 }) {
+  final hats = catalog.hats;
+  final hatId = facts.dayOff && hats.isNotEmpty
+      ? hats[(rolls.hat * hats.length).floor()].id
+      : null;
+
+  Pick legendPick(Legend legend) => Pick(
+    baseId: legend.baseId,
+    speciesId: legend.id,
+    entryId: legend.id,
+    hatId: hatId,
+    isLegend: true,
+  );
+
+  final regional = catalog.regionalLegendFor(timeZone);
+  if (regional != null && rolls.regional < regionalLegendChance) {
+    return legendPick(regional);
+  }
+
   final home = _homeCandidates(catalog, facts.kind);
   final candidates = rolls.visitor < visitorShare
       ? _visitorCandidates(catalog, home)
@@ -68,6 +95,14 @@ Pick pickFor({
     for (final b in bases)
       candidates[b]!.any(unmet) ? discoveryMultiplier : 1.0,
   ], rolls.base);
+
+  final legend = catalog.baseLegendOf(base);
+  if (legend != null) {
+    final liked = legend.likes != null && facts.bands.contains(legend.likes);
+    if (rolls.legend < (liked ? likedLegendChance : legendChance)) {
+      return legendPick(legend);
+    }
+  }
 
   final options = candidates[base]!;
   final species = _choose(options, [
@@ -84,11 +119,6 @@ Pick pickFor({
     }
     lower += colour.chance;
   }
-
-  final hats = catalog.hats;
-  final hatId = facts.dayOff && hats.isNotEmpty
-      ? hats[(rolls.hat * hats.length).floor()].id
-      : null;
 
   return Pick(
     baseId: base,

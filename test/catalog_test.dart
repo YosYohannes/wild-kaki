@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wildkaki/animals/bands.dart';
 import 'package:wildkaki/animals/catalog.dart';
 import 'package:wildkaki/animals/catalog_data.dart';
+import 'package:wildkaki/animals/lookup.dart';
+import 'package:wildkaki/animals/notes_data.dart';
 import 'package:wildkaki/animals/picker.dart';
 
 const kinds = [
@@ -26,8 +28,11 @@ void main() {
 
   test('counts', () {
     expect(catalog.bases, hasLength(15));
-    expect(catalog.species, hasLength(57));
+    expect(catalog.species, hasLength(58));
     expect(catalog.colourSpecies, hasLength(16));
+    expect(catalog.legends.where((l) => !l.isRegional), hasLength(15));
+    expect(catalog.legends.where((l) => l.isRegional), hasLength(5));
+    expect(animalEntries, hasLength(94));
     expect(catalog.hats, hasLength(5));
   });
 
@@ -37,6 +42,7 @@ void main() {
     final entryIds = [
       ...catalog.species.map((s) => s.id),
       ...catalog.colourSpecies.map((c) => c.id),
+      ...catalog.legends.map((l) => l.id),
     ];
     expect(entryIds.toSet(), hasLength(entryIds.length));
     final hatIds = catalog.hats.map((h) => h.id).toList();
@@ -140,7 +146,7 @@ void main() {
     expect(homes('waterfowl'), {'Swim'});
     expect(homes('otter'), {'Swim'});
     expect(homes('lizard'), {'Climb'});
-    for (final id in ['owl', 'bat', 'mouse', 'hedgehog']) {
+    for (final id in ['owl', 'bat', 'mouse', 'raccoon']) {
       expect(homes(id), {'Sleep'});
     }
   });
@@ -242,7 +248,7 @@ void main() {
       'owl': 3,
       'bat': 2,
       'mouse': 3,
-      'hedgehog': 2,
+      'raccoon': 3,
     };
     counts.forEach((id, n) {
       expect(catalog.speciesOf(id), hasLength(n), reason: id);
@@ -261,5 +267,95 @@ void main() {
       expect(h.sprite, 'hat_${h.id}');
       expect(File('assets/sprites/${h.sprite}.png').existsSync(), isTrue);
     }
+  });
+
+  group('legends from the doc', () {
+    final lines = File('docs/animals.md').readAsLinesSync();
+    final docRows = <(String, List<String>)>[];
+    var section = '';
+    var inLegends = false;
+    for (final line in lines) {
+      if (line.startsWith('## ')) inLegends = line == '## Legends';
+      if (!inLegends) continue;
+      if (line.startsWith('### ')) section = line.substring(4);
+      if (!line.startsWith('|') || line.startsWith('|---')) continue;
+      final cells = line
+          .substring(1, line.length - 1)
+          .split('|')
+          .map((c) => c.trim())
+          .toList();
+      if (cells[0] == 'Legend') continue;
+      docRows.add((section, cells));
+    }
+    final baseRows = docRows.where((r) => r.$1 == 'Base legends');
+    final regionalRows = docRows.where((r) => r.$1 == 'Regional legends');
+    String kebabOf(String s) => s
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
+
+    test('the doc lists 15 base and 5 regional legends', () {
+      expect(baseRows, hasLength(15));
+      expect(regionalRows, hasLength(5));
+    });
+
+    test('every base has one base legend, with the band the doc says', () {
+      const bands = <String, Band>{
+        'Day': PartOfDay.day,
+        'Twilight': PartOfDay.twilight,
+        'Night': PartOfDay.night,
+        'Long': LengthBand.long,
+        'Fast': SpeedBand.fast,
+      };
+      for (final (_, c) in baseRows) {
+        final legend = catalog.legends.firstWhere((l) => l.id == kebabOf(c[0]));
+        expect(legend.name, c[0]);
+        expect(legend.baseId, kebabOf(c[1]));
+        expect(legend.likes, bands[c[2]], reason: c[0]);
+        expect(legend.isRegional, isFalse);
+        expect(catalog.baseLegendOf(legend.baseId), legend);
+      }
+      for (final b in catalog.bases) {
+        expect(catalog.baseLegendOf(b.id), isNotNull, reason: b.id);
+      }
+    });
+
+    test('regional legends carry the doc time zones', () {
+      for (final (_, c) in regionalRows) {
+        final legend = catalog.legends.firstWhere((l) => l.id == kebabOf(c[0]));
+        expect(legend.name, c[0]);
+        expect(legend.baseId, kebabOf(c[1]));
+        expect(legend.likes, isNull);
+        expect(legend.isRegional, isTrue);
+        final prefix = RegExp(r'^every time zone starting with (\S+)$');
+        final match = prefix.firstMatch(c[2]);
+        if (match != null) {
+          expect(legend.regionPrefix, match.group(1));
+          expect(legend.regionZones, isEmpty);
+        } else {
+          expect(legend.regionZones, c[2].split(', ').toSet());
+          expect(legend.regionPrefix, isNull);
+        }
+      }
+    });
+
+    test('zones match as the doc says', () {
+      Legend? at(String zone) => catalog.regionalLegendFor(zone);
+      expect(at('Asia/Singapore')?.id, 'merlion');
+      expect(at('Asia/Bangkok')?.id, 'naga');
+      expect(at('Europe/London')?.id, 'nessie');
+      expect(at('Australia/Sydney'), isNull);
+      expect(at('Europe/Berlin'), isNull);
+      expect(at('Pacific/Auckland'), isNull);
+      expect(at('Antarctica/Australia'), isNull);
+      expect(catalog.regionalLegendFor(null), isNull);
+    });
+
+    test('legends have a base and a note', () {
+      for (final l in catalog.legends) {
+        expect(catalog.baseById(l.baseId), isNotNull, reason: l.id);
+        expect(entryNotes, contains(l.id));
+      }
+    });
   });
 }

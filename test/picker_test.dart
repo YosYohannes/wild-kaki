@@ -7,10 +7,23 @@ import 'package:wildkaki/animals/catalog_data.dart';
 import 'package:wildkaki/animals/facts.dart';
 import 'package:wildkaki/animals/holidays.dart';
 import 'package:wildkaki/animals/picker.dart';
+import 'package:wildkaki/animals/rolls.dart';
 import 'package:wildkaki/data/model.dart';
 
 const n = 20000;
 const none = NoHolidays();
+
+const kinds = [
+  'Run',
+  'Walk',
+  'Hike',
+  'Ride',
+  'Swim',
+  'Climb',
+  'Yoga',
+  'Workout',
+  'Sleep',
+];
 
 final saturdayEvening = DateTime(2026, 11, 7, 18);
 final weekdayEvening = DateTime(2026, 11, 4, 18);
@@ -189,7 +202,7 @@ void main() {
     test('Ride allows every songbird species', () {
       final seen = {
         for (final p in picks(kind: 'Ride', count: 5000))
-          if (p.baseId == 'songbird') p.speciesId,
+          if (p.baseId == 'songbird' && !p.isLegend) p.speciesId,
       };
       expect(seen, hasLength(8));
     });
@@ -437,6 +450,7 @@ void main() {
 
     test('the colour is chosen by slices of the roll', () {
       for (final p in picks(count: 3000, met: everything)) {
+        if (p.isLegend) continue;
         final colours = catalog
             .speciesById(p.speciesId)!
             .colours
@@ -545,17 +559,345 @@ void main() {
         );
         final facts = ActivityFacts.from(activity, singapore);
         expect(catalog.baseById(pick.baseId), isNotNull);
-        final s = catalog.speciesById(pick.speciesId)!;
-        expect(s.baseId, pick.baseId);
-        expect(
-          pick.entryId == s.id || s.colours.any((c) => c.id == pick.entryId),
-          isTrue,
-        );
+        if (pick.isLegend) {
+          final legend = catalog.legends.firstWhere(
+            (l) => l.id == pick.entryId,
+          );
+          expect(legend.baseId, pick.baseId);
+        } else {
+          final s = catalog.speciesById(pick.speciesId)!;
+          expect(s.baseId, pick.baseId);
+          expect(
+            pick.entryId == s.id || s.colours.any((c) => c.id == pick.entryId),
+            isTrue,
+          );
+        }
         expect(pick.hatId != null, facts.dayOff);
         if (pick.hatId != null) {
           expect(catalog.hats.map((h) => h.id), contains(pick.hatId));
         }
       }
     });
+  });
+
+  group('legends', () {
+    String? idWhere(bool Function(String) test, [String prefix = 'leg']) {
+      for (var i = 0; i < 200000; i++) {
+        if (test('$prefix-$i')) return '$prefix-$i';
+      }
+      return null;
+    }
+
+    Pick pickIn(
+      String id,
+      String? zone, {
+      String kind = 'Run',
+      DateTime? start,
+    }) => pickAnimal(
+      activity: outing(id, kind: kind, start: start),
+      met: const {},
+      holidays: none,
+      timeZone: zone,
+    );
+
+    test('the chances', () {
+      expect(regionalLegendChance, 0.002);
+      expect(legendChance, 0.01);
+      expect(likedLegendChance, 0.02);
+    });
+
+    test('a regional legend appears only in its zone', () {
+      final id = idWhere((id) => roll('regional', id) < regionalLegendChance)!;
+      final inSingapore = pickIn(id, 'Asia/Singapore');
+      expect(inSingapore.entryId, 'merlion');
+      expect(inSingapore.baseId, 'otter');
+      expect(inSingapore.isLegend, isTrue);
+      expect(pickIn(id, 'Europe/Berlin').entryId, isNot('merlion'));
+      expect(pickIn(id, null).entryId, isNot('merlion'));
+      expect(pickIn(id, 'Asia/Bangkok').entryId, 'naga');
+      expect(pickIn(id, 'Europe/London').entryId, 'nessie');
+    });
+
+    test('the regional legend comes before the kind and the base', () {
+      final id = idWhere((id) => roll('regional', id) < regionalLegendChance)!;
+      for (final kind in kinds) {
+        expect(pickIn(id, 'Europe/London', kind: kind).entryId, 'nessie');
+      }
+    });
+
+    test('an id over the regional chance does not get one', () {
+      final id = idWhere((id) => roll('regional', id) >= regionalLegendChance)!;
+      final inSingapore = pickIn(id, 'Asia/Singapore');
+      expect(inSingapore.entryId, isNot('merlion'));
+    });
+
+    test('regional legends come about 1 in 500 in their zone', () {
+      var hits = 0;
+      for (var i = 0; i < 100000; i++) {
+        if (pickIn('r$i', 'Asia/Singapore').entryId == 'merlion') hits++;
+      }
+      expect(hits / 100000, closeTo(0.002, 0.001));
+    });
+
+    test('a base legend comes about 1 percent of the time', () {
+      final list = picks(kind: 'Run', start: weekdayEvening);
+      final legends = list.where((p) => p.isLegend).toList();
+      expect(legends.length / n, closeTo(0.01, 0.005));
+      for (final p in legends) {
+        final legend = catalog.legends.firstWhere((l) => l.id == p.entryId);
+        expect(legend.isRegional, isFalse);
+        expect(legend.baseId, p.baseId);
+        expect(p.speciesId, p.entryId);
+      }
+    });
+
+    test('a base legend comes about 2 percent when the liked band matches', () {
+      final twilight = picks(kind: 'Run', start: weekdayEvening);
+      final foxes = twilight.where((p) => p.baseId == 'fox').toList();
+      expect(share(foxes, (p) => p.entryId == 'kitsune'), closeTo(0.02, 0.008));
+      final night = picks(kind: 'Run', start: DateTime(2026, 11, 4, 23));
+      final nightFoxes = night.where((p) => p.baseId == 'fox').toList();
+      expect(
+        share(nightFoxes, (p) => p.entryId == 'kitsune'),
+        closeTo(0.01, 0.006),
+      );
+    });
+
+    test('the legend roll decides at the exact thresholds', () {
+      final base = catalog.baseById('fox')!;
+      final facts = ActivityFacts.from(
+        outing('t', start: weekdayEvening),
+        none,
+      );
+      expect(facts.partOfDay, PartOfDay.twilight);
+      Pick at(double legend, ActivityFacts f) => pickFor(
+        facts: f,
+        rolls: Rolls(
+          visitor: 0.5,
+          base: 0,
+          species: 0.5,
+          colour: 0.5,
+          hat: 0.5,
+          legend: legend,
+        ),
+        met: const {},
+        catalog: catalog,
+      );
+      expect(base.id, 'fox');
+      expect(at(0.0199, facts).entryId, 'kitsune');
+      expect(at(0.02, facts).isLegend, isFalse);
+      final night = ActivityFacts.from(
+        outing('t', start: DateTime(2026, 11, 4, 23)),
+        none,
+      );
+      expect(at(0.0099, night).entryId, 'kitsune');
+      expect(at(0.01, night).isLegend, isFalse);
+    });
+
+    test('legends get no discovery multiplier', () {
+      final unmet = picks(kind: 'Run', count: 20000);
+      final met = picks(kind: 'Run', count: 20000, met: everything);
+      expect(
+        share(unmet, (p) => p.isLegend),
+        closeTo(share(met, (p) => p.isLegend), 0.004),
+      );
+    });
+
+    test('legends wear a hat on a day off and none on a weekday', () {
+      final off = picks(
+        start: saturdayEvening,
+        count: 20000,
+      ).where((p) => p.isLegend).toList();
+      expect(off, isNotEmpty);
+      expect(
+        off.every((p) => catalog.hats.any((h) => h.id == p.hatId)),
+        isTrue,
+      );
+      final id = idWhere((id) => roll('regional', id) < regionalLegendChance)!;
+      expect(
+        pickIn(id, 'Asia/Singapore', start: saturdayEvening).hatId,
+        isNotNull,
+      );
+      expect(pickIn(id, 'Asia/Singapore').hatId, isNull);
+      final weekday = picks(count: 20000).where((p) => p.isLegend);
+      expect(weekday.every((p) => p.hatId == null), isTrue);
+    });
+  });
+
+  group('picks without a legend are the picks from before legends', () {
+    const pinned = [
+      ('base-0', 'Run', true, 'hare', 'jackrabbit', 'jackrabbit', 'beanie'),
+      ('base-1', 'Walk', false, 'dog', 'dachshund', 'dachshund', null),
+      (
+        'base-2',
+        'Hike',
+        false,
+        'squirrel',
+        'flying-squirrel',
+        'flying-squirrel',
+        null,
+      ),
+      ('base-3', 'Ride', true, 'songbird', 'pigeon', 'pigeon', 'bowler-hat'),
+      ('base-4', 'Swim', false, 'waterfowl', 'moorhen', 'moorhen', null),
+      (
+        'base-5',
+        'Climb',
+        false,
+        'squirrel',
+        'flying-squirrel',
+        'flying-squirrel',
+        null,
+      ),
+      ('base-6', 'Yoga', true, 'cat', 'tabby', 'tabby', 'beanie'),
+      ('base-7', 'Workout', false, 'cat', 'siamese', 'siamese', null),
+      ('base-8', 'Sleep', false, 'mouse', 'hamster', 'hamster', null),
+      ('base-9', 'Run', true, 'fox', 'fennec', 'fennec', 'party-hat'),
+      ('base-10', 'Walk', false, 'dog', 'husky', 'husky', null),
+      (
+        'base-11',
+        'Hike',
+        false,
+        'squirrel',
+        'flying-squirrel',
+        'flying-squirrel',
+        null,
+      ),
+      ('base-12', 'Ride', true, 'songbird', 'crow', 'crow', 'top-hat'),
+      ('base-13', 'Swim', false, 'waterfowl', 'grebe', 'grebe', null),
+      (
+        'base-14',
+        'Climb',
+        false,
+        'squirrel',
+        'flying-squirrel',
+        'flying-squirrel',
+        null,
+      ),
+      ('base-15', 'Yoga', true, 'cat', 'tabby', 'tabby', 'sombrero'),
+      ('base-16', 'Workout', false, 'otter', 'beaver', 'beaver', null),
+      ('base-17', 'Sleep', false, 'mouse', 'hamster', 'hamster', null),
+      ('base-18', 'Run', true, 'fox', 'grey-fox', 'grey-fox', 'sombrero'),
+      ('base-19', 'Walk', false, 'dog', 'husky', 'husky', null),
+      (
+        'base-20',
+        'Hike',
+        false,
+        'squirrel',
+        'flying-squirrel',
+        'flying-squirrel',
+        null,
+      ),
+      (
+        'base-21',
+        'Ride',
+        true,
+        'squirrel',
+        'flying-squirrel',
+        'flying-squirrel',
+        'sombrero',
+      ),
+      ('base-22', 'Swim', false, 'otter', 'beaver', 'beaver', null),
+      ('base-23', 'Climb', false, 'fox', 'grey-fox', 'grey-fox', null),
+      ('base-24', 'Yoga', true, 'cat', 'tabby', 'tabby', 'party-hat'),
+      (
+        'base-25',
+        'Workout',
+        false,
+        'cat',
+        'scottish-fold',
+        'scottish-fold',
+        null,
+      ),
+      ('base-26', 'Sleep', false, 'owl', 'barn-owl', 'barn-owl', null),
+      ('base-27', 'Run', true, 'fox', 'fennec', 'fennec', 'beanie'),
+      ('base-28', 'Walk', false, 'dog', 'terrier', 'terrier', null),
+      (
+        'base-29',
+        'Hike',
+        false,
+        'squirrel',
+        'flying-squirrel',
+        'flying-squirrel',
+        null,
+      ),
+      ('base-30', 'Ride', true, 'songbird', 'robin', 'robin', 'beanie'),
+      ('base-31', 'Swim', false, 'songbird', 'kingfisher', 'kingfisher', null),
+      ('base-32', 'Climb', false, 'lizard', 'chameleon', 'chameleon', null),
+      (
+        'base-33',
+        'Yoga',
+        true,
+        'cat',
+        'scottish-fold',
+        'scottish-fold',
+        'bowler-hat',
+      ),
+      (
+        'base-34',
+        'Workout',
+        false,
+        'cat',
+        'scottish-fold',
+        'scottish-fold',
+        null,
+      ),
+      ('base-35', 'Sleep', false, 'bat', 'fruit-bat', 'fruit-bat', null),
+    ];
+
+    test('a pinned sample of ids', () {
+      for (final (id, kind, saturday, baseId, speciesId, entryId, hatId)
+          in pinned) {
+        final start = saturday ? saturdayEvening : DateTime(2026, 11, 4, 22);
+        final p = pickAnimal(
+          activity: outing(id, kind: kind, start: start),
+          met: const {},
+          holidays: none,
+        );
+        expect(
+          p,
+          Pick(
+            baseId: baseId,
+            speciesId: speciesId,
+            entryId: entryId,
+            hatId: hatId,
+          ),
+          reason: id,
+        );
+      }
+    });
+
+    test(
+      'with the legend and regional rolls out of range the pick is the same',
+      () {
+        for (var i = 0; i < 5000; i++) {
+          final id = 'same-$i';
+          final all = Rolls.of(id);
+          if (all.legend < likedLegendChance) continue;
+          final facts = ActivityFacts.from(
+            outing(id, kind: kinds[i % kinds.length], start: saturdayEvening),
+            none,
+          );
+          final before = Rolls(
+            visitor: all.visitor,
+            base: all.base,
+            species: all.species,
+            colour: all.colour,
+            hat: all.hat,
+          );
+          final met = i.isEven ? halfMet : const <String>{};
+          expect(
+            pickFor(
+              facts: facts,
+              rolls: all,
+              met: met,
+              catalog: catalog,
+              timeZone: 'Europe/Berlin',
+            ),
+            pickFor(facts: facts, rolls: before, met: met, catalog: catalog),
+            reason: id,
+          );
+        }
+      },
+    );
   });
 }

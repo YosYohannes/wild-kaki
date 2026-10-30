@@ -77,14 +77,32 @@ def dart_str(s):
     return "'" + s.replace("\\", "\\\\").replace("'", "\\'").replace("$", "\\$") + "'"
 
 
+def legends():
+    rows, kind = [], None
+    for line in DOC.read_text().splitlines():
+        if line.startswith("## "):
+            kind = "" if line[3:].strip() == "Legends" else None
+            continue
+        if kind is None:
+            continue
+        if line.startswith("### "):
+            kind = "regional" if "Regional" in line else "base"
+            continue
+        if line.startswith("|") and not line.startswith("|---") and not line.startswith("| Legend |"):
+            rows.append((kind, cells(line)))
+    return rows
+
+
 def entry_tree():
     base_rows, species_rows = parse()
-    tree = {kebab(row[0]): {"name": row[0], "shapes": {}} for row in base_rows}
+    tree = {kebab(row[0]): {"name": row[0], "shapes": {}, "legends": []} for row in base_rows}
     for base_name, (name, _, _, _, colours) in species_rows:
         shape = kebab(re.sub(r"\s*\(.*\)", "", name))
         tree[kebab(base_name)]["shapes"][shape] = [
             kebab(re.match(r"(.+?) \d+%", t.strip()).group(1)) for t in colours.split(",") if t.strip()
         ]
+    for _, row in legends():
+        tree[kebab(row[1])]["legends"].append(kebab(row[0]))
     return tree
 
 
@@ -102,6 +120,7 @@ def note_rows():
 def write_notes(tree):
     notes = note_rows()
     ids = [e for base in tree.values() for s, cs in base["shapes"].items() for e in [s, *cs]]
+    ids += [kebab(row[0]) for _, row in legends()]
     missing = [e for e in ids if e not in notes]
     if missing:
         raise SystemExit(f"docs/notes.md has no note for: {', '.join(missing)}")
@@ -175,10 +194,28 @@ def main():
                 )
             out.append(f"    colours: [{', '.join(parts)}],")
         out.append("  ),")
+    out += ["];", "", "const _legends = <Legend>["]
+    for kind, row in legends():
+        out += [
+            "  Legend(",
+            f"    id: {dart_str(kebab(row[0]))},",
+            f"    name: {dart_str(row[0])},",
+            f"    baseId: {dart_str(kebab(row[1]))},",
+        ]
+        if kind == "base":
+            out.append(f"    likes: {BANDS[row[2]]},")
+        else:
+            prefix = re.fullmatch(r"every time zone starting with (\S+)", row[2])
+            if prefix:
+                out.append(f"    regionPrefix: {dart_str(prefix.group(1))},")
+            else:
+                zones = ", ".join(dart_str(z.strip()) for z in row[2].split(","))
+                out.append(f"    regionZones: {{{zones}}},")
+        out.append("  ),")
     out += ["];", "", "const _hats = <Hat>["]
     for hid, hname in HATS:
         out.append(f"  Hat(id: {dart_str(hid)}, name: {dart_str(hname)}, sprite: {dart_str(hat_sprite(hid))}),")
-    out += ["];", "", "final Catalog defaultCatalog = Catalog(bases: _bases, species: _species, hats: _hats);", ""]
+    out += ["];", "", "final Catalog defaultCatalog = Catalog(bases: _bases, species: _species, legends: _legends, hats: _hats);", ""]
     OUT.write_text("\n".join(out))
     write_notes(entry_tree())
 

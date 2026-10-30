@@ -2,7 +2,7 @@
 
 How an activity becomes an animal: the raw values we read, the processed parameters the decision uses, the values each one can take, and what happens when a value is missing.
 
-An activity is anything Health Connect reports: an exercise session or a sleep session. Nothing is read from the location or any other app. The only network use is the public holiday list (below).
+An activity is anything Health Connect reports: an exercise session or a sleep session. Nothing is read from the location or any other app. The phone's time zone is read for regional legends. The network is used for the public holiday list (below) and the scene's weather.
 
 ## Raw values
 
@@ -40,7 +40,8 @@ The decision looks at `kind`, `partOfDay`, the three bands and the rolls. `dayOf
 | `distanceBand` | distance, kind | Near, Medium, Far, Epic, or Unknown | How far you ranged |
 | `speedBand` | distance, duration, kind | Slow, Steady, Fast, or Unknown | How quickly you moved |
 | `dayOff` | datetime, holiday list | Day off, Working day | A Saturday, a Sunday or a public holiday. Looks only: the animal wears a hat |
-| `roll` | roll | five independent numbers from 0 up to 1: visitor, base, species, colour, hat | Luck |
+| `region` | the phone's time zone when the bush is opened | the regional legend whose time zones include it, or none | Which regional legend can appear |
+| `roll` | roll | seven independent numbers from 0 up to 1: regional, visitor, base, legend, species, colour, hat | Luck |
 
 Public holidays come from the free Nager.Date service, asked once for this year and next by the phone's country code (from the phone's locale). The answer is cached on the phone for 30 days. Offline, or before the first answer, Singapore uses the list bundled with the app; any other country has no list, so only Saturdays and Sundays count as days off.
 
@@ -93,6 +94,10 @@ Unknown for the other kinds, when the distance is missing, or for activities und
 
 The animals, their bases and their affinities are in `animals.md`. The same activity with the same history always gives the same animal, but the kind does not fix the base: about 1 in 10 activities brings a visitor from another base.
 
+### Step 0: regional legend
+
+If the phone's time zone belongs to a regional legend (see `animals.md`) and the regional roll is under 0.002, the animal is that legend. Nothing else is looked at; only the hat (step 5) still applies.
+
 ### Step 1: home or visitor
 
 - If the visitor roll is 0.10 or more, the activity stays **home**: the candidate bases are the bases whose home kinds include the activity's kind. A species listed as "also home" on a kind (for example the Kingfisher on Swim) joins as if its base were home.
@@ -106,6 +111,10 @@ The animals, their bases and their affinities are in `animals.md`. The same acti
 - The home or visitor split from step 1 is never changed by discovery: 90% stays home and 10% brings a visitor, always.
 
 This is how a non-rider still meets songbirds: a base you never reach at home keeps its place among the visitors, and the discovery multiplier makes it three times as likely as a base you have already met.
+
+### Step 2b: base legend
+
+If the legend roll is under 0.01, or under 0.02 when the activity has the band the base's legend likes, the animal is the base's legend. The species and colour steps are skipped; the hat still applies.
 
 ### Step 3: pick the shape species
 
@@ -133,7 +142,7 @@ On a day off the animal wears a hat. The hat roll picks one of the five hats wit
 
 ## Not used
 
-Heart rate, steps, calories, elevation, speed samples, weather, season, climate, location, indoor or outdoor, which app recorded the activity.
+Heart rate, steps, calories, elevation, speed samples, weather, season, climate, location (only the time zone, for regional legends), indoor or outdoor, which app recorded the activity.
 
 Weather in particular never changes which animal you get: an activity can be synced hours or days after it happened, so the weather at sync time says nothing about it. Live weather is only for the look of the scene (see the README).
 
@@ -150,3 +159,6 @@ Weather in particular never changes which animal you get: an activity can be syn
 9. `partOfDay` keeps the fixed hours; it does not follow sunrise and sunset.
 10. Kingfisher stays a Swim animal through the songbird base, about 30% of swims.
 11. Weather is a scene background only, never an input to the pick.
+12. Every base has one legend, at 1% after the base is picked, 2% when the activity has the band it likes. No discovery multiplier.
+13. Regional legends depend only on the phone's time zone, at 0.2% before anything else.
+14. Hedgehog is replaced by Raccoon as a Sleep base.

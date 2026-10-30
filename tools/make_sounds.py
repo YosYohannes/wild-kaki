@@ -211,17 +211,16 @@ def eep():
     return seq(chirp(1500, 2300), silence(0.03), chirp(1700, 2600))
 
 
-def snuff():
-    def sniff(seed):
-        n = noise(0.1, seed, 0.015, 0.05, shape=lambda u: 0.4 + 0.6 * math.sin(math.pi * min(1.0, u * 1.3)))
-        band = highpass(lowpass(n, 1100), 250)
-        return scale(band, 1.6)
-    return seq(sniff(41), silence(0.06), sniff(42))
+def churr():
+    body = tone("tri", 420, 360, 0.24, 0.01, 0.06)
+    trill = [v * (0.55 + 0.45 * math.sin(2 * math.pi * 28 * n / RATE)) for n, v in enumerate(body)]
+    grit = highpass(lowpass(noise(0.24, 51, 0.01, 0.06), 1400), 300)
+    return lowpass(mix(trill, scale(grit, 0.25)), 2500)
 
 
 SOUNDS = {
     "woof": woof, "meow": meow, "thump": thump, "huff": huff, "bark": bark, "chk": chk,
-    "squeak": squeak, "click": click, "hoo": hoo, "eek": eek, "eep": eep, "snuff": snuff,
+    "squeak": squeak, "click": click, "hoo": hoo, "eek": eek, "eep": eep, "churr": churr,
 }
 
 if __name__ == "__main__":
