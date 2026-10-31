@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../animals/lookup.dart';
 import '../data/model.dart';
+import 'animal_sprite.dart';
 import 'theme.dart';
 
 const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -60,6 +61,8 @@ class _AnimalPageState extends State<AnimalPage>
     }
   }
 
+  String? _worn;
+
   @override
   void dispose() {
     _walk.dispose();
@@ -72,6 +75,10 @@ class _AnimalPageState extends State<AnimalPage>
     final meetings = [...widget.meetings]
       ..sort((a, b) => b.outing.start.compareTo(a.outing.start));
     final count = meetings.length;
+    final wornHat = meetings
+        .where((m) => m.outing.id == _worn)
+        .map((m) => m.hat)
+        .firstOrNull;
     return Material(
       color: Wild.parchment,
       child: SafeArea(
@@ -100,13 +107,11 @@ class _AnimalPageState extends State<AnimalPage>
                             ),
                             AnimatedBuilder(
                               animation: _walk,
-                              builder: (context, _) => Image.asset(
-                                'assets/sprites/${frames[(_walk.value * frames.length).floor() % frames.length]}.png',
-                                width: 192,
-                                height: 192,
-                                fit: BoxFit.fill,
-                                filterQuality: FilterQuality.none,
-                                gaplessPlayback: true,
+                              builder: (context, _) => AnimalSprite(
+                                entry: widget.entry,
+                                size: 192,
+                                hatId: wornHat,
+                                frame: (_walk.value * frames.length).floor(),
                               ),
                             ),
                           ],
@@ -148,6 +153,15 @@ class _AnimalPageState extends State<AnimalPage>
                               meetings[i],
                               widget.miles,
                               first: i == count - 1,
+                              worn: meetings[i].outing.id == _worn,
+                              onTap: meetings[i].hat == null
+                                  ? null
+                                  : () => setState(
+                                      () =>
+                                          _worn = meetings[i].outing.id == _worn
+                                          ? null
+                                          : meetings[i].outing.id,
+                                    ),
                             ),
                         ],
                       ),
@@ -164,54 +178,86 @@ class _AnimalPageState extends State<AnimalPage>
 }
 
 class _Meeting extends StatelessWidget {
-  const _Meeting(this.sighting, this.miles, {required this.first});
+  const _Meeting(
+    this.sighting,
+    this.miles, {
+    required this.first,
+    required this.worn,
+    required this.onTap,
+  });
 
   final Sighting sighting;
   final bool miles;
   final bool first;
+  final bool worn;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final hat = hatById(sighting.hat);
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Flexible(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: meetingWhen(sighting.outing.start)),
+                  if (first) _tag('first met'),
+                  if (hat != null) _tag(hat.name.toLowerCase(), worn: worn),
+                ],
+              ),
+              style: numberText(13),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            outingMeta(sighting.outing, miles: miles),
+            style: bodyText(13, color: Wild.bark),
+          ),
+        ],
+      ),
+    );
     return Column(
       children: [
         DottedRule(color: Wild.bark.withValues(alpha: 0.35)),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 11),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Flexible(
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(text: meetingWhen(sighting.outing.start)),
-                      if (first)
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.baseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 6),
-                            child: Text(
-                              'first met',
-                              style: pixelText(11, color: Wild.ember),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  style: numberText(13),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                outingMeta(sighting.outing, miles: miles),
-                style: bodyText(13, color: Wild.bark),
-              ),
-            ],
+        if (hat == null)
+          row
+        else
+          Semantics(
+            button: true,
+            selected: worn,
+            label: 'Put the ${hat.name.toLowerCase()} on',
+            excludeSemantics: true,
+            child: GestureDetector(
+              key: ValueKey('meeting-${sighting.outing.id}'),
+              behavior: HitTestBehavior.opaque,
+              onTap: onTap,
+              child: row,
+            ),
           ),
-        ),
       ],
     );
   }
+
+  InlineSpan _tag(String text, {bool worn = false}) => WidgetSpan(
+    alignment: PlaceholderAlignment.baseline,
+    baseline: TextBaseline.alphabetic,
+    child: Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Container(
+        padding: worn
+            ? const EdgeInsets.symmetric(horizontal: 3)
+            : EdgeInsets.zero,
+        color: worn ? Wild.ember : null,
+        child: Text(
+          text,
+          style: pixelText(11, color: worn ? Wild.parchment : Wild.ember),
+        ),
+      ),
+    ),
+  );
 }

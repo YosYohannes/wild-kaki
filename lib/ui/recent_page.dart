@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/model.dart';
 import '../animals/lookup.dart';
 import 'animal_page.dart';
+import 'animal_sprite.dart';
 import 'theme.dart';
 
 const recentDays = 7;
@@ -31,10 +32,11 @@ class RecentPage extends StatelessWidget {
       const Duration(days: recentDays),
     );
     final rows = [
-      for (final o in waiting) (outing: o, animal: null as String?),
+      for (final o in waiting)
+        (outing: o, animal: null as String?, hat: null as String?),
       for (final s in sightings)
         if (!s.outing.start.isBefore(cutoff))
-          (outing: s.outing, animal: s.animal),
+          (outing: s.outing, animal: s.animal, hat: s.hat),
     ]..sort((a, b) => b.outing.start.compareTo(a.outing.start));
     return Material(
       color: Wild.parchment,
@@ -61,7 +63,8 @@ class RecentPage extends StatelessWidget {
                         style: bodyText(15, color: Wild.bark),
                       ),
                     ),
-                  for (final r in rows) _OutingRow(r.outing, r.animal, miles),
+                  for (final r in rows)
+                    _OutingRow(r.outing, r.animal, r.hat, miles),
                 ],
               ),
             ),
@@ -73,17 +76,15 @@ class RecentPage extends StatelessWidget {
 }
 
 class _OutingRow extends StatelessWidget {
-  const _OutingRow(this.outing, this.animal, this.miles);
+  const _OutingRow(this.outing, this.animal, this.hat, this.miles);
 
   final Outing outing;
   final String? animal;
+  final String? hat;
   final bool miles;
 
   @override
   Widget build(BuildContext context) {
-    final sprite = animal == null
-        ? 'assets/sprites/bush.png'
-        : 'assets/sprites/${entryOrDefault(animal!).frames.first}.png';
     return Column(
       children: [
         DottedRule(color: Wild.bark.withValues(alpha: 0.35)),
@@ -115,13 +116,19 @@ class _OutingRow extends StatelessWidget {
                   ],
                 ),
               ),
-              Image.asset(
-                sprite,
-                width: 64,
-                height: 64,
-                fit: BoxFit.fill,
-                filterQuality: FilterQuality.none,
-              ),
+              animal == null
+                  ? Image.asset(
+                      'assets/sprites/bush.png',
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.fill,
+                      filterQuality: FilterQuality.none,
+                    )
+                  : AnimalSprite(
+                      entry: entryOrDefault(animal!),
+                      size: 64,
+                      hatId: hat,
+                    ),
             ],
           ),
         ),

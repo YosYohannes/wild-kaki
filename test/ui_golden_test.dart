@@ -8,6 +8,7 @@ import 'package:wildkaki/animals/hints_data.dart';
 import 'package:wildkaki/animals/lookup.dart';
 import 'package:wildkaki/data/model.dart';
 import 'package:wildkaki/ui/animal_page.dart';
+import 'package:wildkaki/ui/animal_sprite.dart';
 import 'package:wildkaki/ui/collection_page.dart';
 import 'package:wildkaki/ui/recent_page.dart';
 import 'package:wildkaki/ui/settings_page.dart';
@@ -389,6 +390,88 @@ void main() {
     expect(find.text('first met', findRichText: true), findsOneWidget);
     expect(find.text('Run · 3.6 km · 22 min'), findsOneWidget);
     await _shot(tester, 'animal');
+    await _leave(tester);
+  });
+
+  testWidgets(
+    'a meeting with a hat names it, and tapping it dresses the sprite',
+    (tester) async {
+      final hatted = [
+        Sighting(_meetings[0].outing, 'red-fox'),
+        Sighting(_meetings[1].outing, 'red-fox', hat: 'beanie'),
+        Sighting(_meetings[2].outing, 'red-fox', hat: 'party-hat'),
+      ];
+      await _show(
+        tester,
+        AnimalPage(
+          entry: entryOrDefault('red-fox'),
+          meetings: hatted,
+          miles: false,
+          onClose: () {},
+        ),
+      );
+      String? worn() =>
+          tester.widget<AnimalSprite>(find.byType(AnimalSprite)).hatId;
+
+      expect(find.text('party hat', findRichText: true), findsOneWidget);
+      expect(find.text('beanie', findRichText: true), findsOneWidget);
+      expect(find.byKey(const ValueKey('meeting-a')), findsNothing);
+      expect(find.byType(AnimalSprite), findsOneWidget);
+      expect(worn(), isNull);
+
+      await tester.tap(find.byKey(const ValueKey('meeting-c')));
+      await tester.pump();
+      expect(worn(), 'party-hat');
+      expect(find.byType(AnimalSprite), findsOneWidget);
+      await _settleImages(tester);
+      await _shot(tester, 'animal_hat');
+
+      await tester.tap(find.byKey(const ValueKey('meeting-b')));
+      await tester.pump();
+      expect(worn(), 'beanie');
+
+      await tester.tap(find.byKey(const ValueKey('meeting-b')));
+      await tester.pump();
+      expect(worn(), isNull);
+
+      await tester.tap(find.textContaining('22 Oct', findRichText: true));
+      await tester.pump();
+      expect(worn(), isNull);
+      await _leave(tester);
+    },
+  );
+
+  testWidgets('the recent page draws a hat on the animal that wore it', (
+    tester,
+  ) async {
+    await _show(
+      tester,
+      RecentPage(
+        waiting: const [],
+        sightings: [
+          Sighting(
+            _outing('h', 'Run', DateTime(2025, 10, 29, 8), 5, 30),
+            'red-fox',
+            hat: 'beanie',
+          ),
+          Sighting(
+            _outing('p', 'Walk', DateTime(2025, 10, 28, 8), 2, 30),
+            'tabby',
+          ),
+        ],
+        miles: false,
+        onClose: () {},
+        onSettings: () {},
+        now: DateTime(2025, 10, 30, 9),
+      ),
+    );
+    final sprites = tester
+        .widgetList<AnimalSprite>(find.byType(AnimalSprite))
+        .toList();
+    expect(sprites.map((s) => s.entry.id), ['red-fox', 'tabby']);
+    expect(sprites.map((s) => s.hatId), ['beanie', null]);
+    await _settleImages(tester);
+    await _shot(tester, 'recent_hat');
     await _leave(tester);
   });
 
