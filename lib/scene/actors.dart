@@ -8,6 +8,13 @@ import '../world/world_painter.dart';
 
 const int maxFoxes = 6;
 
+const int meadowFeetRef = 214;
+const int meadowFeetSpan = 22;
+const int riverFeetRef = 148;
+const int riverFeetSpan = 33;
+const int skyTopRef = -4;
+const int skyTopSpan = 56;
+
 typedef MeadowAnimal = ({String outingId, String entryId, String? hatId});
 
 enum Lane { meadow, river, sky }
@@ -328,9 +335,9 @@ class SceneState {
     final lane = laneOf(entryOrDefault(animal.entryId).base, animal.outingId);
     final startX = x ?? _random.nextDouble() * (worldW - 30.0);
     final ref = switch (lane) {
-      Lane.meadow => 214 + _random.nextInt(22),
-      Lane.river => 148 + _random.nextInt(33),
-      Lane.sky => -4 + _random.nextInt(56),
+      Lane.meadow => meadowFeetRef + _random.nextInt(meadowFeetSpan),
+      Lane.river => riverFeetRef + _random.nextInt(riverFeetSpan),
+      Lane.sky => skyTopRef + _random.nextInt(skyTopSpan),
     };
     final dir = x == null ? (_random.nextBool() ? 1 : -1) : (x > 60 ? -1 : 1);
     switch (lane) {

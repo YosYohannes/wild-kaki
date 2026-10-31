@@ -247,6 +247,25 @@ List<(int, int)> _ring(int r) => _rings.putIfAbsent(r, () {
 
 int _mix(int a, int b, double t) => mixColor(a, b, t);
 
+typedef RainSpec = ({
+  double slant,
+  double speed,
+  List<(double, double, double)> drops,
+});
+
+RainSpec? rainSpecFor(Weather w) {
+  final look = _looks[w]!;
+  if (look.streaks == 0) return null;
+  return (
+    slant: look.slant,
+    speed: look.speed,
+    drops: [for (final d in _streaksFor(w, look)) (d.x0, d.y0, d.speed)],
+  );
+}
+
+const int rainDayColor = 0xB8CCDA;
+const int rainNightColor = 0x7C93A8;
+
 class WeatherLayer {
   WeatherLayer(this.view);
 
@@ -313,6 +332,18 @@ class WeatherLayer {
     final from = view.from;
     if (from != null) _layer(canvas, size, layout, night, time, from);
     _layer(canvas, size, layout, night, time, view.to);
+  }
+
+  void paintClouds(
+    Canvas canvas,
+    Size size,
+    Layout layout,
+    double night,
+    double time,
+  ) {
+    final look = _looks[view.to]!;
+    if (look.clouds.isEmpty) return;
+    _clouds(canvas, size.width / worldW, layout, night, time, view.to, look);
   }
 
   void _layer(

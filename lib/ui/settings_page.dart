@@ -15,6 +15,7 @@ class SettingsPage extends StatefulWidget {
     this.version,
     this.report,
     this.now,
+    this.onWallpaper,
   });
 
   final Prefs prefs;
@@ -26,6 +27,7 @@ class SettingsPage extends StatefulWidget {
   final String? version;
   final SyncReport? report;
   final DateTime? now;
+  final VoidCallback? onWallpaper;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -90,6 +92,14 @@ class _SettingsPageState extends State<SettingsPage> {
                           widget.onPrefs(_prefs.copyWith(sound: on)),
                     ),
                   ),
+                  if (widget.onWallpaper != null) ...[
+                    const _Heading('Wallpaper'),
+                    _Row(
+                      title: 'Live wallpaper',
+                      note: 'Your animals walking behind your icons',
+                      trailing: _Link('Set', widget.onWallpaper!),
+                    ),
+                  ],
                   const _Heading('Updates'),
                   _Row(
                     title: 'Check for updates',

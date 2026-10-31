@@ -18,6 +18,7 @@ import '../ui/settings_page.dart';
 import '../ui/theme.dart';
 import '../ui/update_banner.dart';
 import '../update/update_service.dart';
+import '../wallpaper/wallpaper_sync.dart';
 import '../weather/weather_state.dart';
 import '../world/pixel_buffer.dart';
 import '../world/sky.dart';
@@ -71,6 +72,7 @@ class SceneScreen extends StatefulWidget {
     this.sounds,
     this.weather,
     this.updates,
+    this.wallpaper,
   });
 
   final WildController controller;
@@ -80,6 +82,7 @@ class SceneScreen extends StatefulWidget {
   final SceneSounds? sounds;
   final WeatherState? weather;
   final UpdateService? updates;
+  final WallpaperSync? wallpaper;
 
   @override
   State<SceneScreen> createState() => _SceneScreenState();
@@ -387,6 +390,9 @@ class _SceneScreenState extends State<SceneScreen>
           onDevTools: kDebugMode ? () => _go(_Page.devTools) : null,
           version: _version,
           report: _c.report,
+          onWallpaper: widget.wallpaper == null
+              ? null
+              : () => widget.wallpaper!.choose(),
         );
       case _Page.devTools:
         return DevToolsPage(

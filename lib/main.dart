@@ -10,6 +10,7 @@ import 'scene/scene_screen.dart';
 import 'scene/sprites.dart';
 import 'ui/theme.dart';
 import 'update/update_service.dart';
+import 'wallpaper/wallpaper_sync.dart';
 import 'weather/weather_service.dart';
 
 Future<void> main() async {
@@ -40,6 +41,11 @@ Future<void> main() async {
   );
   final updates = UpdateService(enabled: () => controller.prefs.checkUpdates);
   final sprites = await SceneSprites.load();
+  final wallpaper = WallpaperSync(
+    controller: controller,
+    weather: weather.state,
+    sprites: sprites,
+  );
   runApp(
     WildKakiApp(
       controller: controller,
@@ -47,6 +53,7 @@ Future<void> main() async {
       phoneZone: phoneZone,
       weather: weather,
       updates: updates,
+      wallpaper: wallpaper,
       sprites: sprites,
     ),
   );
@@ -60,6 +67,7 @@ class WildKakiApp extends StatefulWidget {
     required this.phoneZone,
     required this.weather,
     required this.updates,
+    required this.wallpaper,
     required this.sprites,
   });
 
@@ -68,6 +76,7 @@ class WildKakiApp extends StatefulWidget {
   final PhoneTimeZone phoneZone;
   final WeatherService weather;
   final UpdateService updates;
+  final WallpaperSync wallpaper;
   final SceneSprites sprites;
 
   @override
@@ -83,10 +92,13 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
     unawaited(widget.holidays.refresh());
     unawaited(widget.weather.refresh());
     unawaited(widget.updates.refresh());
+    widget.wallpaper.attach();
+    widget.wallpaper.schedule();
   }
 
   @override
   void dispose() {
+    widget.wallpaper.detach();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -99,6 +111,7 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
       unawaited(widget.holidays.refresh());
       unawaited(widget.weather.refresh());
       unawaited(widget.updates.refresh());
+      widget.wallpaper.schedule();
     }
   }
 
@@ -115,6 +128,7 @@ class _WildKakiAppState extends State<WildKakiApp> with WidgetsBindingObserver {
           sprites: widget.sprites,
           weather: widget.weather.state,
           updates: widget.updates,
+          wallpaper: widget.wallpaper,
         ),
       ),
     );

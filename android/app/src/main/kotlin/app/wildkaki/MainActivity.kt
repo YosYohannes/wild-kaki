@@ -1,5 +1,7 @@
 package app.wildkaki
 
+import android.app.WallpaperManager
+import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -39,6 +41,17 @@ class MainActivity : FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "app.wildkaki/wallpaper")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "dir" -> result.success(java.io.File(filesDir, "wallpaper").apply { mkdirs() }.absolutePath)
+                    "active" -> result.success(
+                        WallpaperManager.getInstance(this).wallpaperInfo?.packageName == packageName
+                    )
+                    "set" -> result.success(chooseWallpaper())
+                    else -> result.notImplemented()
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "app.wildkaki/app")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -58,6 +71,22 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onDestroy() {
         scope.cancel()
         super.onDestroy()
+    }
+
+    private fun chooseWallpaper(): Boolean {
+        val direct = Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).putExtra(
+            WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+            ComponentName(this, WildWallpaperService::class.java),
+        )
+        for (intent in listOf(direct, Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER))) {
+            try {
+                startActivity(intent)
+                return true
+            } catch (e: Exception) {
+                continue
+            }
+        }
+        return false
     }
 
     private fun openSettings(result: MethodChannel.Result) {
