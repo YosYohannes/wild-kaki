@@ -48,6 +48,21 @@ class Sighting {
   final String? hint;
 }
 
+class SyncReport {
+  const SyncReport({
+    required this.since,
+    required this.at,
+    required this.found,
+  });
+
+  final DateTime since;
+  final DateTime at;
+  final List<Outing> found;
+
+  bool counts(Outing o) =>
+      !(o.kind == sleepKind ? o.end : o.start).isBefore(since);
+}
+
 class HomeState {
   const HomeState({
     required this.waiting,

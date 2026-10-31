@@ -474,6 +474,76 @@ void main() {
     await _leave(tester);
   });
 
+  testWidgets('sync details say what was read and what counted', (
+    tester,
+  ) async {
+    final since = DateTime(2026, 10, 29, 21, 4);
+    final report = SyncReport(
+      since: since,
+      at: DateTime(2026, 10, 31, 9, 30),
+      found: [
+        Outing(
+          id: 'a',
+          kind: 'Run',
+          start: DateTime(2026, 10, 30, 7),
+          distanceKm: 5,
+          minutes: 31,
+        ),
+        Outing(
+          id: 'b',
+          kind: 'Walk',
+          start: DateTime(2026, 10, 28, 18),
+          distanceKm: null,
+          minutes: 20,
+        ),
+      ],
+    );
+    Widget page(SyncReport? r) => SettingsPage(
+      prefs: _allPrefs,
+      onPrefs: (_) {},
+      onBack: () {},
+      onManage: () {},
+      onStartOver: () {},
+      report: r,
+    );
+    await _show(tester, page(report));
+    expect(find.byKey(const ValueKey('sync-details')), findsNothing);
+    await tester.tap(find.text('Show'));
+    await tester.pump();
+    expect(find.text('Counting activities from Oct 29, 21:04'), findsOneWidget);
+    expect(find.text('Last checked Oct 31, 09:30'), findsOneWidget);
+    expect(
+      find.text('Run · 5.0 km · 31 min · Oct 30, 07:00 · counted'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Walk · 20 min · Oct 28, 18:00 · before the start'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Hide'));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('sync-details')), findsNothing);
+    await _leave(tester);
+
+    await _show(tester, page(null));
+    await tester.tap(find.text('Show'));
+    await tester.pump();
+    expect(find.textContaining('Not checked yet'), findsOneWidget);
+    await _leave(tester);
+
+    await _show(
+      tester,
+      page(SyncReport(since: since, at: since, found: const [])),
+    );
+    await tester.tap(find.text('Show'));
+    await tester.pump();
+    expect(
+      find.textContaining('no exercise or sleep sessions'),
+      findsOneWidget,
+    );
+    await _leave(tester);
+  });
+
   testWidgets('settings footer shows the installed version', (tester) async {
     Widget page(String? version) => SettingsPage(
       prefs: _allPrefs,
@@ -484,9 +554,13 @@ void main() {
       version: version,
     );
     await _show(tester, page('1.2.3'));
+    await tester.drag(find.byType(ListView), const Offset(0, -1200));
+    await tester.pump();
     expect(find.text('WildKaki 1.2.3 · Tiny5, OFL'), findsOneWidget);
     await _leave(tester);
     await _show(tester, page(null));
+    await tester.drag(find.byType(ListView), const Offset(0, -1200));
+    await tester.pump();
     expect(find.text('WildKaki · Tiny5, OFL'), findsOneWidget);
     await _leave(tester);
   });

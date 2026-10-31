@@ -386,6 +386,7 @@ class _SceneScreenState extends State<SceneScreen>
           },
           onDevTools: kDebugMode ? () => _go(_Page.devTools) : null,
           version: _version,
+          report: _c.report,
         );
       case _Page.devTools:
         return DevToolsPage(

@@ -13,6 +13,8 @@ class SettingsPage extends StatefulWidget {
     required this.onStartOver,
     this.onDevTools,
     this.version,
+    this.report,
+    this.now,
   });
 
   final Prefs prefs;
@@ -22,6 +24,8 @@ class SettingsPage extends StatefulWidget {
   final VoidCallback onStartOver;
   final VoidCallback? onDevTools;
   final String? version;
+  final SyncReport? report;
+  final DateTime? now;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -29,6 +33,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool _sure = false;
+  bool _details = false;
 
   Prefs get _prefs => widget.prefs;
 
@@ -96,6 +101,17 @@ class _SettingsPageState extends State<SettingsPage> {
                           widget.onPrefs(_prefs.copyWith(checkUpdates: on)),
                     ),
                   ),
+                  const _Heading('Sync'),
+                  _Row(
+                    title: 'Sync details',
+                    note: 'What Health Connect handed over',
+                    trailing: _Link(
+                      _details ? 'Hide' : 'Show',
+                      () => setState(() => _details = !_details),
+                    ),
+                  ),
+                  if (_details)
+                    _SyncDetails(widget.report, widget.now ?? DateTime.now()),
                   const _Heading('Your animals'),
                   if (_sure)
                     _confirm()
@@ -192,6 +208,83 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         DottedRule(color: Wild.bark.withValues(alpha: 0.3)),
       ],
+    );
+  }
+}
+
+const _months = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+String _stamp(DateTime t) {
+  final hh = t.hour.toString().padLeft(2, '0');
+  final mm = t.minute.toString().padLeft(2, '0');
+  return '${_months[t.month - 1]} ${t.day}, $hh:$mm';
+}
+
+class _SyncDetails extends StatelessWidget {
+  const _SyncDetails(this.report, this.now);
+
+  final SyncReport? report;
+  final DateTime now;
+
+  static const _shown = 8;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = report;
+    final style = bodyText(12, color: Wild.bark);
+    final lines = <String>[];
+    if (r == null) {
+      lines.add('Not checked yet. Pull down on the main screen to sync.');
+    } else {
+      lines.add('Counting activities from ${_stamp(r.since)}');
+      lines.add('Last checked ${_stamp(r.at)}');
+      if (r.found.isEmpty) {
+        lines.add(
+          'Health Connect has no exercise or sleep sessions from the week '
+          'before that onwards. If your watch app shows an activity, check '
+          'that it writes to Health Connect.',
+        );
+      } else {
+        lines.add('Health Connect has ${r.found.length} from the week before:');
+        for (final o in r.found.take(_shown)) {
+          final km = o.distanceKm;
+          final dist = km == null ? '' : ' · ${km.toStringAsFixed(1)} km';
+          final mark = r.counts(o) ? 'counted' : 'before the start';
+          lines.add(
+            '${o.kind}$dist · ${o.minutes} min · ${_stamp(o.start)} · $mark',
+          );
+        }
+        if (r.found.length > _shown) {
+          lines.add('and ${r.found.length - _shown} more');
+        }
+      }
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
+      child: Column(
+        key: const ValueKey('sync-details'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final line in lines)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(line, style: style),
+            ),
+        ],
+      ),
     );
   }
 }

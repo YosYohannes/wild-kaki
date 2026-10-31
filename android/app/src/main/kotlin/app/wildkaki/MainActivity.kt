@@ -61,12 +61,21 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun openSettings(result: MethodChannel.Result) {
-        try {
-            startActivity(Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS"))
-            result.success(null)
-        } catch (e: Exception) {
-            result.error("unavailable", e.message, null)
+        val intents = listOf(
+            HealthConnectClient.getHealthConnectManageDataIntent(this),
+            Intent("android.health.connect.action.HEALTH_HOME_SETTINGS"),
+            Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS"),
+        )
+        for (intent in intents) {
+            try {
+                startActivity(intent)
+                result.success(null)
+                return
+            } catch (e: Exception) {
+                continue
+            }
         }
+        result.error("unavailable", "no Health Connect settings screen", null)
     }
 
     private fun readOutings(call: MethodCall, result: MethodChannel.Result) {

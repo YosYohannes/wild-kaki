@@ -49,11 +49,13 @@ class WildController extends ChangeNotifier {
   SourceStatus _status = SourceStatus.missing;
   bool _refreshing = false;
   String? _notice;
+  SyncReport? _report;
 
   HomeState get home => _home;
   Prefs get prefs => _prefs;
   bool get refreshing => _refreshing;
   String? get notice => _notice;
+  SyncReport? get report => _report;
   String? get timeZone => _timeZone();
   bool get connected => _status == SourceStatus.available;
 
@@ -104,17 +106,15 @@ class WildController extends ChangeNotifier {
   }
 
   static const _couldntReach = "couldn't reach Health Connect";
+  static const reportLookback = Duration(days: 7);
 
   Future<void> _sync() async {
     _notice = null;
     final baseline = _store.baseline;
-    final found = await _source.outingsSince(baseline);
-    final counted = found
-        .where(
-          // sleep starts the evening before, so it counts by when it ended
-          (o) => !(o.kind == sleepKind ? o.end : o.start).isBefore(baseline),
-        )
-        .toList();
+    final found = await _source.outingsSince(baseline.subtract(reportLookback));
+    _report = SyncReport(since: baseline, at: DateTime.now(), found: found);
+    // sleep starts the evening before, so it counts by when it ended
+    final counted = found.where(_report!.counts).toList();
     _home = await _store.addWaiting(counted);
   }
 
@@ -170,6 +170,7 @@ class WildController extends ChangeNotifier {
   Future<void> startOver() async {
     _home = await _store.startOver();
     _notice = null;
+    _report = null;
     notifyListeners();
   }
 

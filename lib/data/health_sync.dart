@@ -107,6 +107,8 @@ class HealthConnectSource implements OutingSource {
       await _channel.invokeMethod<void>('openSettings');
     } on MissingPluginException {
       await requestAccess();
+    } on PlatformException {
+      await requestAccess();
     }
   }
 

@@ -463,7 +463,7 @@ void main() {
         final c = await make();
         expect(c.connected, isTrue);
         await c.refresh();
-        expect(source.lastSince, t0);
+        expect(source.lastSince, t0.subtract(WildController.reportLookback));
         expect(c.home.waiting.map((o) => o.id), ['new', 'walk']);
         expect(c.notice, isNull);
         expect(c.refreshing, isFalse);
@@ -907,6 +907,24 @@ void main() {
       expect(source.settingsOpened, 1);
     });
 
+    test('the sync report lists what was read and what counted', () async {
+      source.outings = [
+        outing('new', 2),
+        outing('old', -30),
+        outing('older', -300),
+      ];
+      final c = await make();
+      expect(c.report, isNull);
+      await c.refresh();
+      final r = c.report!;
+      expect(r.since, t0);
+      expect(r.found.map((o) => o.id), ['new', 'old', 'older']);
+      expect(r.found.where(r.counts).map((o) => o.id), ['new']);
+      expect(c.home.waiting.map((o) => o.id), ['new']);
+      await c.startOver();
+      expect(c.report, isNull);
+    });
+
     test('writeFakeRun lowers the baseline so the run is found', () async {
       final start = t0.subtract(const Duration(hours: 2));
       source.fakeRunStart = start;
@@ -917,7 +935,7 @@ void main() {
       final message = await c.writeFakeRun();
       expect(message, 'wrote a fake run, pull down to find it');
       await c.refresh();
-      expect(source.lastSince, start);
+      expect(source.lastSince, start.subtract(WildController.reportLookback));
       expect(c.home.waiting.map((o) => o.id), ['f']);
     });
 
