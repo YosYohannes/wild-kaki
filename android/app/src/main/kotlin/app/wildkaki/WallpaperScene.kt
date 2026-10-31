@@ -46,6 +46,8 @@ class Manifest(
     val rain: Rain?,
     val animals: List<AnimalSpec>,
     val writtenAt: Long,
+    val waiting: Int,
+    val bushes: List<IntArray>,
 )
 
 private fun JSONArray.ints() = IntArray(length()) { getInt(it) }
@@ -90,6 +92,9 @@ fun parseManifest(text: String): Manifest {
             )
         },
         writtenAt = j.optLong("writtenAt"),
+        waiting = j.optInt("waiting", 0),
+        bushes = j.optJSONArray("bushes")?.let { b -> List(b.length()) { b.getJSONArray(it).ints() } }
+            ?: emptyList(),
     )
 }
 
@@ -194,6 +199,7 @@ class WallpaperScene(private val assets: AssetManager, private val dir: File) {
     }
     private val fill = Paint().apply { isAntiAlias = false }
     private var clock = 0.0
+    var waitingOverride: Int? = null
 
     init {
         val file = File(dir, "manifest.json")
@@ -263,13 +269,31 @@ class WallpaperScene(private val assets: AssetManager, private val dir: File) {
         drawRain(canvas, s, night)
 
         actors.filter { it.spec.lane == "sky" }.forEach { drawActor(canvas, it, s, null) }
-        val ground = actors.withIndex()
-            .filter { it.value.spec.lane != "sky" }
-            .sortedWith(compareBy({ it.value.feet }, { it.index }))
-        for ((_, a) in ground) {
-            val clip = if (a.spec.lane == "river") ((a.feet - manifest.waterline) * s).roundToInt() else null
-            drawActor(canvas, a, s, clip)
+        val items = ArrayList<Pair<Int, () -> Unit>>()
+        val shown = min(waitingOverride ?: manifest.waiting, manifest.bushes.size)
+        for (i in 0 until shown) {
+            val base = roundHalfUp(manifest.bushes[i][1] * manifest.k)
+            items.add(base to { drawBush(canvas, manifest.bushes[i][0], base, s) })
         }
+        for (a in actors.filter { it.spec.lane == "meadow" }) {
+            items.add(a.feet to { drawActor(canvas, a, s, null) })
+        }
+        for (a in actors.filter { it.spec.lane == "river" }) {
+            val clip = ((a.feet - manifest.waterline) * s).roundToInt()
+            items.add(a.feet to { drawActor(canvas, a, s, clip) })
+        }
+        items.sortedBy { it.first }.forEach { it.second() }
+    }
+
+    private fun drawBush(canvas: Canvas, x: Int, base: Int, s: Double) {
+        val blink = manifest.animate && (clock % 3.2) > 3.0
+        val rustle = if (manifest.animate && ((clock + x * 0.03) % 5) < 0.45) {
+            if ((clock * 24).toInt() % 2 == 1) 1 else -1
+        } else {
+            0
+        }
+        val bmp = sprite(if (blink) "bush_blink" else "bush") ?: return
+        blit(canvas, bmp, x - 5 + rustle, base - 32, s, false)
     }
 
     private fun drawRain(canvas: Canvas, s: Double, night: Double) {

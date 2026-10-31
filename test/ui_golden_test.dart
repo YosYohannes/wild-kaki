@@ -627,6 +627,41 @@ void main() {
     await _leave(tester);
   });
 
+  testWidgets('the wallpaper section offers the background check', (
+    tester,
+  ) async {
+    var allowed = false;
+    var asked = 0;
+    await _show(
+      tester,
+      SettingsPage(
+        prefs: _allPrefs,
+        onPrefs: (_) {},
+        onBack: () {},
+        onManage: () {},
+        onStartOver: () {},
+        onWallpaper: () {},
+        backgroundAllowed: () async => allowed,
+        requestBackground: () async {
+          asked++;
+          allowed = true;
+          return true;
+        },
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Live wallpaper'), findsOneWidget);
+    expect(find.text('Look for new animals'), findsOneWidget);
+    expect(find.text('On'), findsNothing);
+    await tester.tap(find.text('Allow'));
+    await tester.pump();
+    await tester.pump();
+    expect(asked, 1);
+    expect(find.text('On'), findsOneWidget);
+    expect(find.text('Allow'), findsNothing);
+    await _leave(tester);
+  });
+
   testWidgets('settings footer shows the installed version', (tester) async {
     Widget page(String? version) => SettingsPage(
       prefs: _allPrefs,

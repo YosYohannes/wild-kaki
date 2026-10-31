@@ -26,6 +26,7 @@ Map<String, Object?> wallpaperManifest({
   required bool animate,
   required Weather weather,
   required List<MeadowAnimal> animals,
+  int waiting = 0,
 }) {
   final rain = rainSpecFor(weather);
   return {
@@ -56,6 +57,14 @@ Map<String, Object?> wallpaperManifest({
             ],
           },
     'animals': [for (final a in animals.take(maxFoxes)) _animalJson(a)],
+    'waiting': waiting,
+    'bushes': [
+      for (var i = 0; i < maxBushes; i++)
+        () {
+          final spot = bushAtSlot('', i);
+          return [spot.x, spot.refBase];
+        }(),
+    ],
   };
 }
 
@@ -145,10 +154,11 @@ Future<void> exportWallpaper({
   required Map<String, Object?> manifest,
   required Weather weather,
   required SceneSprites sprites,
+  bool backdrops = true,
 }) async {
   await dir.create(recursive: true);
   final rows = manifest['rows'] as int;
-  for (var h = 0; h < wallpaperHours; h++) {
+  for (var h = 0; backdrops && h < wallpaperHours; h++) {
     final png = await renderBackdrop(
       hour: h.toDouble(),
       rows: rows,

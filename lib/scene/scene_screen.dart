@@ -393,6 +393,8 @@ class _SceneScreenState extends State<SceneScreen>
           onWallpaper: widget.wallpaper == null
               ? null
               : () => widget.wallpaper!.choose(),
+          backgroundAllowed: widget.wallpaper?.backgroundAllowed,
+          requestBackground: widget.wallpaper?.requestBackground,
         );
       case _Page.devTools:
         return DevToolsPage(

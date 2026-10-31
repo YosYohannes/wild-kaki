@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.Record
@@ -29,6 +30,13 @@ import kotlinx.coroutines.withContext
 
 class MainActivity : FlutterFragmentActivity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var pendingBackground: MethodChannel.Result? = null
+    private val backgroundRequest = registerForActivityResult(
+        PermissionController.createRequestPermissionResultContract()
+    ) { granted ->
+        pendingBackground?.success(granted.contains(HealthPeek.BACKGROUND))
+        pendingBackground = null
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -49,6 +57,10 @@ class MainActivity : FlutterFragmentActivity() {
                         WallpaperManager.getInstance(this).wallpaperInfo?.packageName == packageName
                     )
                     "set" -> result.success(chooseWallpaper())
+                    "backgroundAllowed" -> scope.launch {
+                        result.success(HealthPeek.backgroundAllowed(applicationContext))
+                    }
+                    "requestBackground" -> requestBackground(result)
                     else -> result.notImplemented()
                 }
             }
@@ -71,6 +83,20 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onDestroy() {
         scope.cancel()
         super.onDestroy()
+    }
+
+    private fun requestBackground(result: MethodChannel.Result) {
+        if (pendingBackground != null) {
+            result.success(false)
+            return
+        }
+        pendingBackground = result
+        try {
+            backgroundRequest.launch(setOf(HealthPeek.BACKGROUND))
+        } catch (e: Exception) {
+            pendingBackground = null
+            result.success(false)
+        }
     }
 
     private fun chooseWallpaper(): Boolean {

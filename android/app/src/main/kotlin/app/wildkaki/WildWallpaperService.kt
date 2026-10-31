@@ -5,8 +5,16 @@ import android.os.Looper
 import android.os.SystemClock
 import android.service.wallpaper.WallpaperService
 import android.view.SurfaceHolder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Calendar
+
+private const val PEEK_EVERY = 10 * 60 * 1000L
 
 class WildWallpaperService : WallpaperService() {
     override fun onCreateEngine(): Engine = SceneEngine()
@@ -20,6 +28,11 @@ class WildWallpaperService : WallpaperService() {
         private var height = 0
         private var last = 0L
         private var checked = 0L
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        private var peeking = false
+        private var peekedAt = 0L
+        private var peekCount: Int? = null
+        private var peekTime = 0L
 
         override fun onCreate(holder: SurfaceHolder) {
             super.onCreate(holder)
@@ -51,6 +64,7 @@ class WildWallpaperService : WallpaperService() {
 
         override fun onDestroy() {
             handler.removeCallbacks(tick)
+            scope.cancel()
             scene?.release()
             scene = null
             super.onDestroy()
@@ -68,8 +82,31 @@ class WildWallpaperService : WallpaperService() {
                 val next = WallpaperScene(assets, dir)
                 scene?.release()
                 scene = next
+                applyPeek()
             } catch (e: Exception) {
                 return
+            }
+        }
+
+        private fun applyPeek() {
+            val s = scene ?: return
+            val count = peekCount
+            s.waitingOverride = if (count != null && peekTime > s.manifest.writtenAt) count else null
+        }
+
+        private fun peekSometimes() {
+            val now = SystemClock.uptimeMillis()
+            if (peeking || now - peekedAt < PEEK_EVERY) return
+            peeking = true
+            peekedAt = now
+            scope.launch {
+                val count = withContext(Dispatchers.IO) { HealthPeek.waiting(applicationContext) }
+                peeking = false
+                if (count != null) {
+                    peekCount = count
+                    peekTime = System.currentTimeMillis()
+                    applyPeek()
+                }
             }
         }
 
@@ -82,6 +119,7 @@ class WildWallpaperService : WallpaperService() {
             handler.removeCallbacks(tick)
             if (!visible) return
             reload(force = false)
+            peekSometimes()
             val now = SystemClock.uptimeMillis()
             val dt = ((now - last) / 1000.0).coerceIn(0.0, 0.1)
             last = now

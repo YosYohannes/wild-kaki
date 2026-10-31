@@ -37,6 +37,7 @@ class _Host implements WallpaperHost {
 
   final String dir;
   bool active = false;
+  bool background = false;
   int chooser = 0;
 
   @override
@@ -50,6 +51,12 @@ class _Host implements WallpaperHost {
     chooser++;
     return true;
   }
+
+  @override
+  Future<bool> backgroundAllowed() async => background;
+
+  @override
+  Future<bool> requestBackground() async => background = true;
 }
 
 Future<WildController> _controller(List<(String, String?)> animals) async {
@@ -162,6 +169,24 @@ void main() {
               as Map;
       expect(bat['lane'], 'sky');
       expect(bat['frames'], flyer.flyFrames);
+    });
+
+    test('it lists the three bush spots and how many activities wait', () {
+      final m = wallpaperManifest(
+        rows: 315,
+        animate: true,
+        weather: Weather.clear,
+        animals: const [],
+        waiting: 2,
+      );
+      expect(m['waiting'], 2);
+      final bushes = m['bushes'] as List;
+      expect(bushes, hasLength(maxBushes));
+      for (var i = 0; i < maxBushes; i++) {
+        final spot = bushAtSlot('', i);
+        expect(bushes[i], [spot.x, spot.refBase]);
+      }
+      expect(build()['waiting'], 0);
     });
 
     test('only the newest six animals are listed', () {
@@ -298,6 +323,48 @@ void main() {
         expect((written['animals'] as List), hasLength(1));
       },
     );
+
+    test(
+      'a change in waiting rewrites the manifest but not the backdrops',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final store = await WildStore.open(systemAnimate: true);
+        final c = WildController(store, _Source());
+        final s = await sync(c);
+        host.active = true;
+        await s.update();
+        final bg = File('${dir.path}/bg_12.png');
+        final manifest = File('${dir.path}/manifest.json');
+        expect((jsonDecode(manifest.readAsStringSync()) as Map)['waiting'], 0);
+        final bgTime = bg.lastModifiedSync();
+
+        await store.addWaiting([
+          Outing(
+            id: 'w',
+            kind: 'Run',
+            start: DateTime.now().add(const Duration(hours: 1)),
+            distanceKm: 3,
+            minutes: 20,
+          ),
+        ]);
+        await c.refresh();
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        await s.update();
+        expect(
+          (jsonDecode(manifest.readAsStringSync()) as Map)['waiting'],
+          c.home.waiting.length,
+        );
+        expect(bg.lastModifiedSync(), bgTime);
+      },
+    );
+
+    test('the background permission is asked through the host', () async {
+      final c = await _controller([('red-fox', null)]);
+      final s = await sync(c);
+      expect(await s.backgroundAllowed(), isFalse);
+      expect(await s.requestBackground(), isTrue);
+      expect(await s.backgroundAllowed(), isTrue);
+    });
 
     test('a new animal and the animate setting both reach the file', () async {
       final c = await _controller([('red-fox', null)]);

@@ -16,6 +16,8 @@ class SettingsPage extends StatefulWidget {
     this.report,
     this.now,
     this.onWallpaper,
+    this.backgroundAllowed,
+    this.requestBackground,
   });
 
   final Prefs prefs;
@@ -28,6 +30,8 @@ class SettingsPage extends StatefulWidget {
   final SyncReport? report;
   final DateTime? now;
   final VoidCallback? onWallpaper;
+  final Future<bool> Function()? backgroundAllowed;
+  final Future<bool> Function()? requestBackground;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -36,6 +40,15 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool _sure = false;
   bool _details = false;
+  bool? _background;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.backgroundAllowed?.call().then((v) {
+      if (mounted) setState(() => _background = v);
+    });
+  }
 
   Prefs get _prefs => widget.prefs;
 
@@ -99,6 +112,19 @@ class _SettingsPageState extends State<SettingsPage> {
                       note: 'Your animals walking behind your icons',
                       trailing: _Link('Set', widget.onWallpaper!),
                     ),
+                    if (widget.requestBackground != null && _background != null)
+                      _Row(
+                        title: 'Look for new animals',
+                        note: _background!
+                            ? 'The wallpaper checks Health Connect while it is showing'
+                            : 'Let the wallpaper check Health Connect while it is showing',
+                        trailing: _background!
+                            ? Text('On', style: pixelText(14, color: Wild.moss))
+                            : _Link('Allow', () async {
+                                final ok = await widget.requestBackground!();
+                                if (mounted) setState(() => _background = ok);
+                              }),
+                      ),
                   ],
                   const _Heading('Updates'),
                   _Row(

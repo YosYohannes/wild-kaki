@@ -16,6 +16,8 @@ abstract class WallpaperHost {
   Future<String?> directory();
   Future<bool> isActive();
   Future<bool> openChooser();
+  Future<bool> backgroundAllowed();
+  Future<bool> requestBackground();
 }
 
 class PlatformWallpaperHost implements WallpaperHost {
@@ -39,6 +41,14 @@ class PlatformWallpaperHost implements WallpaperHost {
 
   @override
   Future<bool> openChooser() async => await _call<bool>('set') ?? false;
+
+  @override
+  Future<bool> backgroundAllowed() async =>
+      await _call<bool>('backgroundAllowed') ?? false;
+
+  @override
+  Future<bool> requestBackground() async =>
+      await _call<bool>('requestBackground') ?? false;
 }
 
 ui.Size _deviceScreen() =>
@@ -64,6 +74,7 @@ class WallpaperSync {
 
   Timer? _timer;
   String? _last;
+  String? _lastBackdrops;
   bool _running = false;
 
   void attach() {
@@ -88,6 +99,7 @@ class WallpaperSync {
       rows: wallpaperRows(size.width, size.height),
       animate: controller.prefs.animate,
       weather: weather.value,
+      waiting: controller.home.waiting.length,
       animals: [
         for (final s in controller.home.sightings.take(maxFoxes))
           (
@@ -109,19 +121,26 @@ class WallpaperSync {
       final manifest = _manifest();
       final signature = jsonEncode(manifest);
       if (!force && signature == _last) return;
+      final backdrops = '${manifest['rows']}|${weather.value}';
       await exportWallpaper(
         dir: Directory(path),
         manifest: manifest,
         weather: weather.value,
         sprites: sprites,
+        backdrops: force || backdrops != _lastBackdrops,
       );
       _last = signature;
+      _lastBackdrops = backdrops;
     } on Object {
       return;
     } finally {
       _running = false;
     }
   }
+
+  Future<bool> backgroundAllowed() => host.backgroundAllowed();
+
+  Future<bool> requestBackground() => host.requestBackground();
 
   Future<bool> choose() async {
     await update(force: true);

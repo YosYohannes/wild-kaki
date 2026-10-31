@@ -1,7 +1,7 @@
 name: wildkaki
 description: An offline outing app where every outing reveals one wild animal.
 publish_to: 'none'
-version: 1.2.0+6
+version: 1.2.1+7
 
 environment:
   sdk: ^3.13.5
