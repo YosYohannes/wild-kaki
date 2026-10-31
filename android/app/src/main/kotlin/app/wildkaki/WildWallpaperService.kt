@@ -38,6 +38,7 @@ class WildWallpaperService : WallpaperService() {
 
         override fun onCreate(holder: SurfaceHolder) {
             super.onCreate(holder)
+            markStarted()
             setTouchEventsEnabled(false)
         }
 
@@ -93,6 +94,16 @@ class WildWallpaperService : WallpaperService() {
                 return
             }
             Log.i(TAG, "scene loaded")
+        }
+
+        private fun markStarted() {
+            try {
+                val dir = File(filesDir, "wallpaper")
+                dir.mkdirs()
+                File(dir, "started").createNewFile()
+            } catch (e: Exception) {
+                Log.w(TAG, "could not mark the wallpaper as started", e)
+            }
         }
 
         private fun applyPeek() {

@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import java.io.File
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.records.DistanceRecord
@@ -103,9 +104,23 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun wallpaperActive(): Boolean {
         val manager = WallpaperManager.getInstance(this)
-        if (manager.wallpaperInfo?.packageName == packageName) return true
-        return Build.VERSION.SDK_INT >= 34 &&
-            manager.getWallpaperInfo(WallpaperManager.FLAG_LOCK)?.packageName == packageName
+        val home = try {
+            manager.wallpaperInfo?.packageName
+        } catch (e: Exception) {
+            null
+        }
+        val lock = try {
+            if (Build.VERSION.SDK_INT >= 34) {
+                manager.getWallpaperInfo(WallpaperManager.FLAG_LOCK)?.packageName
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+        val started = File(filesDir, "wallpaper/started").exists()
+        android.util.Log.i("WildWallpaper", "active? home=$home lock=$lock started=$started")
+        return home == packageName || lock == packageName || started
     }
 
     private fun chooseWallpaper(): Boolean {
