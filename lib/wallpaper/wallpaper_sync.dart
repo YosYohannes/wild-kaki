@@ -18,6 +18,7 @@ abstract class WallpaperHost {
   Future<bool> openChooser();
   Future<bool> backgroundAllowed();
   Future<bool> requestBackground();
+  Future<void> log(String message);
 }
 
 class PlatformWallpaperHost implements WallpaperHost {
@@ -41,6 +42,15 @@ class PlatformWallpaperHost implements WallpaperHost {
 
   @override
   Future<bool> openChooser() async => await _call<bool>('set') ?? false;
+
+  @override
+  Future<void> log(String message) async {
+    try {
+      await _channel.invokeMethod<void>('log', message);
+    } on Object {
+      return;
+    }
+  }
 
   @override
   Future<bool> backgroundAllowed() async =>
@@ -93,6 +103,8 @@ class WallpaperSync {
     _timer = Timer(debounce, () => unawaited(update()));
   }
 
+  void _log(String message) => unawaited(host.log(message));
+
   Map<String, Object?> _manifest() {
     final size = _screen();
     return wallpaperManifest(
@@ -115,9 +127,15 @@ class WallpaperSync {
     if (_running) return;
     _running = true;
     try {
-      if (!force && !await host.isActive()) return;
+      if (!force && !await host.isActive()) {
+        _log('wallpaper: not active');
+        return;
+      }
       final path = await host.directory();
-      if (path == null) return;
+      if (path == null) {
+        _log('wallpaper: no directory');
+        return;
+      }
       final manifest = _manifest();
       final signature = jsonEncode(manifest);
       if (!force && signature == _last) return;
@@ -131,7 +149,9 @@ class WallpaperSync {
       );
       _last = signature;
       _lastBackdrops = backdrops;
-    } on Object {
+      _log('wallpaper: wrote $path');
+    } on Object catch (e, st) {
+      _log('wallpaper: failed $e\n$st');
       return;
     } finally {
       _running = false;
@@ -143,6 +163,9 @@ class WallpaperSync {
   Future<bool> requestBackground() => host.requestBackground();
 
   Future<bool> choose() async {
+    for (var i = 0; _running && i < 50; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
     await update(force: true);
     return host.openChooser();
   }

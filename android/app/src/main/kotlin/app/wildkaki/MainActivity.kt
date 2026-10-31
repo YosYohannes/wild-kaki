@@ -53,10 +53,12 @@ class MainActivity : FlutterFragmentActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "dir" -> result.success(java.io.File(filesDir, "wallpaper").apply { mkdirs() }.absolutePath)
-                    "active" -> result.success(
-                        WallpaperManager.getInstance(this).wallpaperInfo?.packageName == packageName
-                    )
+                    "active" -> result.success(wallpaperActive())
                     "set" -> result.success(chooseWallpaper())
+                    "log" -> {
+                        android.util.Log.w("WildWallpaper", "dart: ${call.arguments}")
+                        result.success(null)
+                    }
                     "backgroundAllowed" -> scope.launch {
                         result.success(HealthPeek.backgroundAllowed(applicationContext))
                     }
@@ -97,6 +99,13 @@ class MainActivity : FlutterFragmentActivity() {
             pendingBackground = null
             result.success(false)
         }
+    }
+
+    private fun wallpaperActive(): Boolean {
+        val manager = WallpaperManager.getInstance(this)
+        if (manager.wallpaperInfo?.packageName == packageName) return true
+        return Build.VERSION.SDK_INT >= 34 &&
+            manager.getWallpaperInfo(WallpaperManager.FLAG_LOCK)?.packageName == packageName
     }
 
     private fun chooseWallpaper(): Boolean {

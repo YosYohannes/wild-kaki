@@ -1,6 +1,7 @@
 package app.wildkaki
 
 import android.os.Handler
+import android.util.Log
 import android.os.Looper
 import android.os.SystemClock
 import android.service.wallpaper.WallpaperService
@@ -15,6 +16,7 @@ import java.io.File
 import java.util.Calendar
 
 private const val PEEK_EVERY = 10 * 60 * 1000L
+private const val TAG = "WildWallpaper"
 
 class WildWallpaperService : WallpaperService() {
     override fun onCreateEngine(): Engine = SceneEngine()
@@ -76,7 +78,10 @@ class WildWallpaperService : WallpaperService() {
             checked = now
             val dir = File(filesDir, "wallpaper")
             val file = File(dir, "manifest.json")
-            if (!file.exists()) return
+            if (!file.exists()) {
+                Log.w(TAG, "no manifest at ${file.path}")
+                return
+            }
             if (scene?.stamp == file.lastModified()) return
             try {
                 val next = WallpaperScene(assets, dir)
@@ -84,8 +89,10 @@ class WildWallpaperService : WallpaperService() {
                 scene = next
                 applyPeek()
             } catch (e: Exception) {
+                Log.w(TAG, "could not load the scene", e)
                 return
             }
+            Log.i(TAG, "scene loaded")
         }
 
         private fun applyPeek() {
@@ -108,6 +115,16 @@ class WildWallpaperService : WallpaperService() {
                     applyPeek()
                 }
             }
+        }
+
+        private fun drawWaiting(canvas: android.graphics.Canvas) {
+            canvas.drawColor(0xFF0F2119.toInt())
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                color = 0xFFF3ECDC.toInt()
+                textAlign = android.graphics.Paint.Align.CENTER
+                textSize = canvas.width * 0.045f
+            }
+            canvas.drawText("Open WildKaki once to fill the park", canvas.width / 2f, canvas.height / 2f, paint)
         }
 
         private fun hour(): Double {
@@ -133,8 +150,11 @@ class WildWallpaperService : WallpaperService() {
             }
             if (canvas != null) {
                 try {
-                    current?.draw(canvas, canvas.width, canvas.height, hour())
-                        ?: canvas.drawColor(0xFF0F2119.toInt())
+                    if (current != null) {
+                        current.draw(canvas, canvas.width, canvas.height, hour())
+                    } else {
+                        drawWaiting(canvas)
+                    }
                 } finally {
                     holder.unlockCanvasAndPost(canvas)
                 }

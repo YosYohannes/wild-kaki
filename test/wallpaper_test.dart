@@ -53,6 +53,9 @@ class _Host implements WallpaperHost {
   }
 
   @override
+  Future<void> log(String message) async {}
+
+  @override
   Future<bool> backgroundAllowed() async => background;
 
   @override
@@ -392,6 +395,17 @@ void main() {
                   .single
               as Map;
       expect(animal['hat'], 'hat_beanie');
+    });
+
+    test('choosing waits for an update that is already running', () async {
+      final c = await _controller([('red-fox', null)]);
+      final s = await sync(c);
+      host.active = true;
+      final running = s.update();
+      expect(await s.choose(), isTrue);
+      await running;
+      expect(host.chooser, 1);
+      expect(File('${dir.path}/manifest.json').existsSync(), isTrue);
     });
 
     test('a failing host leaves the app alone', () async {
