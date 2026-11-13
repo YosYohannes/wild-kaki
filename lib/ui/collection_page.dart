@@ -17,6 +17,8 @@ class CollectionPage extends StatefulWidget {
     required this.onClose,
     required this.onOpen,
     this.timeZone,
+    this.scrollOffset = 0,
+    this.onScroll,
   });
 
   final List<Sighting> sightings;
@@ -25,6 +27,8 @@ class CollectionPage extends StatefulWidget {
   final VoidCallback onClose;
   final void Function(String entryId) onOpen;
   final String? timeZone;
+  final double scrollOffset;
+  final ValueChanged<double>? onScroll;
 
   @override
   State<CollectionPage> createState() => _CollectionPageState();
@@ -32,6 +36,15 @@ class CollectionPage extends StatefulWidget {
 
 class _CollectionPageState extends State<CollectionPage> {
   AnimalEntry? _card;
+  late final ScrollController _scroll = ScrollController(
+    initialScrollOffset: widget.scrollOffset,
+  )..addListener(() => widget.onScroll?.call(_scroll.offset));
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
 
   bool _shown(AnimalEntry entry, Set<String> met) {
     final legend = entry.legend;
@@ -77,6 +90,7 @@ class _CollectionPageState extends State<CollectionPage> {
                 ),
                 Expanded(
                   child: GridView.count(
+                    controller: _scroll,
                     crossAxisCount: 3,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 0,

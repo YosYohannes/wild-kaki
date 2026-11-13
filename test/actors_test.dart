@@ -190,6 +190,29 @@ void main() {
     expect(lanes, {Lane.meadow, Lane.sky});
   });
 
+  test('a tapped ground bird takes off and climbs into the sky', () {
+    final scene = SceneState([
+      (outingId: _groundOuting, entryId: 'sparrow', hatId: 'beanie'),
+    ], random: Random(3));
+    final bird = scene.foxes.single;
+    final ground = bird.feet - 32;
+    scene.takeOff(bird);
+    expect(scene.foxes, isEmpty);
+    final flyer = scene.flyers.single;
+    expect(flyer.entryId, 'sparrow');
+    expect(flyer.hatId, 'beanie');
+    expect(flyer.rising, isTrue);
+    expect(flyer.y, ground);
+    expect(flyer.x, closeTo(bird.x, 0.001));
+    scene.step(0.6, true);
+    expect(flyer.y, lessThan(ground));
+    scene.step(Flyer.riseSeconds, true);
+    expect(flyer.rising, isFalse);
+    expect(flyer.y, lessThan(Layout.reference.y(skyTopRef + skyTopSpan) + 4));
+    scene.takeOff(bird);
+    expect(scene.flyers, hasLength(1));
+  });
+
   test('sightings are split into lanes and share the cap of six', () {
     final scene = SceneState([
       (outingId: 'o0', entryId: 'duck', hatId: 'beanie'),

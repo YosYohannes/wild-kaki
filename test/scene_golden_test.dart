@@ -21,6 +21,7 @@ import 'package:wildkaki/scene/weather_layer.dart';
 import 'package:wildkaki/ui/collection_page.dart';
 import 'package:wildkaki/ui/dev_tools.dart';
 import 'package:wildkaki/ui/recent_page.dart';
+import 'package:wildkaki/ui/reveal.dart';
 import 'package:wildkaki/ui/settings_page.dart';
 import 'package:wildkaki/ui/theme.dart';
 import 'package:wildkaki/update/update_service.dart';
@@ -635,6 +636,12 @@ void main() {
     final gy = ground.feet - 32;
     expect(await _coverage(tester, walking, gx, gy), 1);
     expect(await _coverage(tester, wings, gx, gy), lessThan(0.9));
+
+    await tester.tapAt(Offset((gx + 16) * 3.0, (ground.feet - 8) * 3.0));
+    await tester.pump();
+    expect(state.foxes.where((f) => f.entryId == 'sparrow'), isEmpty);
+    expect(state.flyers, hasLength(2));
+    expect(state.flyers.last.rising, isTrue);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -681,6 +688,12 @@ void main() {
       scrollable: find.byType(Scrollable).last,
     );
     expect(find.byKey(const ValueKey('new-dot')), findsOneWidget);
+    double offset() => tester
+        .state<ScrollableState>(find.byType(Scrollable).last)
+        .position
+        .pixels;
+    final scrolled = offset();
+    expect(scrolled, greaterThan(0));
     await tester.tap(find.text('Red fox'));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 50)),
@@ -691,9 +704,51 @@ void main() {
     await tester.binding.handlePopRoute();
     await tester.pump();
     expect(find.byType(CollectionPage), findsOneWidget);
+    expect(offset(), scrolled);
     await tester.binding.handlePopRoute();
     await tester.pump();
     expect(find.byType(CollectionPage), findsNothing);
+
+    await tester.tapAt(const Offset(30 * 3.0, 120 * 3.0));
+    await tester.pump();
+    expect(offset(), 0);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('closing the card removes the bush at once and unlocks taps', (
+    tester,
+  ) async {
+    _sprites = (await tester.runAsync(SceneSprites.load))!;
+    final c = (await tester.runAsync(_controller))!;
+    await _show(tester, c, animate: true);
+    expect(c.home.waiting, hasLength(2));
+    await tester.tapAt(_bushTap(tester, 0));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(RevealOverlay), findsOneWidget);
+    await tester.pump(const Duration(seconds: 4));
+
+    await tester.tap(find.bySemanticsLabel('Close'));
+    await tester.pump();
+    expect(find.byType(RevealOverlay), findsNothing);
+    final bushes =
+        (tester
+                        .widget<CustomPaint>(
+                          find
+                              .descendant(
+                                of: find.byType(SceneScreen),
+                                matching: find.byType(CustomPaint),
+                              )
+                              .first,
+                        )
+                        .painter
+                    as dynamic)
+                .bushes
+            as List;
+    expect(bushes, hasLength(1));
+
+    await tester.tapAt(_bushTap(tester, 0));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(RevealOverlay), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 

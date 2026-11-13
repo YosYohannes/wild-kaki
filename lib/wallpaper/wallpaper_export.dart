@@ -132,9 +132,17 @@ Future<Uint8List> renderBackdrop({
     ui.Offset(Layout.lampX.toDouble(), layout.lampY.toDouble()),
     dim,
   );
+  final glass = ui.Rect.fromLTWH(4, layout.lanternY.toDouble(), 6, 6);
+  if (night < 0.95) {
+    canvas.drawRect(
+      glass,
+      ui.Paint()
+        ..color = lampOffGlass.withValues(alpha: (1 - night).clamp(0.0, 1.0)),
+    );
+  }
   if (night > 0.05) {
     canvas.drawRect(
-      ui.Rect.fromLTWH(4, layout.lanternY.toDouble(), 6, 6),
+      glass,
       ui.Paint()
         ..color = const ui.Color(0xFFFFE9A0)
             .withValues(alpha: night.clamp(0.0, 1.0)),

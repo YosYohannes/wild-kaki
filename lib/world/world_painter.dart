@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'pixel_buffer.dart';
 import 'sky.dart';
 
+const ui.Color lampOffGlass = ui.Color(0xFF4F5F57);
+
 class Layout {
   Layout.forRows(this.rows) : k = rows / refRows;
 

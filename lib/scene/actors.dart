@@ -177,6 +177,7 @@ class Flyer {
     this.hatId,
     Random? random,
     Layout? layout,
+    this.climbFrom,
   }) : top = (layout ?? Layout.reference).y(refTop),
        _random = random ?? Random() {
     t = _random.nextDouble() * 3;
@@ -186,6 +187,7 @@ class Flyer {
 
   static const double lo = -2;
   static const double hi = worldW - 30.0;
+  static const double riseSeconds = 1.2;
 
   final Random _random;
   final String entryId;
@@ -193,6 +195,8 @@ class Flyer {
   double x;
   final int refTop;
   int top;
+  int? climbFrom;
+  double _rise = 0;
   int dir;
   late double t;
   late final double _phase;
@@ -204,7 +208,13 @@ class Flyer {
 
   int get bob => (3 * sin(t * 2.2 + _phase)).round();
 
-  int get y => top + bob;
+  bool get rising => climbFrom != null;
+
+  int get y {
+    final from = climbFrom;
+    if (from == null) return top + bob;
+    return (from + (top + bob - from) * _rise).round();
+  }
 
   int get frame => (t / 0.14).toInt() % 2;
 
@@ -218,6 +228,10 @@ class Flyer {
 
   void step(double dt) {
     if (alarm > 0) alarm -= dt;
+    if (climbFrom != null) {
+      _rise += dt / riseSeconds;
+      if (_rise >= 1) climbFrom = null;
+    }
     x += dir * _speed * (alarm > 0 ? 3 : 1) * dt;
     t += dt * (alarm > 0 ? 2 : 1);
     if (x <= lo) {
@@ -324,6 +338,22 @@ class SceneState {
     for (final f in flyers) {
       f.fit(layout);
     }
+  }
+
+  void takeOff(Fox fox) {
+    if (!foxes.remove(fox)) return;
+    final flyer = Flyer(
+      fox.x.clamp(Flyer.lo, Flyer.hi),
+      skyTopRef + _random.nextInt(skyTopSpan),
+      fox.dir,
+      entryId: fox.entryId,
+      hatId: fox.hatId,
+      random: _random,
+      layout: _layout,
+      climbFrom: fox.feet - 32,
+    );
+    flyer.startle();
+    flyers.add(flyer);
   }
 
   void addAnimal(double x, MeadowAnimal animal) {

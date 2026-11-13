@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../animals/catalog.dart';
 import '../animals/lookup.dart';
 import '../data/controller.dart';
 import '../data/model.dart';
@@ -111,6 +112,8 @@ class _SceneScreenState extends State<SceneScreen>
   String _animalId = defaultEntryId;
   _Page _settingsFrom = _Page.collection;
   _Revealing? _revealing;
+  String? _gone;
+  double _collectionOffset = 0;
   Map<String, int> _slots = {};
   List<String> _bushIds = const [];
   List<BushSpot> _bushes = const [];
@@ -259,6 +262,7 @@ class _SceneScreenState extends State<SceneScreen>
       case _Page.scene:
         break;
       case _Page.collection:
+        _collectionOffset = 0;
         _go(_Page.scene);
       case _Page.animal:
         _go(_animalFrom);
@@ -281,8 +285,13 @@ class _SceneScreenState extends State<SceneScreen>
 
     final fox = _world.foxes.where((f) => f.hit(px, py)).firstOrNull;
     if (fox != null) {
-      fox.startle();
-      react(entryOrDefault(fox.entryId).base.sound);
+      final base = entryOrDefault(fox.entryId).base;
+      if (base.habitat == Habitat.sky) {
+        _world.takeOff(fox);
+      } else {
+        fox.startle();
+      }
+      react(base.sound);
       return;
     }
     final swimmer = _world.swimmers.where((s) => s.hit(px, py)).firstOrNull;
@@ -339,8 +348,10 @@ class _SceneScreenState extends State<SceneScreen>
       entryId: r.entry.id,
       hatId: r.hatId,
     ));
+    _gone = r.outing.id;
     _c.reveal(r.outing);
     if (_c.prefs.sound) _sounds.play(r.entry.base.sound);
+    setState(() => _revealing = null);
   }
 
   Widget _pageFor(_Page page) {
@@ -356,7 +367,12 @@ class _SceneScreenState extends State<SceneScreen>
             _settingsFrom = _Page.collection;
             _go(_Page.settings);
           },
-          onClose: () => _go(_Page.scene),
+          scrollOffset: _collectionOffset,
+          onScroll: (o) => _collectionOffset = o,
+          onClose: () {
+            _collectionOffset = 0;
+            _go(_Page.scene);
+          },
           onOpen: (animal) {
             _c.markOpened(animal);
             _animalId = animal;
@@ -438,8 +454,12 @@ class _SceneScreenState extends State<SceneScreen>
             _ensureWorld(rows);
             final layout = Layout.forRows(rows);
             _world.fit(layout);
+            if (_gone != null && !_c.home.waiting.any((o) => o.id == _gone)) {
+              _gone = null;
+            }
             final bushes = _placeBushes([
-              for (final o in _c.home.waiting.take(maxBushes)) o.id,
+              for (final o in _c.home.waiting.take(maxBushes))
+                if (o.id != _gone) o.id,
             ], layout);
             final night = skyAt(_hour).stars;
             final reveal = _revealing;
@@ -681,9 +701,17 @@ class _ScenePainter extends CustomPainter {
     }
     _sprite(canvas, sprites.bench, Layout.benchX, layout.benchY, s, dim);
     _sprite(canvas, sprites.lamppost, Layout.lampX, layout.lampY, s, dim);
+    final glass = Rect.fromLTWH(4 * s, layout.lanternY * s, 6 * s, 6 * s);
+    if (night < 0.95) {
+      canvas.drawRect(
+        glass,
+        Paint()
+          ..color = lampOffGlass.withValues(alpha: (1 - night).clamp(0.0, 1.0)),
+      );
+    }
     if (night > 0.05) {
       canvas.drawRect(
-        Rect.fromLTWH(4 * s, layout.lanternY * s, 6 * s, 6 * s),
+        glass,
         Paint()
           ..color = const Color(0xFFFFE9A0)
               .withValues(alpha: night.clamp(0.0, 1.0)),
