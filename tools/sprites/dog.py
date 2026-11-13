@@ -94,15 +94,15 @@ SPECIES = {
             (None, 24, 0, [
                 "bb",
             ]),
-            (None, 17, -3, [
-                "bbb",
-                "bab",
-                "bab",
+            (None, 16, -3, [
+                "bb...",
+                "bab..",
+                "baabb",
             ]),
-            (None, 23, -3, [
-                "bbb",
-                "bab",
-                "bab",
+            (None, 22, -3, [
+                "...bb",
+                "..bab",
+                "bbaab",
             ]),
             (None, 7, 9, [
                 "bbbbbbbbbbbb",
@@ -123,6 +123,7 @@ SPECIES = {
                 "b",
             ]),
             (None, 6, 5, "b"),
+            (1, 5, 4, "b"),
             (0, 10, 13, [
                 "kk",
             ]),
@@ -559,3 +560,40 @@ COLOURS = {
     "black-shiba": {"b": "#34343c", "d": "#232329", "l": "#c98a4a", "k": "#c98a4a", "e": "#e8d08a"},
     "golden-poodle": {"b": "#e5a95c", "d": "#bf8236", "l": "#f3cf94", "k": "#d39a4c"},
 }
+
+
+def _painted(sid, frame):
+    g = {}
+    for y, row in enumerate(FRAMES[frame]):
+        for x, c in enumerate(row):
+            if c != ".":
+                g[(x, y)] = "b" if c == "H" else c
+    for f, x0, y0, rows in SPECIES[sid].get("patches", []):
+        if f not in (None, frame):
+            continue
+        for dy, row in enumerate([rows] if isinstance(rows, str) else rows):
+            for dx, c in enumerate(row):
+                if c == "-":
+                    g.pop((x0 + dx, y0 + dy), None)
+                elif c not in ".H":
+                    g[(x0 + dx, y0 + dy)] = c
+    return g
+
+
+def _wag(sid, max_x, anchor_y, dx, dy=0):
+    g = _painted(sid, 1)
+    tail = {p: c for p, c in g.items() if p[0] < max_x and p[1] < anchor_y}
+    return [(1, x, y, "-") for x, y in tail] + [(1, x + dx, y + dy, c) for (x, y), c in tail.items()]
+
+
+for _sid, _args in {
+    "shiba": (12, 3, -1),
+    "dachshund": (4, 5, 1),
+    "beagle": (9, 4, -1),
+    "poodle": (9, 3, -1),
+    "pug": (11, 3, -1),
+    "husky": (13, 3, -1),
+    "terrier": (9, 3, -1),
+    "cerberus-pup": (7, 3, -1),
+}.items():
+    SPECIES[_sid]["patches"] = SPECIES[_sid].get("patches", []) + _wag(_sid, *_args)
