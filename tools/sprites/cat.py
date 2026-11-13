@@ -13,16 +13,24 @@ BODY = [
     "bbbbddddddddddddd...",
 ]
 
+BODY_B = BODY[:7] + [
+    ".b..bbbbbbbbllnllbb.",
+    ".b.bbbbbbbblllllb...",
+    ".b.bbbbbbbbbbllllb..",
+    "..bdbbbbbbbbblllb...",
+    "..bbddddddddddddd...",
+]
+
 FRAMES = [
     BODY + [
         "....bb.dd...bb.dd...",
-        "....bb.dd...bb.dd...",
-        "....kk.kk...kk.kk...",
+        "...bb.dd.....bb.dd..",
+        "..kk.kk.......kk.kk.",
     ],
-    BODY + [
-        "....dd.bb...dd.bb...",
-        "....dd.bb...dd.bb...",
-        "....kk.kk...kk.kk...",
+    BODY_B + [
+        "....bb.dd...bb.dd...",
+        "....bb.dd...bb.dd...",
+        ".....kk.kk.kk.kk....",
     ],
 ]
 
@@ -31,11 +39,14 @@ TABBY = {
     "p": "#e8a0a0", "e": "#9bc43e", "q": "#1f1a14", "n": "#d98a8a",
 }
 
-LEGS = (None, 4, 12, ["mm.mm...mm.mm", "mm.mm...mm.mm"])
+LEGS = [(0, 0, 12, ["....mm.mm...mm.mm...", "...mm.mm.....mm.mm.."]), (1, 0, 12, ["....mm.mm...mm.mm...", "....mm.mm...mm.mm..."])]
 
 FLUFFY_TAIL = [
-    (None, 0, 9, ["bb"]),
-    (None, 1, 10, ["bb"]),
+    (0, 0, 9, ["bb"]),
+    (0, 1, 10, ["bb"]),
+    (1, 0, 6, ["bb"]),
+    (1, 0, 7, ["b", "b", "b"]),
+    (1, 1, 10, ["b"]),
 ]
 
 SPECIES = {
@@ -46,7 +57,8 @@ SPECIES = {
             (None, 5, 8, ["a.a.a", "a.a.a"]),
             (None, 6, 10, ["a.a"]),
             (None, 2, 11, ["a"]),
-            (None, 0, 10, ["a"]),
+            (0, 0, 10, ["a"]),
+            (1, 1, 8, ["a"]),
         ],
     },
     "siamese": {
@@ -60,9 +72,11 @@ SPECIES = {
             (None, 13, 6, ["mmm"]),
             (None, 12, 7, ["mmnmm"]),
             (None, 12, 8, ["mmm"]),
-            (None, 0, 10, ["m"]),
-            (None, 0, 11, ["mmm"]),
-            LEGS,
+            (0, 0, 10, ["m"]),
+            (0, 0, 11, ["mmm"]),
+            (1, 1, 7, ["m", "m", "m"]),
+            (1, 2, 10, ["m", "m"]),
+            *LEGS,
         ],
     },
     "persian": {
@@ -92,7 +106,8 @@ SPECIES = {
             *FLUFFY_TAIL,
             (None, 5, 8, ["a...a"]),
             (None, 7, 9, ["a"]),
-            (None, 0, 9, ["a"]),
+            (0, 0, 9, ["a"]),
+            (1, 0, 8, ["a"]),
         ],
     },
     "scottish-fold": {
@@ -125,6 +140,7 @@ SPECIES = {
         },
         "patches": [
             (None, 0, 10, ["bbb"]),
+            (1, 1, 7, ["-", "-", "-"]),
             (None, 0, 5, ["b", "b", "b", "b", "b"]),
             (None, 3, 3, ["b", "b", "b", "b"]),
             (None, -1, 1, [".g.", "gwg", "fwf"]),

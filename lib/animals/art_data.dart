@@ -118,7 +118,7 @@ const Map<String, EntryArt> entryArt = {
   ),
   'kitsune': EntryArt(
     frames: ['kitsune_1', 'kitsune_2'],
-    headPoints: [(x: 24, y: 18), (x: 24, y: 18)],
+    headPoints: [(x: 22, y: 16), (x: 22, y: 16)],
   ),
   'hare': EntryArt(
     frames: ['hare_1', 'hare_2'],
@@ -182,27 +182,27 @@ const Map<String, EntryArt> entryArt = {
   ),
   'red-squirrel': EntryArt(
     frames: ['red-squirrel_1', 'red-squirrel_2'],
-    headPoints: [(x: 19, y: 18), (x: 19, y: 21)],
+    headPoints: [(x: 19, y: 18), (x: 19, y: 19)],
   ),
   'black-squirrel': EntryArt(
     frames: ['black-squirrel_1', 'black-squirrel_2'],
-    headPoints: [(x: 19, y: 18), (x: 19, y: 21)],
+    headPoints: [(x: 19, y: 18), (x: 19, y: 19)],
   ),
   'grey-squirrel': EntryArt(
     frames: ['grey-squirrel_1', 'grey-squirrel_2'],
-    headPoints: [(x: 19, y: 18), (x: 19, y: 21)],
+    headPoints: [(x: 19, y: 18), (x: 19, y: 19)],
   ),
   'chipmunk': EntryArt(
     frames: ['chipmunk_1', 'chipmunk_2'],
-    headPoints: [(x: 17, y: 20), (x: 17, y: 24)],
+    headPoints: [(x: 17, y: 20), (x: 17, y: 21)],
   ),
   'flying-squirrel': EntryArt(
     frames: ['flying-squirrel_1', 'flying-squirrel_2'],
-    headPoints: [(x: 18, y: 18), (x: 18, y: 21)],
+    headPoints: [(x: 18, y: 18), (x: 18, y: 19)],
   ),
   'ratatoskr': EntryArt(
     frames: ['ratatoskr_1', 'ratatoskr_2'],
-    headPoints: [(x: 19, y: 18), (x: 19, y: 21)],
+    headPoints: [(x: 19, y: 18), (x: 19, y: 19)],
   ),
   'sparrow': EntryArt(
     frames: ['sparrow_1', 'sparrow_2'],
