@@ -3,6 +3,7 @@ import 'dart:math';
 import '../animals/catalog.dart';
 import '../animals/lookup.dart';
 import '../animals/rolls.dart';
+import '../data/model.dart';
 import '../world/pixel_buffer.dart';
 import '../world/world_painter.dart';
 
@@ -16,6 +17,22 @@ const int skyTopRef = -4;
 const int skyTopSpan = 56;
 
 typedef MeadowAnimal = ({String outingId, String entryId, String? hatId});
+
+List<MeadowAnimal> parkAnimals(List<Sighting> sightings) {
+  final ranked = [for (var i = 0; i < sightings.length; i++) (i, sightings[i])]
+    ..sort((a, b) {
+      final byOrder = (b.$2.order ?? 0).compareTo(a.$2.order ?? 0);
+      return byOrder != 0 ? byOrder : a.$1.compareTo(b.$1);
+    });
+  return [
+    for (final (_, s) in ranked.take(maxFoxes))
+      (
+        outingId: s.outing.id,
+        entryId: entryOrDefault(s.animal).id,
+        hatId: s.hat,
+      ),
+  ];
+}
 
 enum Lane { meadow, river, sky }
 
@@ -34,6 +51,7 @@ class Fox {
     this.dir, {
     this.entryId = defaultEntryId,
     this.hatId,
+    this.outingId = '',
     Random? random,
     Layout? layout,
   }) : feet = (layout ?? Layout.reference).y(refFeet),
@@ -46,6 +64,7 @@ class Fox {
   final Random _random;
   final String entryId;
   final String? hatId;
+  final String outingId;
   double x;
   final int refFeet;
   int feet;
@@ -104,6 +123,7 @@ class Swimmer {
     this.dir, {
     this.entryId = defaultEntryId,
     this.hatId,
+    this.outingId = '',
     Random? random,
     Layout? layout,
   }) : feet = (layout ?? Layout.reference).y(refFeet),
@@ -120,6 +140,7 @@ class Swimmer {
   final Random _random;
   final String entryId;
   final String? hatId;
+  final String outingId;
   double x;
   final int refFeet;
   int feet;
@@ -175,6 +196,7 @@ class Flyer {
     this.dir, {
     this.entryId = defaultEntryId,
     this.hatId,
+    this.outingId = '',
     Random? random,
     Layout? layout,
     this.climbFrom,
@@ -192,6 +214,7 @@ class Flyer {
   final Random _random;
   final String entryId;
   final String? hatId;
+  final String outingId;
   double x;
   final int refTop;
   int top;
@@ -348,6 +371,7 @@ class SceneState {
       fox.dir,
       entryId: fox.entryId,
       hatId: fox.hatId,
+      outingId: fox.outingId,
       random: _random,
       layout: _layout,
       climbFrom: fox.feet - 32,
@@ -356,7 +380,12 @@ class SceneState {
     flyers.add(flyer);
   }
 
-  void addAnimal(double x, MeadowAnimal animal) {
+  void addAnimal(double x, MeadowAnimal animal, {String? replacing}) {
+    if (replacing != null) {
+      foxes.removeWhere((f) => f.outingId == replacing);
+      swimmers.removeWhere((s) => s.outingId == replacing);
+      flyers.removeWhere((f) => f.outingId == replacing);
+    }
     if (animalCount >= maxFoxes) return;
     _add(animal, x: x);
   }
@@ -379,6 +408,7 @@ class SceneState {
             dir,
             entryId: animal.entryId,
             hatId: animal.hatId,
+            outingId: animal.outingId,
             random: _random,
             layout: _layout,
           ),
@@ -391,6 +421,7 @@ class SceneState {
             dir,
             entryId: animal.entryId,
             hatId: animal.hatId,
+            outingId: animal.outingId,
             random: _random,
             layout: _layout,
           ),
@@ -403,6 +434,7 @@ class SceneState {
             dir,
             entryId: animal.entryId,
             hatId: animal.hatId,
+            outingId: animal.outingId,
             random: _random,
             layout: _layout,
           ),

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wildkaki/animals/lookup.dart';
+import 'package:wildkaki/data/model.dart';
 import 'package:wildkaki/scene/actors.dart';
 import 'package:wildkaki/world/pixel_buffer.dart';
 import 'package:wildkaki/world/world_painter.dart';
@@ -74,6 +75,49 @@ void main() {
     for (final f in small.foxes) {
       expect(f.feet, inInclusiveRange(214, 235));
     }
+  });
+
+  test('the park holds the six animals met most recently', () {
+    Sighting met(String id, int? order, DateTime start) => Sighting(
+      Outing(id: id, kind: 'Walk', start: start, distanceKm: 1, minutes: 30),
+      'red-fox',
+      order: order,
+    );
+    final day = DateTime(2026, 11, 1);
+    final sightings = [
+      for (var i = 0; i < 7; i++)
+        met('new$i', i + 1, day.add(Duration(days: 10 - i))),
+      met('old', 8, day),
+      met('legacy', null, day.add(const Duration(days: 20))),
+    ];
+    expect(parkAnimals(sightings).map((a) => a.outingId), [
+      'old',
+      'new6',
+      'new5',
+      'new4',
+      'new3',
+      'new2',
+    ]);
+  });
+
+  test('a new animal takes the place of the one it replaces', () {
+    final scene = SceneState([
+      for (var i = 0; i < maxFoxes; i++)
+        (outingId: 'o$i', entryId: 'red-fox', hatId: null),
+    ], random: Random(2));
+    scene.takeOff(scene.foxes.first);
+    scene.addAnimal(40, (
+      outingId: 'n',
+      entryId: 'tabby',
+      hatId: null,
+    ), replacing: 'o0');
+    expect(scene.animalCount, maxFoxes);
+    final ids = [
+      ...scene.foxes.map((f) => f.outingId),
+      ...scene.flyers.map((f) => f.outingId),
+    ];
+    expect(ids, isNot(contains('o0')));
+    expect(ids, contains('n'));
   });
 
   test('meadow animals keep their entry and hat', () {

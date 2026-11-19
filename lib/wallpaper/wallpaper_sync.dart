@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
 
-import '../animals/lookup.dart';
 import '../data/controller.dart';
 import '../scene/actors.dart';
 import '../scene/sprites.dart';
@@ -112,14 +111,7 @@ class WallpaperSync {
       animate: controller.prefs.animate,
       weather: weather.value,
       waiting: controller.home.waiting.length,
-      animals: [
-        for (final s in controller.home.sightings.take(maxFoxes))
-          (
-            outingId: s.outing.id,
-            entryId: entryOrDefault(s.animal).id,
-            hatId: s.hat,
-          ),
-      ],
+      animals: parkAnimals(controller.home.sightings),
     );
   }
 

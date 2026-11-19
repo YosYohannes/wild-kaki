@@ -124,14 +124,7 @@ class _SceneScreenState extends State<SceneScreen>
   int _met(String entryId) =>
       _c.home.sightings.where((s) => s.animal == entryId).length;
 
-  List<MeadowAnimal> get _meadow => [
-    for (final s in _c.home.sightings.take(maxFoxes))
-      (
-        outingId: s.outing.id,
-        entryId: entryOrDefault(s.animal).id,
-        hatId: s.hat,
-      ),
-  ];
+  List<MeadowAnimal> get _meadow => parkAnimals(_c.home.sightings);
 
   bool get _motion =>
       _c.prefs.animate &&
@@ -343,11 +336,12 @@ class _SceneScreenState extends State<SceneScreen>
   }
 
   void _close(_Revealing r) {
+    final park = _meadow;
     _world.addAnimal(r.spot?.x.toDouble() ?? 40, (
       outingId: r.outing.id,
       entryId: r.entry.id,
       hatId: r.hatId,
-    ));
+    ), replacing: park.length >= maxFoxes ? park.last.outingId : null);
     _gone = r.outing.id;
     _c.reveal(r.outing);
     if (_c.prefs.sound) _sounds.play(r.entry.base.sound);
